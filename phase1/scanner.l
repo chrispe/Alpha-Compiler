@@ -1,10 +1,3 @@
-/* Makefile:
-al: lex.yy.c
-    gcc -o al lex.yy.c -lfl
-lex.yy.c: scanner.l
-    flex scanner.l
-*/
-
 %{
     #define YY_DECL int alpha_yylex(void *yyal)
     #define KEYWORDS    15
