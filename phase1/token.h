@@ -2,14 +2,15 @@
     This is an interface used for the
     functionality of tokens.
 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-extern   char *token_type_str[];
-extern   char *key_str[];
-extern  char *op_str[];
-extern   char *pun_str[];
+extern char *token_type_str[];
+extern char *key_str[];
+extern char *op_str[];
+extern char *pun_str[];
 
 typedef enum {
         KEYWORD_IF,

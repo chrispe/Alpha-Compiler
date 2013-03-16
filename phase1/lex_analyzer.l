@@ -6,17 +6,15 @@
     #define TOTAL_TYPES (KEYWORDS + OPERATORS + PUNCTUATION)
     #include "token.h"
  
-        
-    /* proswrina */
     alpha_token_t *head = NULL;
     alpha_token_t *tail = NULL;
-
- 
 %}
 
 IDENTIFIER     [a-zA-Z][a-zA-Z0-9_]*
 
-INTEGER        (0[xX][0-9A-Fa-f]+)|[0-9]*
+INTEGER_HEX    (0[xX][0-9A-Fa-f]+)
+
+INTEGER_DEC    [0-9]*
 
 REAL           [0-9]*\.[0-9](e|E)?[0-9]*
 
@@ -41,10 +39,12 @@ UNKNOWN        .
 %%
 
 {STRING} {
+
     char *tmp = malloc(sizeof(yytext));
     char *p   = tmp; 
     strcpy(tmp, yytext);
-    
+    int no_error = 1;
+
     while (*p++) {
         if (*p == '\\') {
             if (p[1] == 't')
@@ -54,12 +54,14 @@ UNKNOWN        .
             else if (p[1] == '\\')
                 replace(p, "\\\\", '\\');
             else {
-                fprintf(stderr, "Error on line %d: Stop being an idiot.\n", yylineno);
-                return -1;
+                fprintf(stderr, "Error on line %d: Unrecognized escape character.\n", yylineno);
+                no_error = 0;
+                break;
             } 
         }
     }
-    addToken(&head, &tail, yylineno, STRING, tmp);
+
+    if(no_error)addToken(&head, &tail, yylineno, STRING, tmp);
 }
 
 {KEYWORD} {
@@ -90,8 +92,12 @@ UNKNOWN        .
     addToken(&head, &tail, yylineno, type, yytext);
 }
 
-{INTEGER} {
-    /* todo: metatropes vasewn */
+{INTEGER_HEX} {
+    int val = htoi(yytext);
+    addToken(&head, &tail, yylineno, INTEGER, &val);
+}
+
+{INTEGER_DEC} {
     int val = atoi(yytext);
     addToken(&head, &tail, yylineno, INTEGER, &val);
 }
@@ -108,7 +114,6 @@ UNKNOWN        .
 
     for (i = 0; i < PUNCTUATION; i++) {
         if (!strcmp(pun_str[i], pun)) {
-            /* O_O */
             type = i + KEYWORDS + OPERATORS +  3;
             break;
         }
@@ -156,17 +161,15 @@ UNKNOWN        .
         }
 }
 
-{INVALID_ID} { printf("Error on line %d: Identifiers cannot start with a number.\n", yylineno); return (-1);}
+{INVALID_ID} { printf("Error on line %d: Identifiers cannot start with a number.\n", yylineno);}
 
-{UNKNOWN} { printf("Error on line %d: Unrecognized character\n", yylineno); return (-1);}
+{UNKNOWN} { printf("Error on line %d: Unrecognized character\n", yylineno);}
 
 <<EOF>> { printf("\nTotal lines: %d\n", yylineno); return 1; }
     
 %%
-
 int main(int argc, char *argv[])
 {
-    int r_value;
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
             fprintf(stderr, "Cannot read file %s\n", argv[1]);
@@ -176,7 +179,7 @@ int main(int argc, char *argv[])
     else
         yyin = stdin;
     
-    r_value = alpha_yylex(head);
-    if(r_value!=-1)printTokens(head);
+    alpha_yylex(head);
+    printTokens(head);
     return 0;
 }

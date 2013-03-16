@@ -95,3 +95,11 @@ void printTokens(alpha_token_t *head)
         head = head->next;
     }
 }
+
+int htoi(char *p)
+{
+    if ((p[1] == 'x')  || (p[1] == 'X'))
+        return(strtol(&p[2], (char **)0, 16));
+    else
+        return(strtol(p, (char **)0, 16));
+}
