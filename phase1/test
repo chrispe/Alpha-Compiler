@@ -1,0 +1,20 @@
+/* Can't get this following line to compile:
+ * /*  printf("Song, "Under the Sea."\n"); */
+ * displays some kind of error
+ */
+
+a = 3
+b = 4
+h = "hello world says the monkey knows where it goes\n show follow me"
+n = j
+n = "i love the \\n (new line) \n"
+
+/* this is a normal comment mpla  a*b + b*c */
+
+/*******************
+
+	cant see mee
+
+*******************/
+
+float = 3.143
