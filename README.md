@@ -1,6 +1,6 @@
 Alpha-Compiler
 ==============
-<small>by me and Giannis</small>
+<small style="padding-top:1px">by me and Giannis</small>
 
 <h3>Description:</h3>
 This is a compiler designed to compile the Alpha.<br>
