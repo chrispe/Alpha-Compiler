@@ -1,4 +1,3 @@
-
 al: lex.yy.c
 	@echo "Generating the executable file..."
 	@gcc -o al lex.yy.c -lfl
