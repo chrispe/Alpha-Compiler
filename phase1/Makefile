@@ -1,11 +1,10 @@
-
 al: lex.yy.c
 	@echo "Generating the executable file..."
 	@gcc -o al lex.yy.c -lfl
 	@echo "Done."
 lex.yy.c: scanner.l
 	@echo "Generating lex.yy.c..."
-	@flex scanner.l
+	@flex lex_analyzer.l
 clean:
 	@echo "Cleaning up..."
 	@rm -f al
