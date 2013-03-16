@@ -4,17 +4,14 @@
     #define OPERATORS   14
     #define PUNCTUATION 12
     #define TOTAL_TYPES (KEYWORDS + OPERATORS + PUNCTUATION)
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
     #include "token.h"
+ 
         
     /* proswrina */
     alpha_token_t *head = NULL;
     alpha_token_t *tail = NULL;
 
-    void replace(char *, char *, char);
-    void addToken(alpha_token_t **, alpha_token_t **, unsigned int, token_type_t, void *);
+ 
 %}
 
 IDENTIFIER     [a-zA-Z][a-zA-Z0-9_]*
@@ -41,7 +38,6 @@ UNKNOWN        .
 
 %option yylineno
 %option lex-compat
-
 %%
 
 {STRING} {
@@ -63,12 +59,10 @@ UNKNOWN        .
             } 
         }
     }
-    printf("string: %s\n", tmp);
     addToken(&head, &tail, yylineno, STRING, tmp);
 }
 
 {KEYWORD} {
-    printf("keyword: %s\n", yytext);
     token_type_t type;
     char *key = yytext;
     int i;
@@ -79,12 +73,10 @@ UNKNOWN        .
             break;
         }
     }
-
     addToken(&head, &tail, yylineno, type, yytext);
 }
 
 {OPERATOR} {
-    printf("operator: %s\n", yytext);
     token_type_t type;
     char *op = yytext;
     int i;
@@ -95,25 +87,21 @@ UNKNOWN        .
             break;
         }
     }
-
     addToken(&head, &tail, yylineno, type, yytext);
 }
 
 {INTEGER} {
-    printf("integer: %s\n", yytext);
     /* todo: metatropes vasewn */
     int val = atoi(yytext);
     addToken(&head, &tail, yylineno, INTEGER, &val);
 }
 
 {REAL} {
-    printf("real: %s\n", yytext);
     double val = atof(yytext);
     addToken(&head, &tail, yylineno, REAL, &val);
 }
 
 {PUNCT} {
-    printf("punct: %s\n", yytext);
     token_type_t type;
     char *pun = yytext;
     int i;
@@ -130,127 +118,55 @@ UNKNOWN        .
 }
 
 {IDENTIFIER} {
-    printf("id: %s\n", yytext);
     addToken(&head, &tail, yylineno, IDENTIFIER, yytext);
 }
 
 {SINGLE_COMMENT} {
-    printf("comment: %s\n", yytext);
     addToken(&head, &tail, yylineno, SINGLE_COMMENT, yytext);
 }
 
 {SPACE} {}
 
-"/*" {
-    int c;
-    int b = 1;
-    
-    while ((c = input()) != EOF) {
-        if (c == '*') {
-            if ((c = input()) == '/') {
-                b--;
-                if (b < 0)
-                    break;
-            }
-            unput(c);
-        }
-        else if (c == '/') {
-            if ((c = input()) == '*')
-                b++;
-            else
-                unput(c);
-        }
-    }
+"/*".* {
+        int c;
+        int dev = 1;
 
-    if (b != 0) {
-        printf("\nUnclosed comment starting at line %d\n", yylineno);
-        return -1;
-    }
-    addToken(&head, &tail, yylineno, MCOMMENT, yytext);
+        while((c=input())!=EOF)
+        {
+            if(c=='*')
+            {
+                if((c=input())=='/')
+                {
+                    dev--;
+                    if(dev<0)break;
+                }
+                unput(c);
+            }
+            else if(c=='/')
+            {
+                if((c=input())=='*')dev++;
+                else unput(c);
+            }
+        }   
+        printf("Added comment : %s",yytext);
+        if(dev!=0)
+        {
+                printf("\nError on line %d: Unclosed comment\n",yylineno);
+                return(-1);
+        }
 }
 
-{INVALID_ID} { printf("Error on line %d: Identifiers cannot start with a number.\n", yylineno); }
+{INVALID_ID} { printf("Error on line %d: Identifiers cannot start with a number.\n", yylineno); return (-1);}
 
-{UNKNOWN} { printf("Error on line %d: Unrecognized character\n", yylineno); return(-1);}
+{UNKNOWN} { printf("Error on line %d: Unrecognized character\n", yylineno); return (-1);}
 
-<<EOF>> { printf("\nTotal lines: %d\nA re stephanie...\n\n", yylineno); return 1; }
+<<EOF>> { printf("\nTotal lines: %d\n", yylineno); return 1; }
     
 %%
 
-void
-replace(char *str, char *from, char to)
+int main(int argc, char *argv[])
 {
-    char *p = str;
-    *p = to;
-    memcpy((char *) p+1, (char *) p+2, strlen(p+1));
-}
-
-void
-addToken(alpha_token_t **head, alpha_token_t **tail, unsigned int line, token_type_t type, void *content)
-{
-    alpha_token_t *new_token = malloc(sizeof(alpha_token_t));
-
-    if (new_token == NULL)
-        return;
-
-    new_token->line = line;
-    new_token->type = type;
-
-    /* na valw elegxous gia fail ths malloc */
-    switch (type) {
-        case INTEGER:
-            new_token->content = (int *) malloc(sizeof(int));
-            *(int *)(new_token->content) = *(int *) content;
-            break;
-        case REAL:
-            new_token->content = (double *) malloc(sizeof(double));
-            *(double *)(new_token->content) = *(double *) content;
-            break;
-        default:
-            new_token->content = (char *) malloc(sizeof(*content));
-            strcpy(new_token->content, content);
-    }
-
-    if (*head == NULL) {
-        *head = new_token;
-        (*head)->next = NULL;
-        *tail = *head;
-        return;
-    }
-
-    (*tail)->next = new_token;
-    *tail = new_token;
-}
-
-/* nystazw */
-void
-printTokens(alpha_token_t *head)
-{
-    unsigned int c = 1;
-
-    while (head) {
-        printf("%u:\t#%u\t", head->line, c++);
-        switch (head->type) {
-            case INTEGER:
-                printf("\"%d\"", *(int *) head->content);
-                break;
-            case REAL:
-                printf("\"%lf\"", *(double *) head->content);
-                break;
-            case STRING:
-                printf("%s", (char *) head->content);
-                break;
-            default:
-                printf("\"%s\"", (char *) head->content);
-        }
-        printf("\t%s\n", token_type_str[head->type]);
-        head = head->next;
-    }
-}
-
-int
-main(int argc, char *argv[])
-{
+    int r_value;
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
             fprintf(stderr, "Cannot read file %s\n", argv[1]);
@@ -260,9 +176,7 @@ main(int argc, char *argv[])
     else
         yyin = stdin;
     
-    alpha_yylex(head);
-    printTokens(head);
+    r_value = alpha_yylex(head);
+    if(r_value!=-1)printTokens(head);
     return 0;
 }
-
-/* zZzZzZzZ */
