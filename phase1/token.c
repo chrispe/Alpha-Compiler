@@ -104,24 +104,19 @@ int htoi(char *p)
     return(strtol(p, (char **)0, 16));
 }
 
-char * extendString(char * string,char c)
+char *extendString(char * string,char c)
 {
-    int temp;
-    if(string==NULL)
-    {
-        string = (char *)malloc(2*sizeof(char));
-        if(string!=NULL)
-        {
-            string[0] = c;
-            string[1] = '\0';
-        }
-    }
-    else
-    {
+    int temp = 0;
+    if(string==NULL)string = (char *)malloc(sizeof(char)*2);
+    else{
         temp = strlen(string);
-        string = (char *)realloc(string,(temp+2)*sizeof(char));
+        string = (char *)realloc(string,temp+2*sizeof(char));
+    } 
+
+    if(string!=NULL){
         string[temp] = c;
-        string[temp +1] = '\0';
+        string[temp+1] = '\0';
     }
+    
     return(string);
 }
