@@ -69,6 +69,8 @@ typedef struct alpha_token {
     struct alpha_token *next;
 } alpha_token_t;
     
+char * extendString(char *,char);
+
 void replace(char *, char *, char);
     
 void addToken(alpha_token_t **, alpha_token_t **, unsigned int, token_type_t, void *);

@@ -8,7 +8,7 @@ al: lex.yy.c token.o
 token.o: token.c token.h
 	@gcc -o token.o -c token.c
 lex.yy.c: lex_analyzer.l
-	@echo "Generating lex.yy.c..."
+	@echo "Generating lex.yy.c using Flex..."
 	@flex lex_analyzer.l
 clean:
 	@echo "Cleaning up..."

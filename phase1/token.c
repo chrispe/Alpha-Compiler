@@ -56,7 +56,8 @@ void addToken(alpha_token_t **head, alpha_token_t **tail, unsigned int line, tok
             *(double *)(new_token->content) = *(double *) content;
             break;
         default:
-            new_token->content = (char *) malloc(sizeof(*content));
+            //aqz check the following line
+            new_token->content = (char *) malloc(strlen(content)*sizeof(char));
             if(new_token->content==NULL)return;
             strcpy(new_token->content, content);
     }
@@ -77,7 +78,7 @@ void printTokens(alpha_token_t *head)
     unsigned int c = 1;
 
     while (head) {
-        printf("%u:\t#%u\t", head->line, c++);
+        printf("<%u>:\t#%u\t", head->line, c++);
         switch (head->type) {
             case INTEGER:
                 printf("\"%d\"", *(int *) head->content);
@@ -100,6 +101,27 @@ int htoi(char *p)
 {
     if ((p[1] == 'x')  || (p[1] == 'X'))
         return(strtol(&p[2], (char **)0, 16));
+    return(strtol(p, (char **)0, 16));
+}
+
+char * extendString(char * string,char c)
+{
+    int temp;
+    if(string==NULL)
+    {
+        string = (char *)malloc(2*sizeof(char));
+        if(string!=NULL)
+        {
+            string[0] = c;
+            string[1] = '\0';
+        }
+    }
     else
-        return(strtol(p, (char **)0, 16));
+    {
+        temp = strlen(string);
+        string = (char *)realloc(string,(temp+2)*sizeof(char));
+        string[temp] = c;
+        string[temp +1] = '\0';
+    }
+    return(string);
 }

@@ -26,6 +26,8 @@ PUNCT          "{"|"}"|"["|"]"|"("|")"|";"|","|":"|"::"
 
 SPACE          [\r\n \t\v]
 
+MULTI_COMMENT  "/*"
+
 KEYWORD        if|else|while|for|function|return|break|continue|and|not|or|local|true|false|nil
 
 SINGLE_COMMENT "//".*
@@ -60,7 +62,6 @@ UNKNOWN        .
             } 
         }
     }
-
     if(no_error)addToken(&head, &tail, yylineno, STRING, tmp);
 }
 
@@ -118,7 +119,6 @@ UNKNOWN        .
             break;
         }
     }
-
     addToken(&head, &tail, yylineno, type, yytext);
 }
 
@@ -130,42 +130,34 @@ UNKNOWN        .
     addToken(&head, &tail, yylineno, SINGLE_COMMENT, yytext);
 }
 
-{SPACE} {}
+{MULTI_COMMENT} {
 
-"/*".* {
         int c;
-        int dev = 1;
+        int cline = yylineno;
+        int ends = 0;
+        char * comment = NULL;
 
-        while((c=input())!=EOF)
-        {
-            if(c=='*')
-            {
-                if((c=input())=='/')
-                {
-                    dev--;
-                    if(dev<0)break;
+        while((c=input())!=EOF){
+            if(c=='*'){
+                if((c=input())=='/'){
+                    ends = 1;
+                    break;
                 }
-                unput(c);
+                comment = extendString(comment,'*');
             }
-            else if(c=='/')
-            {
-                if((c=input())=='*')dev++;
-                else unput(c);
-            }
+            comment = extendString(comment,c);
         }   
-        printf("Added comment : %s",yytext);
-        if(dev!=0)
-        {
-                printf("\nError on line %d: Unclosed comment\n",yylineno);
-                return(-1);
-        }
+        if(!ends)fprintf(stderr,"\nError on line %d: Unclosed comment\n",cline);
+        else addToken(&head, &tail, yylineno, MCOMMENT, comment);
 }
 
-{INVALID_ID} { printf("Error on line %d: Identifiers cannot start with a number.\n", yylineno);}
+{SPACE} {}
 
-{UNKNOWN} { printf("Error on line %d: Unrecognized character\n", yylineno);}
+{INVALID_ID} { fprintf(stderr,"Error on line %d: Identifiers cannot start with a number.\n", yylineno);}
 
-<<EOF>> { printf("\nTotal lines: %d\n", yylineno); return 1; }
+{UNKNOWN} { fprintf(stderr,"Error on line %d: Unrecognized character\n", yylineno);}
+
+<<EOF>> { return 1; }
     
 %%
 int main(int argc, char *argv[])
@@ -181,5 +173,6 @@ int main(int argc, char *argv[])
     
     alpha_yylex(head);
     printTokens(head);
+    printf("\nAnalysis completed.\n");
     return 0;
 }
