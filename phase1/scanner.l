@@ -9,7 +9,6 @@
     #include <string.h>
     #include "token.h"
         
-        
     /* proswrina */
     alpha_token_t *head = NULL;
     alpha_token_t *tail = NULL;
