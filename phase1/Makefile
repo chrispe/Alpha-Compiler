@@ -2,3 +2,6 @@ al: lex.yy.c
     gcc -o al lex.yy.c -lfl
 lex.yy.c: scanner.l
     flex scanner.l
+clean:
+    rm al
+    rm lex.yy.c
