@@ -107,17 +107,14 @@ int htoi(char *p)
 char * extendString(char * string,char c)
 {
     int temp;
-    if(string==NULL)
-    {
+    if(string==NULL){
         string = (char *)malloc(2*sizeof(char));
-        if(string!=NULL)
-        {
+        if(string!=NULL){
             string[0] = c;
             string[1] = '\0';
         }
     }
-    else
-    {
+    else{
         temp = strlen(string);
         string = (char *)realloc(string,(temp+2)*sizeof(char));
         string[temp] = c;
