@@ -117,12 +117,12 @@ UNKNOWN        .
 }
 
 {REAL} {
-    double val = strtod(yytext, (char **) NULL);
+    double val = atof(yytext);
     addToken(&head, &tail, yylineno, REAL, &val);
 }
 
 {REAL_E} {
-    double val = strtod(yytext, (char **) NULL);
+    double val = atof(yytext);
     addToken(&head, &tail, yylineno, REAL, &val);
 }
 
