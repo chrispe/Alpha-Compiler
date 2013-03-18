@@ -56,7 +56,6 @@ void addToken(alpha_token_t **head, alpha_token_t **tail, unsigned int line, tok
             *(double *)(new_token->content) = *(double *) content;
             break;
         default:
-            //aqz check the following line
             new_token->content = (char *) malloc(strlen(content)*sizeof(char));
             if(new_token->content==NULL)return;
             strcpy(new_token->content, content);
