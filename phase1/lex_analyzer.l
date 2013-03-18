@@ -8,15 +8,18 @@
  
     alpha_token_t *head = NULL;
     alpha_token_t *tail = NULL;
+    int errors = 0;
 %}
 
 IDENTIFIER     [a-zA-Z][a-zA-Z0-9_]*
 
+REAL_E         [0-9]+((e|E)([/+|/-][0-9]+)?)
+
+REAL           [0-9]*\.[0-9]*((e[/+|/-]|E[/+|/-])[0-9]+)?
+
 INTEGER_HEX    (0[xX][0-9A-Fa-f]+)
 
 INTEGER_DEC    [0-9]*
-
-REAL           [0-9]*\.[0-9](e|E)?[0-9]*
 
 STRING         \"(\\\"|.)*\"
 
@@ -58,6 +61,7 @@ UNKNOWN        .
             else {
                 fprintf(stderr, "Error on line %d: Unrecognized escape character.\n", yylineno);
                 no_error = 0;
+                errors++;
                 break;
             } 
         }
@@ -104,7 +108,12 @@ UNKNOWN        .
 }
 
 {REAL} {
-    double val = atof(yytext);
+    double val = strtod(yytext, (char **) NULL);
+    addToken(&head, &tail, yylineno, REAL, &val);
+}
+
+{REAL_E} {
+    double val = strtod(yytext, (char **) NULL);
     addToken(&head, &tail, yylineno, REAL, &val);
 }
 
@@ -147,15 +156,18 @@ UNKNOWN        .
             }
             comment = extendString(comment,c);
         }   
-        if(!ends)fprintf(stderr,"\nError on line %d: Unclosed comment\n",cline);
+        if(!ends){
+            fprintf(stderr,"\nError on line %d: Unclosed comment\n",cline);
+            errors++;
+        }
         else addToken(&head, &tail, yylineno, MCOMMENT, comment);
 }
 
 {SPACE} {}
 
-{INVALID_ID} { fprintf(stderr,"Error on line %d: Identifiers cannot start with a number.\n", yylineno);}
+{INVALID_ID} { fprintf(stderr,"Error on line %d: Identifiers cannot start with a number.\n", yylineno);errors++;}
 
-{UNKNOWN} { fprintf(stderr,"Error on line %d: Unrecognized character\n", yylineno);}
+{UNKNOWN} { fprintf(stderr,"Error on line %d: Unrecognized character\n", yylineno);errors++;}
 
 <<EOF>> { return 1; }
     
@@ -172,7 +184,7 @@ int main(int argc, char *argv[])
         yyin = stdin;
     
     alpha_yylex(head);
+    if(errors){printf("Some errors occured, press ENTER to continue with the analysis results.\n");getchar();}
     printTokens(head);
-    printf("\nAnalysis completed.\n");
     return 0;
 }
