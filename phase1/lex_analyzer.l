@@ -23,6 +23,8 @@ INTEGER_DEC    [0-9]*
 
 STRING         \"(\\\"|.)*\"
 
+WRONG_STR      \"
+
 OPERATOR       "="|"+"|"-"|"*"|"/"|"%"|"=="|"!="|"++"|"--"|">"|"<"|">="|"<="
 
 PUNCT          "{"|"}"|"["|"]"|"("|")"|";"|","|":"|"::"
@@ -67,6 +69,13 @@ UNKNOWN        .
         }
     }
     if(no_error)addToken(&head, &tail, yylineno, STRING, tmp);
+}
+
+{WRONG_STR} {
+    errors++;
+    int c;
+    while(c!=EOF && c!='\n')c=input();
+    fprintf(stderr, "Error on line %d: Unclosed string.\n", yylineno);
 }
 
 {KEYWORD} {
@@ -184,7 +193,7 @@ int main(int argc, char *argv[])
         yyin = stdin;
     
     alpha_yylex(head);
-    if(errors){printf("Some errors occured, press ENTER to continue with the analysis results.\n");getchar();}
+    if(errors){printf("Some errors (%d) occured, press ENTER to continue with the analysis results.\n",errors);getchar();}
     printTokens(head);
     return 0;
 }

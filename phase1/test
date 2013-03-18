@@ -21,7 +21,7 @@ n = "i love the \\n (new line) \n but \\t(tabs) \t are better"
 
 /* Testing floats */
 
-"float : 3.143" = 3.143
+"float : 3.143" a = 3.143
 "float : 1.234567" =1.234567
 "float : 300" =3.0e+2
 "float : 0.03" = =3.0e-2
@@ -30,7 +30,6 @@ n = "i love the \\n (new line) \n but \\t(tabs) \t are better"
 "float 3"=3e
 "float 3.000124" = 3.000124
 
-
 while(a<100)
 {
 	if(a>b){a = (a-b)*2;}
@@ -38,4 +37,4 @@ while(a<100)
 	if(a+b==10)break;
 }
 
-
+/*klklkl
