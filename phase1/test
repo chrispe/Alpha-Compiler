@@ -37,4 +37,7 @@ while(a<100)
 	if(a+b==10)break;
 }
 
-/*klklkl
+if(a=="nt)
+{
+	b = 3
+}
