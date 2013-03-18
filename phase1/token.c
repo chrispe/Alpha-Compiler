@@ -109,7 +109,7 @@ char *extendString(char * string,char c)
     if(string==NULL)string = (char *)malloc(sizeof(char)*2);
     else{
         temp = strlen(string);
-        string = (char *)realloc(string,temp+2*sizeof(char));
+        string = (char *)realloc(string,(temp+2)*sizeof(char));
     } 
 
     if(string!=NULL){
