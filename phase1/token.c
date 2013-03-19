@@ -31,7 +31,7 @@ void replace(char *str, char *from, char to)
 {
     char *p = str;
     *p = to;
-    memcpy((char *) p+1, (char *) p+2, strlen(p+1));
+    memmove((char *) p+1, (char *) p+2, strlen(p+1));
 }
 
 void addToken(alpha_token_t **head, alpha_token_t **tail, unsigned int line, token_type_t type, void *content)
