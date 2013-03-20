@@ -13,7 +13,7 @@
 
 IDENTIFIER     [a-zA-Z][a-zA-Z0-9_]*
 
-REAL_E         [0-9]+((e|E)([/+|/-][0-9]+)?)
+REAL_E         [0-9]+((e|E)([/+|/-][0-9]+)+)
 
 REAL           [0-9]*\.[0-9]*((e[/+|/-]|E[/+|/-])[0-9]+)?
 
@@ -161,6 +161,7 @@ UNKNOWN        .
                     ends = 1;
                     break;
                 }
+                unput(c);
                 comment = extendString(comment,'*');
             }
             comment = extendString(comment,c);
