@@ -1,14 +1,14 @@
 %{
-    #define YY_DECL int alpha_yylex(void *yyal)
+    #define YY_DECL int alpha_yylex(void ** yyal)
     #define KEYWORDS    15
     #define OPERATORS   14
     #define PUNCTUATION 12
     #define TOTAL_TYPES (KEYWORDS + OPERATORS + PUNCTUATION)
     #include "token.h"
  
-    alpha_token_t *head = NULL;
     alpha_token_t *tail = NULL;
     int errors = 0;
+
 %}
 
 IDENTIFIER     [a-zA-Z][a-zA-Z0-9_]*
@@ -68,7 +68,7 @@ UNKNOWN        .
             } 
         }
     }
-    if(no_error)addToken(&head, &tail, yylineno, STRING, tmp);
+    if(no_error)addToken((alpha_token_t **)yyal, &tail, yylineno, STRING, tmp);
 }
 
 {WRONG_STR} {
@@ -89,7 +89,7 @@ UNKNOWN        .
             break;
         }
     }
-    addToken(&head, &tail, yylineno, type, yytext);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, type, yytext);
 }
 
 {OPERATOR} {
@@ -103,27 +103,27 @@ UNKNOWN        .
             break;
         }
     }
-    addToken(&head, &tail, yylineno, type, yytext);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, type, yytext);
 }
 
 {INTEGER_HEX} {
     int val = htoi(yytext);
-    addToken(&head, &tail, yylineno, INTEGER, &val);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, INTEGER, &val);
 }
 
 {INTEGER_DEC} {
     int val = atoi(yytext);
-    addToken(&head, &tail, yylineno, INTEGER, &val);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, INTEGER, &val);
 }
 
 {REAL} {
     double val = atof(yytext);
-    addToken(&head, &tail, yylineno, REAL, &val);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, REAL, &val);
 }
 
 {REAL_E} {
     double val = atof(yytext);
-    addToken(&head, &tail, yylineno, REAL, &val);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, REAL, &val);
 }
 
 {PUNCT} {
@@ -137,15 +137,15 @@ UNKNOWN        .
             break;
         }
     }
-    addToken(&head, &tail, yylineno, type, yytext);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, type, yytext);
 }
 
 {IDENTIFIER} {
-    addToken(&head, &tail, yylineno, IDENTIFIER, yytext);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, IDENTIFIER, yytext);
 }
 
 {SINGLE_COMMENT} {
-    addToken(&head, &tail, yylineno, SINGLE_COMMENT, yytext);
+    addToken((alpha_token_t **)yyal, &tail, yylineno, SINGLE_COMMENT, yytext);
 }
 
 {MULTI_COMMENT} {
@@ -169,7 +169,7 @@ UNKNOWN        .
             fprintf(stderr,"\nError on line %d: Unclosed comment\n",cline);
             errors++;
         }
-        else addToken(&head, &tail, yylineno, MCOMMENT, comment);
+        else addToken((alpha_token_t **)yyal, &tail, yylineno, MCOMMENT, comment);
 }
 
 {SPACE} {}
@@ -183,6 +183,7 @@ UNKNOWN        .
 %%
 int main(int argc, char *argv[])
 {
+    alpha_token_t *head = NULL;
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
             fprintf(stderr, "Cannot read file %s\n", argv[1]);
@@ -192,7 +193,7 @@ int main(int argc, char *argv[])
     else
         yyin = stdin;
     
-    alpha_yylex(head);
+    alpha_yylex((void **)&head);
     if(errors){printf("Some errors (%d) occured, press ENTER to continue with the analysis results.\n",errors);getchar();}
     printTokens(head);
     return 0;
