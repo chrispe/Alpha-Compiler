@@ -21,13 +21,14 @@ n = "i love the \\n (new line) \n but \\t(tabs) \t are better"
 
 /* Testing floats */
 
+
 "float : 3.143" a = 3.143
 "float : 1.234567" =1.234567
 "float : 300" =3.0e+2
 "float : 0.03" = =3.0e-2
 "float : 0.3" = 3e-1
 "float 300" = 3e+2
-"float 3"=3e
+"float 3"=3e+0
 "float 3.000124" = 3.000124
 
 while(a<100)
