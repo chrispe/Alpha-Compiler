@@ -15,7 +15,7 @@ IDENTIFIER     [a-zA-Z][a-zA-Z0-9_]*
 
 REAL_E         [0-9]+((e|E)([/+|/-][0-9]+)+)
 
-REAL           [0-9]*\.[0-9]*((e[/+|/-]|E[/+|/-])[0-9]+)?
+REAL           [0-9]+\.[0-9]+((e[/+|/-]|E[/+|/-])[0-9]+)?
 
 INTEGER_HEX    (0[xX][0-9A-Fa-f]+)
 
@@ -27,7 +27,7 @@ WRONG_STR      \"
 
 OPERATOR       "="|"+"|"-"|"*"|"/"|"%"|"=="|"!="|"++"|"--"|">"|"<"|">="|"<="
 
-PUNCT          "{"|"}"|"["|"]"|"("|")"|";"|","|":"|"::"
+PUNCT          "{"|"}"|"["|"]"|"("|")"|";"|","|":"|"::"|"."|".."
 
 SPACE          [\r\n \t\v]
 
@@ -58,6 +58,8 @@ UNKNOWN        .
                 replace(p, "\\t", '\t');
             else if (p[1] == 'n')
                 replace(p, "\\n", '\n');
+            else if (p[1] == '"')
+                replace(p, "\"", '"');    
             else if (p[1] == '\\')
                 replace(p, "\\\\", '\\');
             else {
@@ -149,41 +151,59 @@ UNKNOWN        .
 }
 
 {MULTI_COMMENT} {
+    int c;
+    int b = 1;
+    char * comment = NULL;
+    int current_line = yylineno;
 
-        int c;
-        int cline = yylineno;
-        int ends = 0;
-        char * comment = NULL;
-
-        while((c=input())!=EOF){
-            if(c=='*'){
-                if((c=input())=='/'){
-                    ends = 1;
-                    break;
+    while ((c = input()) != EOF) {
+        
+        if (c == '*') {
+            if ((c = input()) == '/') {
+                b--;
+                if(b!=0)
+                {
+                    comment = extendString(comment,'*');
+                    comment = extendString(comment,'/');
                 }
-                unput(c);
-                comment = extendString(comment,'*');
+                if (b <= 0)
+                    break;
             }
-            comment = extendString(comment,c);
-        }   
-        if(!ends){
-            fprintf(stderr,"\nError on line %d: Unclosed comment\n",cline);
-            errors++;
+            else 
+            {
+                comment = extendString(comment,'*');
+                unput(c);
+            }
         }
-        else addToken((alpha_token_t **)yyal, &tail, yylineno, MCOMMENT, comment);
+        else if (c == '/') {
+            comment = extendString(comment,c);
+            if ((c = input()) == '*')
+                b++;
+            comment = extendString(comment,c);
+        }
+        else comment = extendString(comment,c);
+    }
+
+    if (b != 0) {
+        errors++;
+        printf("Error: Unclosed comment starting on line %d.\n", current_line);
+        return -1;
+    }
+    addToken((alpha_token_t **)yyal, &tail, yylineno, MCOMMENT, comment);
 }
 
 {SPACE} {}
 
 {INVALID_ID} { fprintf(stderr,"Error on line %d: Identifiers cannot start with a number.\n", yylineno);errors++;}
 
-{UNKNOWN} { fprintf(stderr,"Error on line %d: Unrecognized character\n", yylineno);errors++;}
+{UNKNOWN} { fprintf(stderr,"Error on line %d: Unrecognized character '%s'.\n", yylineno,yytext);errors++;}
 
 <<EOF>> { return 1; }
     
 %%
 int main(int argc, char *argv[])
 {
+    int errors = 0;
     alpha_token_t *head = NULL;
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
@@ -194,7 +214,7 @@ int main(int argc, char *argv[])
     else
         yyin = stdin;
     
-    alpha_yylex((void **)&head);
+    errors = alpha_yylex((void **)&head);
     if(errors){printf("Some errors (%d) occured, press ENTER to continue with the analysis results.\n",errors);getchar();}
     printTokens(head);
     return 0;

@@ -5,6 +5,7 @@
 
 // Testing integers
 
+
 a = 3
 b = 4
 p = 10000
@@ -15,9 +16,7 @@ n = "i love the \\n (new line) \n but \\t(tabs) \t are better"
 
 /* this is a normal comment mpla  a*b + b*c */
 
-/***************
-   cant see me
-****************/
+ 
 
 /* Testing floats */
 
@@ -38,7 +37,11 @@ while(a<100)
 	if(a+b==10)break;
 }
 
-if(a=="nt)
+if(a=="nt")
 {
 	b = 3
 }
+
+ /***************
+   cant see me
+****************/
