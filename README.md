@@ -7,3 +7,4 @@ Alpha is a programming language created just for educational<br>
 purposes for the course of Compilers in the University of Crete.<br>
 
 <b>Phase 1 : </b>Includes the lexical analyzer using Flex.
+<b>Phase 2 : </b>Includes the syntax analyser using Yacc.
