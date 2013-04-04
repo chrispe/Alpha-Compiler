@@ -18,8 +18,8 @@ typedef struct Symbol_Table{
 
 // The structure of a symbol table entry.
 typedef struct SymbolTableEntry{
-	unsigned int active;
 	char * name;
+	unsigned int active;
 	unsigned int scope;
 	unsigned int line;
 	sb_entry_type type;
@@ -32,11 +32,8 @@ typedef struct SymbolTableEntry{
 
 // The type of the variable/function.
 typedef enum{
-	GLOBAL, 
-	LOCAL,
-	FORMAL,
-	USERFUNC,
-	LIBFUNC
+	GLOBAL, LOCAL, FORMAL,
+	USERFUNC, LIBFUNC
 }st_entry_type;
 
 // The struct for the symbol type of a variable.
