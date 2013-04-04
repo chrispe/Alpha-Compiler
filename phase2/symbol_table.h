@@ -52,14 +52,14 @@ typedef struct SymbolTableEntry{
 		variable * varVal;
 		function * funVal;
 	}value_type;
-	struct * SymbolTableEntry next;
+	struct SymbolTableEntry * next;
 }st_entry;
 
 // A scope entry.
 typedef struct ScopeEntry{
 	unsigned int scope;
 	st_entry * symbol;
-	struct * ScopeEntry next;
+	struct ScopeEntry * next;
 }scope_entry;
 
 /* 
