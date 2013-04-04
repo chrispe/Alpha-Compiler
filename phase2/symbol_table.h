@@ -43,14 +43,14 @@ typedef struct Variable {
 
 // The struct for the symbol type of a function.
 typedef struct Function{
-	arg_stack * arguments;
+	arg_node * arguments;
 }function;
 
-// A stack used to save the arguments of a function.
-typedef struct ArgStack{
+// A linked list used to save the arguments of a function.
+typedef struct ArgNode{
 	char * arg_name;
-	struct ArgStack * next;
-}arg_stack;
+	struct ArgNode * next;
+}arg_node;
 
 // A scope entry.
 typedef struct ScopeEntry{
@@ -83,11 +83,11 @@ int generate_key(char * name);
 // It just hides the symbol given in the parameter.
 void hide_symbol(st_entry ** symbol);
 
-// Pushes a node to the stack.
-void args_push(arg_stack ** args,char * arg_name);
+// Adds a new arg to the argument list.
+void args_insert(arg_stack ** args,char * arg_name);
 
-// Pops a node form the stack.
-arg_stack * args_pop(arg_stack ** args);
+// Returns the node with that argument.
+arg_stack * args_lookup(arg_stack ** args, char * arg_name);
 
-// Gets the top of the stack.
-arg_stack * args_top(arg_stack * args);
+// Prints the symbol table.
+void print_st(symbol_table * st);
