@@ -72,22 +72,25 @@ symbol_table * create_symbol_table();
 int st_insert(symbol_table ** st, st_entry symbol);
 
 // A general function for looking up a symbol under the symbol table using the hash table.
-st_entry * st_lookup_table(symbol_table * st, char * symbol_name);
+st_entry * st_lookup_table(symbol_table * st,const char * symbol_name);
 
 // A general function for looking up a symbol under the symbol table using scope list.
-st_entry * st_lookup_list(symbol_table * st,char * symbol_name);
+st_entry * st_lookup_list(symbol_table * st,const char * symbol_name);
 
 // The hash function (generates key by giving the symbol name) for the hash table of the symbol table.
-int generate_key(char * name);
+int generate_key(const char * name);
 
-// It just hides the symbol given in the parameter.
-void hide_symbol(st_entry ** symbol);
+// Sets the symbol either hidden or visible depending on the <hidden> variable.
+void symbol_set_hidden(st_entry ** symbol,const char hidden);
+
+// Sets the block variables either hidden or visible.
+void block_set_hidden(st_entry ** symbol,const char * func,const char hidden);
 
 // Adds a new arg to the argument list.
-void args_insert(arg_stack ** args,char * arg_name);
+void args_insert(arg_stack ** args,const char * arg_name);
 
 // Returns the node with that argument.
-arg_stack * args_lookup(arg_stack ** args, char * arg_name);
+arg_stack * args_lookup(arg_stack ** args,const char * arg_name);
 
 // Prints the symbol table.
 void print_st(symbol_table * st);
