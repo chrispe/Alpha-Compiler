@@ -4,6 +4,7 @@
 	#include <string.h>
 	#include "symbol_table.h"
 	int yyerror (char * yaccProvideMessage);
+	extern int yylex(void);
 	extern int yylineno;
 	extern char * yytext;
 	extern FILE * yyin;
