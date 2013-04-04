@@ -16,6 +16,20 @@ typedef struct Symbol_Table{
 	scope_entry * scope_list;
 }symbol_table;
 
+// The structure of a symbol table entry.
+typedef struct SymbolTableEntry{
+	unsigned int active;
+	char * name;
+	unsigned int scope;
+	unsigned int line;
+	sb_entry_type type;
+	union{
+		variable * varVal;
+		function * funVal;
+	}value_type;
+	struct SymbolTableEntry * next;
+}st_entry;
+
 // The type of the variable/function.
 typedef enum{
 	GLOBAL, 
@@ -40,20 +54,6 @@ typedef struct ArgStack{
 	char * arg_name;
 	struct ArgStack * next;
 }arg_stack;
-
-// The structure of a symbol table entry.
-typedef struct SymbolTableEntry{
-	unsigned int active;
-	char * name;
-	unsigned int scope;
-	unsigned int line;
-	sb_entry_type type;
-	union{
-		variable * varVal;
-		function * funVal;
-	}value_type;
-	struct SymbolTableEntry * next;
-}st_entry;
 
 // A scope entry.
 typedef struct ScopeEntry{
