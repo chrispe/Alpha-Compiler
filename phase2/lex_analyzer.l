@@ -2,9 +2,10 @@
     #define KEYWORDS    15
     #define OPERATORS   14
     #define PUNCTUATION 12
+    #define YACC_DEFINED_START 262
     #define TOTAL_TYPES (KEYWORDS + OPERATORS + PUNCTUATION)
     #include "lex_lib.h"
- 
+    #include "parser.h"
 %}
 
 IDENTIFIER     [a-zA-Z][a-zA-Z0-9_]*
@@ -39,6 +40,7 @@ UNKNOWN        .
 
 %option yylineno
 %option lex-compat
+%option noyywrap
 %%
 
 {STRING} {
@@ -67,13 +69,12 @@ UNKNOWN        .
     }
     if(no_error)
     {
-        yyval.strval = strdup(tmp);
+        yylval.strval = strdup(tmp);
         return STRING;
     }
 }
 
 {WRONG_STR} {
-    errors++;
     int c;
     while(c!=EOF && c!='\n')c=input();
     fprintf(stderr, "Error on line %d: Unclosed string.\n", yylineno);
@@ -81,7 +82,7 @@ UNKNOWN        .
 }
 
 {KEYWORD} {
-    token_type_t type;
+    enum yytokentype type;
     char *key = yytext;
     int i;
 
@@ -91,11 +92,11 @@ UNKNOWN        .
             break;
         }
     }
-    return type;
+    return type + YACC_DEFINED_START;
 }
 
 {OPERATOR} {
-    token_type_t type;
+    enum yytokentype type;
     char *op = yytext;
     int i;
 
@@ -105,35 +106,35 @@ UNKNOWN        .
             break;
         }
     }
-    return type;
+    return type + YACC_DEFINED_START;
 }
 
 {INTEGER_HEX} {
     int val = htoi(yytext);
-    yyval.intval = val; 
+    yylval.intval = val; 
     return INTEGER;
 }
 
 {INTEGER_DEC} {
     int val = atoi(yytext);
-    yyval.intval = val; 
+    yylval.intval = val; 
     return INTEGER;
 }
 
 {REAL} {
     double val = atof(yytext);
-    yyval.fltval = val; 
+    yylval.fltval = val; 
     return REAL;
 }
 
 {REAL_E} {
     double val = atof(yytext);
-    yyval.fltval = val;
+    yylval.fltval = val;
     return REAL;
 }
 
 {PUNCT} {
-    token_type_t type;
+    enum yytokentype type;
     char *pun = yytext;
     int i;
 
@@ -143,11 +144,11 @@ UNKNOWN        .
             break;
         }
     }
-    return type;
+    return type + YACC_DEFINED_START;
 }
 
 {IDENTIFIER} {
-    yyval.strval = strdup(yytext);
+    yylval.strval = strdup(yytext);
     return IDENTIFIER;
 }
 

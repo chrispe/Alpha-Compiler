@@ -1,17 +1,5 @@
 #include "lex_lib.h"
 
- char *token_type_str[] = {
-        "KEYWORD_IF", "KEYWORD_ELSE", "KEYWORD_WHILE", "KEYWORD_FOR", "KEYWORD_FUNCTION",
-        "KEYWORD_RETURN", "KEYWORD_BREAK", "KEYWORD_CONTINUE", "KEYWORD_AND", "KEYWORD_NOT",
-        "KEYWORD_OR", "KEYWORD_LOCAL", "KEYWORD_TRUE", "KEYWORD_FALSE", "KEYWORD_NIL", "OP_EQUAL",
-        "OP_PLUS", "OP_MINUS", "OP_ASTERISK", "OP_SLASH", "OP_PERCENT", 
-        "OP_EQ", "OP_NEQ", "OP_INC", "OP_DEC", "OP_GT", "OP_LT", "OP_EGT",
-        "OP_ELT", "INTEGER", "REAL", "STRING", "PUN_BRACE_L", "PUN_BRACE_R",
-        "PUN_BRACKET_L", "PUN_BRACKET_R", "PUN_PAREN_L", "PUN_PAREN_R",
-        "PUN_SCOLON", "PUN_COMMA", "PUN_COLON", "PUN_DCOLON", "PUN_DOT",
-        "PUN_DDOT", "IDENTIFIER", "SINGLE_COMMENT", "MCOMMENT"
-};
-    
 char *key_str[] = {
     "if", "else", "while", "for", "function",
     "return", "break", "continue", "and", "not",
@@ -26,6 +14,13 @@ char *op_str[] = {
 char *pun_str[] = {
     "{", "}", "[", "]", "(", ")", ";", ",", ":", "::", ".", ".."
 };
+
+int htoi(char *p)
+{
+    if ((p[1] == 'x')  || (p[1] == 'X'))
+        return(strtol(&p[2], (char **)0, 16));
+    return(strtol(p, (char **)0, 16));
+}
 
 void replace(char *str, char *from, char to)
 {
@@ -47,6 +42,5 @@ char *extendString(char * string,char c)
         string[temp] = c;
         string[temp+1] = '\0';
     }
-    
     return(string);
 }

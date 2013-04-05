@@ -1,16 +1,13 @@
-/* Can't get this following line to compile:
- * /*  printf("Song, "Under the Sea."\n"); */
- * displays some kind of error
- */
+/* Can't get this following line to compile:*/
 
-// Testing integers
+Testing integers
 
 "................................."
 "hello world"
 "lol"
 "\"\""
 
-
+3tty
 a = 3
 b = 4
 p = 10000

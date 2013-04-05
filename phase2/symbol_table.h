@@ -4,37 +4,17 @@
 
 #define BUCKET_SIZE 1000
 
-/*
-	The main structure of the symbol table.
-	Contains a hash table so we can store and retrieve
-	any symbol from it. But, we also have a scope list.
-	In each scope node we insert the symbols that have the same scope.
-*/
-
-typedef struct Symbol_Table{
-	st_entry * hash_table[BUCKET_SIZE];
-	scope_entry * scope_list;
-}symbol_table;
-
-// The structure of a symbol table entry.
-typedef struct SymbolTableEntry{
-	char * name;
-	unsigned int active;
-	unsigned int scope;
-	unsigned int line;
-	sb_entry_type type;
-	union{
-		variable * varVal;
-		function * funVal;
-	}value_type;
-	struct SymbolTableEntry * next;
-}st_entry;
-
 // The type of the variable/function.
 typedef enum{
-	GLOBAL, LOCAL, FORMAL,
+	GLOBAL, LCAL, FORMAL,
 	USERFUNC, LIBFUNC
 }st_entry_type;
+
+// A linked list used to save the arguments of a function.
+typedef struct ArgNode{
+	char * arg_name;
+	struct ArgNode * next;
+}arg_node;
 
 // The struct for the symbol type of a variable.
 typedef struct Variable {
@@ -46,11 +26,19 @@ typedef struct Function{
 	arg_node * arguments;
 }function;
 
-// A linked list used to save the arguments of a function.
-typedef struct ArgNode{
-	char * arg_name;
-	struct ArgNode * next;
-}arg_node;
+// The structure of a symbol table entry.
+typedef struct SymbolTableEntry{
+	char * name;
+	unsigned int active;
+	unsigned int scope;
+	unsigned int line;
+	st_entry_type type;
+	union{
+		variable * varVal;
+		function * funVal;
+	}value_type;
+	struct SymbolTableEntry * next;
+}st_entry;
 
 // A scope entry.
 typedef struct ScopeEntry{
@@ -58,6 +46,17 @@ typedef struct ScopeEntry{
 	st_entry * symbol;
 	struct ScopeEntry * next;
 }scope_entry;
+
+/*
+	The main structure of the symbol table.
+	Contains a hash table so we can store and retrieve
+	any symbol from it. But, we also have a scope list.
+	In each scope node we insert the symbols that have the same scope.
+*/
+typedef struct Symbol_Table{
+	st_entry * hash_table[BUCKET_SIZE];
+	scope_entry * scope_list;
+}symbol_table;
 
 /* 
 	Creates a symbol table and returns a pointer to it.
@@ -87,10 +86,10 @@ void symbol_set_hidden(st_entry ** symbol,const char hidden);
 void block_set_hidden(st_entry ** symbol,const char * func,const char hidden);
 
 // Adds a new arg to the argument list.
-void args_insert(arg_stack ** args,const char * arg_name);
+void args_insert(arg_node ** args,const char * arg_name);
 
 // Returns the node with that argument.
-arg_stack * args_lookup(arg_stack ** args,const char * arg_name);
+arg_node * args_lookup(arg_node ** args,const char * arg_name);
 
 // Prints the symbol table.
 void print_st(symbol_table * st);
