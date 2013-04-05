@@ -29,7 +29,7 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt;
+%type <strval> stmt assignexpr lvalue member;
 %type <fltval> expr term;
  
 
@@ -39,7 +39,7 @@
 %left GREATER EQ_GREATER LESS EQ_LESS
 %left PLUS MINUS
 %left MULTI SLASH PERCENT
-%left NOT UMINUS
+%right NOT UMINUS DPLUS DMINUS
 
 
  
@@ -76,13 +76,36 @@ expr:
 		|	expr NEQUAL expr {$$ = ($1 != $3)?1:0;}
 		|	expr AND expr {$$ = ($1 && $3)?1:0;}
 		|	expr OR expr {$$ = ($1 || $3)?1:0;}
-		| 	term {}
+		| 	term {/* empty action */}
+		|	assignexpr {/* empty action */}
 		;
 
 term:
-		PAREN_L expr PAREN_R	{ $$ = $2; }
-		| MINUS expr %prec UMINUS { $$ = $2*(-1);}
+		PAREN_L expr PAREN_R	{$$ = $2;}
+		| MINUS expr %prec UMINUS {$$ = $2*(-1);}
+		| NOT expr {$$ = !($2);}
+		| expr DPLUS {$$ = $1 + 1;}
+		| DPLUS expr {$$ = $2 + 1;}
+		| expr DMINUS {$$ = $1 - 1;}
+		| DMINUS expr {$$ = $2 - 1;}
 		;
+
+assignexpr:
+		lvalue EQUAL expr {printf("Expression\n");}
+		;
+
+lvalue:
+		IDENTIFIER {}
+		| LOCAL IDENTIFIER {}
+		| DDOT IDENTIFIER {}
+		| member {}
+		;
+
+member:
+		lvalue DOT IDENTIFIER {}
+		| lvalue BRACKET_L expr BRACKET_R {}
+		;
+
 %%
 
 int yyerror (const char * yaccProvideMessage){
