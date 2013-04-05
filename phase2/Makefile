@@ -9,7 +9,7 @@ calc: lex.yy.c parser.c lex_lib.o
 	@echo "Done."
 parser.c:
 	@echo "Generating parser.c using Bison..."
-	@bison --yacc --defines parser.y
+	@bison --yacc parser.y
 lex.yy.c:
 	@echo "Generating lex.yy.c using Flex..."
 	@flex lex_analyzer.l

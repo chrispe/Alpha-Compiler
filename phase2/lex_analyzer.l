@@ -140,7 +140,7 @@ UNKNOWN        .
 
     for (i = 0; i < PUNCTUATION; i++) {
         if (!strcmp(pun_str[i], pun)) {
-            type = i + KEYWORDS + OPERATORS +  3;
+            type = i + KEYWORDS + OPERATORS;
             break;
         }
     }
