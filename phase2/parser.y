@@ -25,20 +25,64 @@
 %token <strval> STRING;
 %token <strval> IDENTIFIER;
 
-
-%token <strval>	IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE AND NOT OR LOCAL TRUE FALSE NIL;
-%token <strval> EQUAL PLUS MINUS ASTERISK SLASH DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
+%token <strval>	IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE AND NOT OR LOCAL TRUE FALSE NIL
+%token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
+%type <strval> stmt;
+%type <fltval> expr term;
+ 
+
+%left OR
+%left AND
+%left DEQUAL NEQUAL
+%left GREATER EQ_GREATER LESS EQ_LESS
+%left PLUS MINUS
+%left MULTI SLASH PERCENT
+%left NOT UMINUS
+
+
+ 
 %% 
 
-program: program
-		|	{
-				printf("Program started.\n");
-			}
+program:
+		program stmt
+		|
 		;
- 
- 
+
+stmt:
+		expr SEMICOLON {printf("Expression result : %f\n",$1);}
+		;
+
+expr:
+		REAL				{$$ = $1;}
+		|   INTEGER			{$$ = $1;}
+		|	expr PLUS expr 	{$$ = $1 + $3;}
+		|	expr MINUS expr	{$$ = $1 - $3;}
+		|	expr MULTI expr {$$ = $1 * $3;}
+		|	expr SLASH expr {
+					if($3!=0)$$ = (int)$1 / (int)$3;
+					else yyerror("Cannot divide by zero.");
+			}
+		|	expr PERCENT expr {
+					if($3!=0)$$ = (int)$1 % (int)$3;
+					else yyerror("Cannot divide by zero.");
+			}
+		|	expr GREATER expr {$$ = ($1 > $3)?1:0;}
+		|	expr EQ_GREATER expr {$$ = ($1 >= $3)?1:0;}
+		|	expr LESS expr {$$ = ($1 < $3)?1:0;}
+		|   expr EQ_LESS expr {$$ = ($1 <= $3)?1:0;}
+		|	expr DEQUAL expr {$$ = ($1 == $3)?1:0;}
+		|	expr NEQUAL expr {$$ = ($1 != $3)?1:0;}
+		|	expr AND expr {$$ = ($1 && $3)?1:0;}
+		|	expr OR expr {$$ = ($1 || $3)?1:0;}
+		| 	term {}
+		;
+
+term:
+		PAREN_L expr PAREN_R	{ $$ = $2; }
+		| MINUS expr %prec UMINUS { $$ = $2*(-1);}
+		;
 %%
 
 int yyerror (const char * yaccProvideMessage){

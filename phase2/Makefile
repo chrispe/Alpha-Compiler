@@ -1,6 +1,6 @@
-calc: lex.yy.c parser.c lex_lib.o 
+parser: lex.yy.c parser.c lex_lib.o 
 	@echo "Generating executable file..."
-	@gcc -o calc lex.yy.c lex_lib.o parser.c -lfl
+	@gcc -o parser lex.yy.c lex_lib.o parser.c -lfl
 	@echo "Cleaning up..."
 	@rm *.o
 	@rm -f lex.yy.c
@@ -18,5 +18,8 @@ lex_lib.o: lex_lib.c lex_lib.h
 clean:
 	@echo "Cleaning up..."
 	@rm -f *.o
-	@rm -f calc
+	@rm -f lex.yy.c
+	@rm -f parser.c
+	@rm -f parser.h
+	@rm -f parser
 	@echo "Done."

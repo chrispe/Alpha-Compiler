@@ -18,4 +18,5 @@ char * extendString(char *,char);
 // Replaces a char in a string with another char
 void replace(char *, char *, char);
 
+// Returns the hex value of a string representing a hex value
 int htoi(char *);
