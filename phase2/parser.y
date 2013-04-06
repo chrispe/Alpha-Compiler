@@ -14,6 +14,8 @@
 %defines 
 %output="parser.c"
 
+
+
 %union{
 	int intval;
 	double fltval;
@@ -33,6 +35,7 @@
 %type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt
 %type <intval> expr  
  
+
 %left EQUAL
 %left OR
 %left AND
@@ -51,15 +54,15 @@
 
 program:
 		program stmt 
-		| {printf("Parsing file...\n");}
+		| {printf("\n <--[Parsing Started]-->\n");}
 		;
 
 stmt:
 		expr SEMICOLON {}
-		| BREAK SEMICOLON {}
-		| CONTINUE SEMICOLON {}
+		| BREAK SEMICOLON {printf("break;\n");}
+		| CONTINUE SEMICOLON {printf("continue;\n");}
 		| forstmt {}
-		| whilestmt {}
+		| whilestmt  
 		| block {}
 		| ifstmt {}
 		| funcdef {}
@@ -69,27 +72,27 @@ stmt:
 
 expr:
 		assignexpr {/* empty action */}
-		|	expr PLUS expr 	{printf("%d+%d\n",$1,$3); $$ = $1 + $3;}
-		|	expr MINUS expr	{printf("%d-%d\n",$1,$3); $$ = $1 - $3;}
-		|	expr MULTI expr {printf("%d*%d\n",$1,$3); $$ = $1 * $3;}
+		|	expr PLUS expr 	{printf("\t<expr> + <expr>\n",$1,$3); $$ = $1 + $3;}
+		|	expr MINUS expr	{printf("\t<expr> - <expr>\n",$1,$3); $$ = $1 - $3;}
+		|	expr MULTI expr {printf("\t<expr> * <expr>\n",$1,$3); $$ = $1 * $3;}
 		|	expr SLASH expr {
-					printf("%d/%d\n",$1,$3);
+					printf("\t<expr> / <expr>\n",$1,$3);
 					if($3!=0)$$ = (int)$1 / (int)$3;
 					else yyerror("Cannot divide by zero.");
 			}
 		|	expr PERCENT expr {
-					printf("%d%%%d\n",$1,$3);
+					printf("\t<expr> %% <expr>\n",$1,$3);
 					if($3!=0)$$ = (int)$1 % (int)$3;
 					else yyerror("Cannot divide by zero.");
 			}
-		|	expr GREATER expr {printf("%d>%d\n",$1,$3); $$ = ($1 > $3)?1:0;}
-		|	expr EQ_GREATER expr {printf("%d>=%d\n",$1,$3); $$ = ($1 >= $3)?1:0;}
-		|	expr LESS expr {printf("%d%d\n",$1,$3); $$ = ($1 < $3)?1:0;}
-		|   expr EQ_LESS expr {printf("%d<=%dd\n",$1,$3); $$ = ($1 <= $3)?1:0;}
-		|	expr DEQUAL expr {printf("%d==%d\n",$1,$3); $$ = ($1 == $3)?1:0;}
-		|	expr NEQUAL expr {printf("%d!=%d\n",$1,$3); $$ = ($1 != $3)?1:0;}
-		|	expr AND expr {printf("%d and %d\n",$1,$3); $$ = ($1 && $3)?1:0;}
-		|	expr OR expr {printf("%d or %d\n",$1,$3); $$ = ($1 || $3)?1:0;}
+		|	expr GREATER expr {printf("\t<expr> > <expr>\n",$1,$3); $$ = ($1 > $3)?1:0;}
+		|	expr EQ_GREATER expr {printf("\t<expr> >= <expr>\n",$1,$3); $$ = ($1 >= $3)?1:0;}
+		|	expr LESS expr {printf("\t<expr> < <expr>\n",$1,$3); $$ = ($1 < $3)?1:0;}
+		|   expr EQ_LESS expr {printf("\t<expr> <= <expr>d\n",$1,$3); $$ = ($1 <= $3)?1:0;}
+		|	expr DEQUAL expr {printf("\t<expr> == <expr>\n",$1,$3); $$ = ($1 == $3)?1:0;}
+		|	expr NEQUAL expr {printf("\t<expr> != <expr>\n",$1,$3); $$ = ($1 != $3)?1:0;}
+		|	expr AND expr {printf("\t<expr> and <expr>\n",$1,$3); $$ = ($1 && $3)?1:0;}
+		|	expr OR expr {printf("\t<expr> or <expr>\n",$1,$3); $$ = ($1 || $3)?1:0;}
 		| 	term {/* empty action */}
 		;
 
@@ -113,7 +116,7 @@ primary:
 		;
 
 const:
-		REAL	{printf("float : %f",$1);}
+		REAL {}
 		| INTEGER {}
 		| STRING {}
 		| NIL {}
@@ -122,7 +125,7 @@ const:
 		;
 
 assignexpr:
-		lvalue EQUAL expr {printf("Expression\n");}
+		lvalue EQUAL expr {}
 		;
 
 lvalue:
@@ -178,8 +181,8 @@ elist:
 		;
  
 funcdef:
-		FUNCTION IDENTIFIER PAREN_L idlist PAREN_R block {}
-		| FUNCTION PAREN_L idlist PAREN_R block {}
+		FUNCTION IDENTIFIER PAREN_L idlist PAREN_R block {printf("Func <id> (<parameters>) \n");}
+		| FUNCTION PAREN_L idlist PAREN_R block {printf("Func (<parameters>) \n");}
 		;
 
 idlist:
@@ -198,21 +201,21 @@ block_in:
 		;
 
 ifstmt:
-		IF PAREN_L expr PAREN_R stmt %prec IF_TERM {}
-		| IF PAREN_L expr PAREN_R stmt ELSE stmt {}
+		IF PAREN_L expr PAREN_R stmt %prec IF_TERM {printf("if (<expr>) <stmt>\n");}
+		| IF PAREN_L expr PAREN_R stmt ELSE stmt {printf("if (<expr>) <stmt> else <stmt>\n");}
 		;
 
 whilestmt:
-		WHILE PAREN_L expr PAREN_R stmt {}
+		WHILE PAREN_L expr PAREN_R stmt {printf("while (<expr>) <stmt>\n");}
 		;
 
 forstmt:
-		FOR PAREN_L elist SEMICOLON expr SEMICOLON elist PAREN_R stmt {}
+		FOR PAREN_L elist SEMICOLON expr SEMICOLON elist PAREN_R stmt {printf("for (<elist>;<expr>;<elist>) <stmt>\n ");}
 		;
 
 returnstmt:
-		RETURN SEMICOLON {}
-		| RETURN expr SEMICOLON {}
+		RETURN SEMICOLON {printf("return ;\n");}
+		| RETURN expr SEMICOLON {printf("return <expr>;\n");}
 		;
 
 %%
@@ -234,5 +237,6 @@ int main(int argc,char ** argv)
         yyin = stdin;
 
 	yyparse();
+	printf("\n <--[Parsing Completed]-->\n");
 	return 0;	
 }
