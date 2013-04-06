@@ -1,2 +1,81 @@
-d=-(10)*2 - 20;
-g=3+3;
+//global_var insert sto ST, scope 0;
+global_var = 0.5;
+
+
+//global function foo (scope 0)
+function foo(){
+        //insetr sto ST, x scope 1;
+        local x = 1;
+
+        //insert sti ST, foo1 (scope 1)
+        //insert sti ST, argument y scope 2
+        //insert sti ST, argument z scope 2
+        function foo1 (y, z){
+                //global_var scope 2
+                local global_var = 1;
+        }
+}
+
+
+if(global_var == true)
+        y = 2;  //y insert sto ST, scope 0
+
+if (global_var != true) {
+        y = 3.5;  //y scope 0
+        x = 1;  //x insert sto ST, scope 1;
+}
+
+if(3.3+3.4==5.5)
+
+//object insert sto ST, scope 0
+//z insert sto ST, scope 0
+//y insert sto ST, scope 0
+object = [{"x" : z = 1}, {"y" : r = 1}];
+
+x=print;
+print;
+x();
+y();
+
+pinakas.i = x();
+
+pinakas.i();
+
+{
+        pinakas[[[i]]]=3;
+}
+
+/* xrhsimopoioyme mia global metablhth xwris na yparxei sto global scope */
+/* elegxoyme to shoddwed ths function apo mia local metablhth */
+
+if(x=1){
+        ::Global = 7;
+}
+
+function f(){
+        local f=10;
+        function g(){
+                f=5;
+                return f();
+        }
+}
+
+function F(){
+        local F=10;
+        function G(){
+                function H(){
+                        G();
+                        return ::F();
+                }
+        }
+}
+
+a = 3*(x+2);
+if(a=3){
+	local dg = 3*a;
+	return (a);
+}
+else {
+	return(a+2);
+}
+a = 3.0+5.2;

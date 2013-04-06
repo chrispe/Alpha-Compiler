@@ -29,8 +29,9 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall elist objectdef indexedelem indexed funcdef idlist block ifstmt  ;
-%type <fltval> expr term;
+%type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall   term
+%type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt
+%type <intval> expr  
  
 %left EQUAL
 %left OR
@@ -46,53 +47,56 @@
 %nonassoc IF_TERM
 %nonassoc ELSE
 
-
- 
 %% 
 
 program:
-		program stmt
-		|
+		program stmt 
+		| {printf("Parsing file...\n");}
 		;
 
 stmt:
-		expr SEMICOLON {printf("Expression result : %f\n",$1);}
+		expr SEMICOLON {}
 		| BREAK SEMICOLON {}
 		| CONTINUE SEMICOLON {}
+		| forstmt {}
+		| whilestmt {}
 		| block {}
-		| ifstmt{}
-		| funcdef{}
+		| ifstmt {}
+		| funcdef {}
+		| returnstmt {}
 		| SEMICOLON {}
 		;
 
 expr:
 		assignexpr {/* empty action */}
-		|	expr PLUS expr 	{$$ = $1 + $3;}
-		|	expr MINUS expr	{$$ = $1 - $3;}
-		|	expr MULTI expr {$$ = $1 * $3;}
+		|	expr PLUS expr 	{printf("%d+%d\n",$1,$3); $$ = $1 + $3;}
+		|	expr MINUS expr	{printf("%d-%d\n",$1,$3); $$ = $1 - $3;}
+		|	expr MULTI expr {printf("%d*%d\n",$1,$3); $$ = $1 * $3;}
 		|	expr SLASH expr {
+					printf("%d/%d\n",$1,$3);
 					if($3!=0)$$ = (int)$1 / (int)$3;
 					else yyerror("Cannot divide by zero.");
 			}
 		|	expr PERCENT expr {
+					printf("%d%%%d\n",$1,$3);
 					if($3!=0)$$ = (int)$1 % (int)$3;
 					else yyerror("Cannot divide by zero.");
 			}
-		|	expr GREATER expr {$$ = ($1 > $3)?1:0;}
-		|	expr EQ_GREATER expr {$$ = ($1 >= $3)?1:0;}
-		|	expr LESS expr {$$ = ($1 < $3)?1:0;}
-		|   expr EQ_LESS expr {$$ = ($1 <= $3)?1:0;}
-		|	expr DEQUAL expr {$$ = ($1 == $3)?1:0;}
-		|	expr NEQUAL expr {$$ = ($1 != $3)?1:0;}
-		|	expr AND expr {$$ = ($1 && $3)?1:0;}
-		|	expr OR expr {$$ = ($1 || $3)?1:0;}
+		|	expr GREATER expr {printf("%d>%d\n",$1,$3); $$ = ($1 > $3)?1:0;}
+		|	expr EQ_GREATER expr {printf("%d>=%d\n",$1,$3); $$ = ($1 >= $3)?1:0;}
+		|	expr LESS expr {printf("%d%d\n",$1,$3); $$ = ($1 < $3)?1:0;}
+		|   expr EQ_LESS expr {printf("%d<=%dd\n",$1,$3); $$ = ($1 <= $3)?1:0;}
+		|	expr DEQUAL expr {printf("%d==%d\n",$1,$3); $$ = ($1 == $3)?1:0;}
+		|	expr NEQUAL expr {printf("%d!=%d\n",$1,$3); $$ = ($1 != $3)?1:0;}
+		|	expr AND expr {printf("%d and %d\n",$1,$3); $$ = ($1 && $3)?1:0;}
+		|	expr OR expr {printf("%d or %d\n",$1,$3); $$ = ($1 || $3)?1:0;}
 		| 	term {/* empty action */}
 		;
 
 term:
-		PAREN_L expr PAREN_R	{$$ = $2;}
-		| MINUS expr %prec UMINUS {$$ = $2*(-1);}
-		| NOT expr {$$ = !($2);}
+		PAREN_L expr PAREN_R	{}
+		| MINUS expr %prec UMINUS {}
+		| NOT expr {}
 		| lvalue DPLUS {}
 		| DPLUS lvalue {}
 		| lvalue DMINUS {}
@@ -109,7 +113,7 @@ primary:
 		;
 
 const:
-		REAL	{}
+		REAL	{printf("float : %f",$1);}
 		| INTEGER {}
 		| STRING {}
 		| NIL {}
@@ -185,13 +189,30 @@ idlist:
 		;
 
 block:
-		BRACE_L BRACE_R {}
-		| BRACE_L stmt BRACE_R {}
+		BRACE_L block_in BRACE_R {}
 		;
  
+block_in:	
+		block_in stmt {}
+		| {}
+		;
+
 ifstmt:
 		IF PAREN_L expr PAREN_R stmt %prec IF_TERM {}
 		| IF PAREN_L expr PAREN_R stmt ELSE stmt {}
+		;
+
+whilestmt:
+		WHILE PAREN_L expr PAREN_R stmt {}
+		;
+
+forstmt:
+		FOR PAREN_L elist SEMICOLON expr SEMICOLON elist PAREN_R stmt {}
+		;
+
+returnstmt:
+		RETURN SEMICOLON {}
+		| RETURN expr SEMICOLON {}
 		;
 
 %%
