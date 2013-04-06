@@ -1,6 +1,10 @@
 //global_var insert sto ST, scope 0;
 global_var = 0.5;
+if(x){
+	return;
+}
 
+if(x==2)return (2);
 
 //global function foo (scope 0)
 function foo(){
@@ -12,7 +16,7 @@ function foo(){
         //insert sti ST, argument z scope 2
         function foo1 (y, z){
                 //global_var scope 2
-                local global_var = 1;
+                local global_var == 1;
         }
 }
 
@@ -60,6 +64,10 @@ function f(){
         }
 }
 
+function (d,f){
+	x=3;
+}
+
 function F(){
         local F=10;
         function G(){
@@ -79,3 +87,4 @@ else {
 	return(a+2);
 }
 a = 3.0+5.2;
+return;
