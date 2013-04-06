@@ -29,7 +29,7 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall elist objectdef indexedelem indexed funcdef idlist block;
+%type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall elist objectdef indexedelem indexed funcdef idlist block ifstmt  ;
 %type <fltval> expr term;
  
 %left EQUAL
@@ -43,6 +43,8 @@
 %left DOT DDOT
 %left BRACKET_R BRACKET_L
 %left PAREN_R PAREN_L
+%nonassoc IF_TERM
+%nonassoc ELSE
 
 
  
@@ -55,6 +57,12 @@ program:
 
 stmt:
 		expr SEMICOLON {printf("Expression result : %f\n",$1);}
+		| BREAK SEMICOLON {}
+		| CONTINUE SEMICOLON {}
+		| block {}
+		| ifstmt{}
+		| funcdef{}
+		| SEMICOLON {}
 		;
 
 expr:
@@ -102,7 +110,11 @@ primary:
 
 const:
 		REAL	{}
-		|INTEGER {}
+		| INTEGER {}
+		| STRING {}
+		| NIL {}
+		| TRUE {}
+		| FALSE {}
 		;
 
 assignexpr:
@@ -142,8 +154,8 @@ methodcall:
 		;
 
 objectdef:
-		BRACKET_L elist BRACKET_R {};
-		| BRACKET_L indexed BRACKET_R {};
+		BRACKET_L elist BRACKET_R {}
+		| BRACKET_L indexed BRACKET_R {}
 		;
 
 indexed:
@@ -162,22 +174,26 @@ elist:
 		;
  
 funcdef:
-		FUNCTION IDENTIFIER PAREN_L idlist PAREN_R block {};
-		| FUNCTION PAREN_L idlist PAREN_R block {};
+		FUNCTION IDENTIFIER PAREN_L idlist PAREN_R block {}
+		| FUNCTION PAREN_L idlist PAREN_R block {}
 		;
 
 idlist:
-		IDENTIFIER {};
-		| idlist COMMA IDENTIFIER {};
+		IDENTIFIER {}
+		| idlist COMMA IDENTIFIER {}
 		| {}
 		;
 
 block:
-		BRACE_L stmt {};
-		| block stmt {};
-		| {}
+		BRACE_L BRACE_R {}
+		| BRACE_L stmt BRACE_R {}
 		;
  
+ifstmt:
+		IF PAREN_L expr PAREN_R stmt %prec IF_TERM {}
+		| IF PAREN_L expr PAREN_R stmt ELSE stmt {}
+		;
+
 %%
 
 int yyerror (const char * yaccProvideMessage){
