@@ -29,17 +29,20 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt assignexpr lvalue member;
+%type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall elist objectdef indexedelem indexed funcdef idlist block;
 %type <fltval> expr term;
  
-
+%left EQUAL
 %left OR
 %left AND
-%left DEQUAL NEQUAL
-%left GREATER EQ_GREATER LESS EQ_LESS
+%nonassoc DEQUAL NEQUAL
+%nonassoc GREATER EQ_GREATER LESS EQ_LESS
 %left PLUS MINUS
 %left MULTI SLASH PERCENT
 %right NOT UMINUS DPLUS DMINUS
+%left DOT DDOT
+%left BRACKET_R BRACKET_L
+%left PAREN_R PAREN_L
 
 
  
@@ -55,8 +58,7 @@ stmt:
 		;
 
 expr:
-		REAL				{$$ = $1;}
-		|   INTEGER			{$$ = $1;}
+		assignexpr {/* empty action */}
 		|	expr PLUS expr 	{$$ = $1 + $3;}
 		|	expr MINUS expr	{$$ = $1 - $3;}
 		|	expr MULTI expr {$$ = $1 * $3;}
@@ -77,17 +79,30 @@ expr:
 		|	expr AND expr {$$ = ($1 && $3)?1:0;}
 		|	expr OR expr {$$ = ($1 || $3)?1:0;}
 		| 	term {/* empty action */}
-		|	assignexpr {/* empty action */}
 		;
 
 term:
 		PAREN_L expr PAREN_R	{$$ = $2;}
 		| MINUS expr %prec UMINUS {$$ = $2*(-1);}
 		| NOT expr {$$ = !($2);}
-		| expr DPLUS {$$ = $1 + 1;}
-		| DPLUS expr {$$ = $2 + 1;}
-		| expr DMINUS {$$ = $1 - 1;}
-		| DMINUS expr {$$ = $2 - 1;}
+		| lvalue DPLUS {}
+		| DPLUS lvalue {}
+		| lvalue DMINUS {}
+		| DMINUS lvalue {}
+		| primary {}
+		;
+
+primary:
+		lvalue	{}
+		| const {}
+		| call {}
+		| objectdef {}
+		| PAREN_L funcdef PAREN_R {}
+		;
+
+const:
+		REAL	{}
+		|INTEGER {}
 		;
 
 assignexpr:
@@ -97,15 +112,72 @@ assignexpr:
 lvalue:
 		IDENTIFIER {}
 		| LOCAL IDENTIFIER {}
-		| DDOT IDENTIFIER {}
+		| DCOLON IDENTIFIER {}
 		| member {}
 		;
 
 member:
 		lvalue DOT IDENTIFIER {}
 		| lvalue BRACKET_L expr BRACKET_R {}
+		| call DOT IDENTIFIER {}
+		| call BRACKET_L expr BRACKET_R {}
 		;
 
+call:
+		call PAREN_L elist PAREN_R {}
+		| lvalue callsuffix {}
+		;
+
+callsuffix:
+		normcall {}
+		| methodcall {}
+		;
+
+normcall:
+		PAREN_L elist PAREN_R {}
+		;
+
+methodcall:
+		DDOT IDENTIFIER PAREN_L elist PAREN_R {}
+		;
+
+objectdef:
+		BRACKET_L elist BRACKET_R {};
+		| BRACKET_L indexed BRACKET_R {};
+		;
+
+indexed:
+		indexedelem {}
+		| indexed COMMA indexedelem {}
+		;
+
+indexedelem:
+		BRACE_L expr COLON expr BRACE_R {}
+		;
+
+elist:
+		expr {}
+		| elist COMMA expr {}
+		| {}
+		;
+ 
+funcdef:
+		FUNCTION IDENTIFIER PAREN_L idlist PAREN_R block {};
+		| FUNCTION PAREN_L idlist PAREN_R block {};
+		;
+
+idlist:
+		IDENTIFIER {};
+		| idlist COMMA IDENTIFIER {};
+		| {}
+		;
+
+block:
+		BRACE_L stmt {};
+		| block stmt {};
+		| {}
+		;
+ 
 %%
 
 int yyerror (const char * yaccProvideMessage){
