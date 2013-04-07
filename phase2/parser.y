@@ -222,17 +222,22 @@ int yyerror (const char * yaccProvideMessage){
 
 int main(int argc,char ** argv)
 {
+	/* Testing */
  	symbol_table * st;
  	st_entry * s1;
  	st_entry * s2;
  	st_entry * s3;
  	st_entry * s4;
 
- 	s1 = create_symbol("First",0, 0, 0,LIBFUNC);
- 	s2 = create_symbol("Two",0, 0, 0,GLOBAL);
- 	s3 = create_symbol("Third",0, 0, 0,GLOBAL);
- 	s4 = create_symbol("Forth",0, 0, 0,GLOBAL);
+ 	s1 = create_symbol("a",0, 0, 0,LIBFUNC);
+ 	s2 = create_symbol("b",0, 0, 0,GLOBAL);
+ 	s3 = create_symbol("c",0, 0, 0,GLOBAL);
+ 	s4 = create_symbol("d",0, 0, 0,GLOBAL);
 	s1 = set_var_func(s1,"dds");
+
+	args_insert(&(s1->value_type.funVal->arguments),"const");
+	args_insert(&(s1->value_type.funVal->arguments),"dsst");
+	args_insert(&(s1->value_type.funVal->arguments),"cdsst");
 
  	st = create_symbol_table();
 
@@ -242,6 +247,7 @@ int main(int argc,char ** argv)
 	st_insert(&st,&s4);
 
 	print_st(st);
+	/* Test end */
 
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {

@@ -1,6 +1,5 @@
 #include "symbol_table.h"
 
-
 int st_insert(symbol_table ** st, st_entry ** symbol){
 	int key = generate_key((*symbol)->name);
 	if((*st)->hash_table[key]==NULL)(*st)->hash_table[key] = *symbol;
@@ -11,8 +10,7 @@ int st_insert(symbol_table ** st, st_entry ** symbol){
 	return 1;
 }
 
-symbol_table * create_symbol_table()
-{
+symbol_table * create_symbol_table(){
 	int i;
 	symbol_table * st = (symbol_table *)malloc(sizeof(symbol_table));
 	if(memerror(st,"symbol table"))return NULL;
@@ -23,8 +21,7 @@ symbol_table * create_symbol_table()
 	return st;
 }
 
-st_entry * create_symbol(const char * name, unsigned int active, unsigned int scope,unsigned int line,st_entry_type type)
-{
+st_entry * create_symbol(const char * name, unsigned int active, unsigned int scope,unsigned int line,st_entry_type type){
 	st_entry * symbol = (st_entry *)malloc(sizeof(st_entry));
 	if(memerror(symbol,"symbol"))return NULL;
 
@@ -52,10 +49,8 @@ st_entry * create_symbol(const char * name, unsigned int active, unsigned int sc
 	return symbol;
 }
 
-st_entry * set_var_func(st_entry * symbol,const char * func_name)
-{
-	if(symbol==NULL)return symbol;
-	else if(symbol->type==USERFUNC || symbol->type==LIBFUNC){
+st_entry * set_var_func(st_entry * symbol,const char * func_name){
+	if(symbol->type==USERFUNC || symbol->type==LIBFUNC){
 		printf("Error : Symbol (%s) varVal not initialized, is it a function?\n",symbol->name);
 		return symbol;
 	}
@@ -90,16 +85,21 @@ int args_insert(arg_node ** args,const char * arg_name){
 	if(args_lookup(*args,arg_name)!=NULL)return 0;
 
 	arg_node * arg = (arg_node *)malloc(sizeof(arg_node));
-	if(memerror(arg,"func arg"))return;
+	if(memerror(arg,"func arg"))return 0;
 
 	arg->name = malloc(strlen(arg_name)+1);
-	if(memerror(arg->name,"func arg:name"))return;
+	if(memerror(arg->name,"func arg:name"))return 0;
+	strcpy(arg->name,arg_name);
 
-	if(*args==NULL)*args = arg;
+	if(*args==NULL){
+		arg->next = NULL;
+		*args = arg;
+	}
 	else{
 		arg->next = *args;
 		*args = arg;
 	}
+
 	return 1;
 }
 
