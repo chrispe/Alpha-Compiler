@@ -82,11 +82,8 @@ st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned i
 // The hash function (generates key by giving the symbol name) for the hash table of the symbol table.
 int generate_key(const char * name);
 
-// Sets the symbol either hidden or visible depending on the <hidden> variable.
-void symbol_set_hidden(st_entry ** symbol,const char hidden);
-
-// Sets the block variables either hidden or visible.
-void block_set_hidden(st_entry ** symbol,const char * func,const char hidden);
+// Sets the scope variables either hidden or visible.
+void scope_set_active(symbol_table ** st,unsigned int scope,const char active);
 
 // Adds a new arg to the argument list.
 int args_insert(arg_node ** args,const char * arg_name);

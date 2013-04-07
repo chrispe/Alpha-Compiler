@@ -3,14 +3,18 @@
 int st_insert(symbol_table ** st, st_entry ** symbol){
 	unsigned int key = generate_key((*symbol)->name);
 	scope_entry * temp = (*st)->scope_list;
+
+	// Making a copy of the symbol to link it to the scope list.
 	st_entry * symbol_cpy = create_symbol((*symbol)->name,(*symbol)->active,(*symbol)->scope,(*symbol)->line,(*symbol)->type);
 
+	// Insertion in the hash table.
 	if((*st)->hash_table[key]==NULL)(*st)->hash_table[key] = *symbol;
 	else{
 		(*symbol)->next = (*st)->hash_table[key];
 		(*st)->hash_table[key] = *symbol;
 	} 
 	
+	// Insertion in the scope list.
 	while(temp!=NULL && temp->scope!=(*symbol)->scope)
 		temp = temp->next;
 
@@ -30,39 +34,53 @@ int st_insert(symbol_table ** st, st_entry ** symbol){
 	return 1;
 }
 
-// Needs work
 symbol_table * create_symbol_table(){
+	char * lib_functions[] = {"print","input","objectmemberkeys","objecttotalmembers",
+							  "objectcopy","totalarguments","argument","typeof","strtonum",
+							  "sqrt","cos","sin"};
+	
 	int i;
+	st_entry * symbol;
 	symbol_table * st = (symbol_table *)malloc(sizeof(symbol_table));
 	if(memerror(st,"symbol table"))return NULL;
 
 	for(i=0;i<BUCKET_SIZE;i++)
 		st->hash_table[i] = NULL;
-	
 	st->scope_list = NULL;
+
+	// We add all the library functions from the beginning in the symbol table.
+	for(i=0;i<12;i++){
+		symbol = create_symbol(lib_functions[i],1,0,0,LIBFUNC);
+		if(memerror(symbol,"initalize lib func"))return NULL;
+		st_insert(&st,&symbol);
+	}
+
 	return st;
 }
-
-// Needs work
+ 
 void print_st(symbol_table * st){
-	int i;
 	st_entry * entry;
 	scope_entry * sc;
+	arg_node * arg;
 
-	for(i=0;i<BUCKET_SIZE;i++){
-		entry = st->hash_table[i];
-		while(entry!=NULL){
-			printf("Symbol : %s\n",entry->name);
-			entry = entry->next;
-		}
-	}
-	printf("________\n");
 	sc = st->scope_list;
 	while(sc!=NULL){
-		printf("SCOPE : %d\n",sc->scope);
+		printf("Symbol Table scope:<%d>\n",sc->scope);
 		entry = sc->symbols;
 		while(entry!=NULL){
-			printf("Symbol : %s scope:%d\n",entry->name,entry->scope);
+			if(entry->type!=FORMAL){
+				printf("\tkey='%s' ",entry->name);
+				if(entry->type==GLOBAL)printf("type=(global variable) ");
+				else if(entry->type==LCAL)printf("type=(local variable) ");
+				else if(entry->type==LIBFUNC)printf("type=(library function) ");
+				else{
+					printf("user_function(");
+					arg = entry->value_type.funVal->arguments;
+					while(arg!=NULL)printf("%s,",arg->name);
+					printf(") ");
+				}
+				printf("line=%d scope=%d active=%d\n",entry->line,entry->scope,entry->active);
+			}
 			entry = entry->next;
 		}
 		sc = sc->next;
@@ -90,7 +108,6 @@ st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned i
 	if(sc_temp==NULL)return NULL;
 	st_temp = sc_temp->symbols;
 	 
-	printf("I GOT HERE WITH SCOPE %d\n",scope);
 	while(st_temp!=NULL){
 		if(strcmp(st_temp->name,symbol_name)==0)return st_temp;
 		st_temp = st_temp->next;
@@ -113,6 +130,7 @@ st_entry * create_symbol(const char * name, unsigned int active, unsigned int sc
 	symbol->line = line;
 	symbol->type = type;
 
+	// Depending on the symbol type we set the correct variables.
 	if(type==USERFUNC || type==LIBFUNC){
 		symbol->value_type.funVal = (function *)malloc(sizeof(function));
 		if(memerror(symbol->value_type.funVal,"funval"))return NULL;
@@ -191,6 +209,31 @@ arg_node * args_lookup(arg_node * args,const char * arg_name){
 	return NULL;
 }
 
-void symbol_set_hidden(st_entry ** symbol,const char hidden){
-	(*symbol)->active = ~hidden;
+void scope_set_active(symbol_table ** st,unsigned int scope,char active){
+	scope_entry * sc_temp = (*st)->scope_list;
+	st_entry * st_temp;
+	st_entry * ht_temp;
+	unsigned int key;
+
+	while(sc_temp!=NULL && sc_temp->scope!=scope)
+		sc_temp = sc_temp->next;
+
+	if(sc_temp!=NULL){
+		st_temp = sc_temp->symbols;
+
+		while(st_temp!=NULL){
+
+			st_temp->active = active;
+
+			// For the hash table
+			key = generate_key(st_temp->name);
+			ht_temp = (*st)->hash_table[key];
+			while(ht_temp!=NULL){
+				ht_temp->active = active;
+				ht_temp = ht_temp->next;
+			}
+
+			st_temp = st_temp->next;
+		}
+	}
 }
