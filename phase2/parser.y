@@ -14,8 +14,6 @@
 %defines 
 %output="parser.c"
 
-
-
 %union{
 	int intval;
 	double fltval;
@@ -35,7 +33,6 @@
 %type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt
 %type <intval> expr  
  
-
 %left EQUAL
 %left OR
 %left AND
@@ -49,12 +46,11 @@
 %left PAREN_R PAREN_L
 %nonassoc IF_TERM
 %nonassoc ELSE
-
 %% 
 
 program:
 		program stmt 
-		| {printf("\n <--[Parsing Started]-->\n");}
+		| {printf("\n <--[Parsing Started]-->\n\n");}
 		;
 
 stmt:
@@ -62,7 +58,7 @@ stmt:
 		| BREAK SEMICOLON {printf("break;\n");}
 		| CONTINUE SEMICOLON {printf("continue;\n");}
 		| forstmt {}
-		| whilestmt  
+		| whilestmt {}
 		| block {}
 		| ifstmt {}
 		| funcdef {}
@@ -71,39 +67,39 @@ stmt:
 		;
 
 expr:
-		assignexpr {/* empty action */}
-		|	expr PLUS expr 	{printf("\t<expr> + <expr>\n",$1,$3); $$ = $1 + $3;}
-		|	expr MINUS expr	{printf("\t<expr> - <expr>\n",$1,$3); $$ = $1 - $3;}
-		|	expr MULTI expr {printf("\t<expr> * <expr>\n",$1,$3); $$ = $1 * $3;}
+		assignexpr {}
+		|	expr PLUS expr 	{printf("<expr> + <expr>\n",$1,$3); $$ = $1 + $3;}
+		|	expr MINUS expr	{printf("<expr> - <expr>\n",$1,$3); $$ = $1 - $3;}
+		|	expr MULTI expr {printf("<expr> * <expr>\n",$1,$3); $$ = $1 * $3;}
 		|	expr SLASH expr {
-					printf("\t<expr> / <expr>\n",$1,$3);
+					printf("<expr> / <expr>\n",$1,$3);
 					if($3!=0)$$ = (int)$1 / (int)$3;
 					else yyerror("Cannot divide by zero.");
 			}
 		|	expr PERCENT expr {
-					printf("\t<expr> %% <expr>\n",$1,$3);
+					printf("<expr> %% <expr>\n",$1,$3);
 					if($3!=0)$$ = (int)$1 % (int)$3;
 					else yyerror("Cannot divide by zero.");
 			}
-		|	expr GREATER expr {printf("\t<expr> > <expr>\n",$1,$3); $$ = ($1 > $3)?1:0;}
-		|	expr EQ_GREATER expr {printf("\t<expr> >= <expr>\n",$1,$3); $$ = ($1 >= $3)?1:0;}
-		|	expr LESS expr {printf("\t<expr> < <expr>\n",$1,$3); $$ = ($1 < $3)?1:0;}
-		|   expr EQ_LESS expr {printf("\t<expr> <= <expr>d\n",$1,$3); $$ = ($1 <= $3)?1:0;}
-		|	expr DEQUAL expr {printf("\t<expr> == <expr>\n",$1,$3); $$ = ($1 == $3)?1:0;}
-		|	expr NEQUAL expr {printf("\t<expr> != <expr>\n",$1,$3); $$ = ($1 != $3)?1:0;}
-		|	expr AND expr {printf("\t<expr> and <expr>\n",$1,$3); $$ = ($1 && $3)?1:0;}
-		|	expr OR expr {printf("\t<expr> or <expr>\n",$1,$3); $$ = ($1 || $3)?1:0;}
-		| 	term {/* empty action */}
+		|	expr GREATER expr {printf("<expr> > <expr>\n",$1,$3); $$ = ($1 > $3)?1:0;}
+		|	expr EQ_GREATER expr {printf("<expr> >= <expr>\n",$1,$3); $$ = ($1 >= $3)?1:0;}
+		|	expr LESS expr {printf("<expr> < <expr>\n",$1,$3); $$ = ($1 < $3)?1:0;}
+		|   expr EQ_LESS expr {printf("<expr> <= <expr>d\n",$1,$3);$$ = ($1 <= $3)?1:0;}
+		|	expr DEQUAL expr {printf("<expr> == <expr>\n",$1,$3); $$ = ($1 == $3)?1:0;}
+		|	expr NEQUAL expr {printf("<expr> != <expr>\n",$1,$3); $$ = ($1 != $3)?1:0;}
+		|	expr AND expr {printf("<expr> and <expr>\n",$1,$3); $$ = ($1 && $3)?1:0;}
+		|	expr OR expr {printf("<expr> or <expr>\n",$1,$3); $$ = ($1 || $3)?1:0;}
+		| 	term {}
 		;
 
 term:
-		PAREN_L expr PAREN_R	{}
-		| MINUS expr %prec UMINUS {}
-		| NOT expr {}
-		| lvalue DPLUS {}
-		| DPLUS lvalue {}
-		| lvalue DMINUS {}
-		| DMINUS lvalue {}
+		PAREN_L expr PAREN_R	{printf("(expr)\n");}
+		| MINUS expr %prec UMINUS {printf("-<expr>\n");}
+		| NOT expr {printf("!<expr>\n");}
+		| lvalue DPLUS {printf("lvalue++\n");}
+		| DPLUS lvalue {printf("++lvalue\n");}
+		| lvalue DMINUS {printf("lvalue--\n");}
+		| DMINUS lvalue {printf("--lvalue\n");}
 		| primary {}
 		;
 
@@ -129,9 +125,9 @@ assignexpr:
 		;
 
 lvalue:
-		IDENTIFIER {}
-		| LOCAL IDENTIFIER {}
-		| DCOLON IDENTIFIER {}
+		IDENTIFIER {printf("ID\n");}
+		| LOCAL IDENTIFIER {printf("LOCAL ID\n");}
+		| DCOLON IDENTIFIER {printf("::ID\n");}
 		| member {}
 		;
 
@@ -143,7 +139,7 @@ member:
 		;
 
 call:
-		call PAREN_L elist PAREN_R {}
+		call PAREN_L elist PAREN_R {printf("funccall(<elist>)\n");}
 		| lvalue callsuffix {}
 		;
 
@@ -226,7 +222,27 @@ int yyerror (const char * yaccProvideMessage){
 
 int main(int argc,char ** argv)
 {
- 
+ 	symbol_table * st;
+ 	st_entry * s1;
+ 	st_entry * s2;
+ 	st_entry * s3;
+ 	st_entry * s4;
+
+ 	s1 = create_symbol("First",0, 0, 0,LIBFUNC);
+ 	s2 = create_symbol("Two",0, 0, 0,GLOBAL);
+ 	s3 = create_symbol("Third",0, 0, 0,GLOBAL);
+ 	s4 = create_symbol("Forth",0, 0, 0,GLOBAL);
+	s1 = set_var_func(s1,"dds");
+
+ 	st = create_symbol_table();
+
+	st_insert(&st,&s1);
+	st_insert(&st,&s2);
+	st_insert(&st,&s3);
+	st_insert(&st,&s4);
+
+	print_st(st);
+
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
             fprintf(stderr, "Cannot read file %s\n", argv[1]);

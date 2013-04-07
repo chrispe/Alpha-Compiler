@@ -3,6 +3,9 @@
 */
 
 #define BUCKET_SIZE 1000
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 // The type of the variable/function.
 typedef enum{
@@ -12,7 +15,7 @@ typedef enum{
 
 // A linked list used to save the arguments of a function.
 typedef struct ArgNode{
-	char * arg_name;
+	char * name;
 	struct ArgNode * next;
 }arg_node;
 
@@ -62,13 +65,13 @@ typedef struct Symbol_Table{
 	Creates a symbol table and returns a pointer to it.
 	Warning : The returned symbol table has already the default library functions.
 */
-symbol_table * create_symbol_table();
+symbol_table * create_symbol_table(void);
 
 /*	
 	A general fuction for inserting a new symbol to the symbol table.
 	Returns 1 if insertion was a succecss else returns 0. 
 */
-int st_insert(symbol_table ** st, st_entry symbol);
+int st_insert(symbol_table ** st, st_entry ** symbol);
 
 // A general function for looking up a symbol under the symbol table using the hash table.
 st_entry * st_lookup_table(symbol_table * st,const char * symbol_name);
@@ -86,10 +89,19 @@ void symbol_set_hidden(st_entry ** symbol,const char hidden);
 void block_set_hidden(st_entry ** symbol,const char * func,const char hidden);
 
 // Adds a new arg to the argument list.
-void args_insert(arg_node ** args,const char * arg_name);
+int args_insert(arg_node ** args,const char * arg_name);
 
 // Returns the node with that argument.
-arg_node * args_lookup(arg_node ** args,const char * arg_name);
+arg_node * args_lookup(arg_node * args,const char * arg_name);
 
 // Prints the symbol table.
 void print_st(symbol_table * st);
+
+// Prints an error in case the memory allocation failed.
+int memerror(void * ptr, const char * name);
+
+// Sets the function in which the symbol (var) was declared.
+st_entry * set_var_func(st_entry * symbol,const char * func_name);
+
+// Creates a symbol with the given parameters. 
+st_entry * create_symbol(const char * name, unsigned int active, unsigned int scope,unsigned int line,st_entry_type type);
