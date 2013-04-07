@@ -62,8 +62,8 @@ void print_st(symbol_table * st){
 	st_entry * entry;
 	scope_entry * sc;
 	arg_node * arg;
-
 	sc = st->scope_list;
+
 	while(sc!=NULL){
 		printf("Symbol Table scope:<%d>\n",sc->scope);
 		entry = sc->symbols;
@@ -85,16 +85,17 @@ void print_st(symbol_table * st){
 		}
 		sc = sc->next;
 	}
-
 }
 
 st_entry * st_lookup_table(symbol_table * st,const char * symbol_name){
 	unsigned int key = generate_key(symbol_name);
 	st_entry * temp = st->hash_table[key];
+
 	while(temp!=NULL){
 		if(strcmp(temp->name,symbol_name)==0)return temp;
 		temp = temp->next;
 	}
+
 	return temp;
 }
 
@@ -188,24 +189,21 @@ int args_insert(arg_node ** args,const char * arg_name){
 	if(memerror(arg->name,"func arg:name"))return 0;
 	strcpy(arg->name,arg_name);
 
-	if(*args==NULL){
-		arg->next = NULL;
-		*args = arg;
-	}
-	else{
-		arg->next = *args;
-		*args = arg;
-	}
+	if(*args==NULL)arg->next = NULL;
+	else arg->next = *args;
 
+	*args = arg;
 	return 1;
 }
 
 arg_node * args_lookup(arg_node * args,const char * arg_name){
 	arg_node * tmp = args;
+
 	while(tmp!=NULL){
 		if(strcmp(tmp->name,arg_name)==0)return tmp;
 		tmp = tmp->next;
 	}
+
 	return NULL;
 }
 
