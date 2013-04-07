@@ -84,7 +84,7 @@ expr:
 		|	expr GREATER expr {printf("<expr> > <expr>\n",$1,$3); $$ = ($1 > $3)?1:0;}
 		|	expr EQ_GREATER expr {printf("<expr> >= <expr>\n",$1,$3); $$ = ($1 >= $3)?1:0;}
 		|	expr LESS expr {printf("<expr> < <expr>\n",$1,$3); $$ = ($1 < $3)?1:0;}
-		|   expr EQ_LESS expr {printf("<expr> <= <expr>d\n",$1,$3);$$ = ($1 <= $3)?1:0;}
+		|   	expr EQ_LESS expr {printf("<expr> <= <expr>d\n",$1,$3);$$ = ($1 <= $3)?1:0;}
 		|	expr DEQUAL expr {printf("<expr> == <expr>\n",$1,$3); $$ = ($1 == $3)?1:0;}
 		|	expr NEQUAL expr {printf("<expr> != <expr>\n",$1,$3); $$ = ($1 != $3)?1:0;}
 		|	expr AND expr {printf("<expr> and <expr>\n",$1,$3); $$ = ($1 && $3)?1:0;}
@@ -225,14 +225,14 @@ int main(int argc,char ** argv)
  	symbol_table * st;
  	st = create_symbol_table();
 
-    if (argc > 1) {
-        if ((yyin = fopen(argv[1], "r")) == NULL) {
-            fprintf(stderr, "Cannot read file %s\n", argv[1]);
-            return 1;
-        }
-    }
-    else
-        yyin = stdin;
+    	if (argc > 1) {
+        	if ((yyin = fopen(argv[1], "r")) == NULL) {
+            		fprintf(stderr, "Cannot read file %s\n", argv[1]);
+            		return 1;
+        	}
+    	}
+    	else
+        	yyin = stdin;
 
 	yyparse();
 	printf("\n <--[Parsing Completed]-->\n");

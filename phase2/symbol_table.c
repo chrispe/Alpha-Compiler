@@ -36,8 +36,8 @@ int st_insert(symbol_table ** st, st_entry ** symbol){
 
 symbol_table * create_symbol_table(){
 	char * lib_functions[] = {"print","input","objectmemberkeys","objecttotalmembers",
-							  "objectcopy","totalarguments","argument","typeof","strtonum",
-							  "sqrt","cos","sin"};
+				  "objectcopy","totalarguments","argument","typeof","strtonum",
+				  "sqrt","cos","sin"};
 	
 	int i;
 	st_entry * symbol;
