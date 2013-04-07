@@ -46,7 +46,7 @@ typedef struct SymbolTableEntry{
 // A scope entry.
 typedef struct ScopeEntry{
 	unsigned int scope;
-	st_entry * symbol;
+	st_entry * symbols;
 	struct ScopeEntry * next;
 }scope_entry;
 
@@ -77,7 +77,7 @@ int st_insert(symbol_table ** st, st_entry ** symbol);
 st_entry * st_lookup_table(symbol_table * st,const char * symbol_name);
 
 // A general function for looking up a symbol under the symbol table using scope list.
-st_entry * st_lookup_list(symbol_table * st,const char * symbol_name);
+st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned int scope);
 
 // The hash function (generates key by giving the symbol name) for the hash table of the symbol table.
 int generate_key(const char * name);

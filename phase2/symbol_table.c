@@ -1,24 +1,102 @@
 #include "symbol_table.h"
 
 int st_insert(symbol_table ** st, st_entry ** symbol){
-	int key = generate_key((*symbol)->name);
+	unsigned int key = generate_key((*symbol)->name);
+	scope_entry * temp = (*st)->scope_list;
+	st_entry * symbol_cpy = create_symbol((*symbol)->name,(*symbol)->active,(*symbol)->scope,(*symbol)->line,(*symbol)->type);
+
 	if((*st)->hash_table[key]==NULL)(*st)->hash_table[key] = *symbol;
-	else {
+	else{
 		(*symbol)->next = (*st)->hash_table[key];
 		(*st)->hash_table[key] = *symbol;
 	} 
+	
+	while(temp!=NULL && temp->scope!=(*symbol)->scope)
+		temp = temp->next;
+
+	if(temp==NULL){
+		temp = (scope_entry *)malloc(sizeof(scope_entry));
+		if(memerror(temp,"scope entry"))return 0;
+		temp->next = (*st)->scope_list;
+		temp->scope = (*symbol)->scope;
+		(*st)->scope_list = temp;
+		(*st)->scope_list->symbols = symbol_cpy;
+	}
+	else{
+		symbol_cpy->next = temp->symbols;
+		temp->symbols = symbol_cpy;
+	}
+
 	return 1;
 }
 
+// Needs work
 symbol_table * create_symbol_table(){
 	int i;
 	symbol_table * st = (symbol_table *)malloc(sizeof(symbol_table));
 	if(memerror(st,"symbol table"))return NULL;
 
-	for(i=0;i<BUCKET_SIZE;i++)st->hash_table[i] = NULL;
+	for(i=0;i<BUCKET_SIZE;i++)
+		st->hash_table[i] = NULL;
+	
 	st->scope_list = NULL;
-
 	return st;
+}
+
+// Needs work
+void print_st(symbol_table * st){
+	int i;
+	st_entry * entry;
+	scope_entry * sc;
+
+	for(i=0;i<BUCKET_SIZE;i++){
+		entry = st->hash_table[i];
+		while(entry!=NULL){
+			printf("Symbol : %s\n",entry->name);
+			entry = entry->next;
+		}
+	}
+	printf("________\n");
+	sc = st->scope_list;
+	while(sc!=NULL){
+		printf("SCOPE : %d\n",sc->scope);
+		entry = sc->symbols;
+		while(entry!=NULL){
+			printf("Symbol : %s scope:%d\n",entry->name,entry->scope);
+			entry = entry->next;
+		}
+		sc = sc->next;
+	}
+
+}
+
+st_entry * st_lookup_table(symbol_table * st,const char * symbol_name){
+	unsigned int key = generate_key(symbol_name);
+	st_entry * temp = st->hash_table[key];
+	while(temp!=NULL){
+		if(strcmp(temp->name,symbol_name)==0)return temp;
+		temp = temp->next;
+	}
+	return temp;
+}
+
+st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned int scope){
+	st_entry * st_temp;
+	scope_entry * sc_temp = st->scope_list;
+
+	while(sc_temp!=NULL && sc_temp->scope!=scope)
+		sc_temp = sc_temp->next;
+
+	if(sc_temp==NULL)return NULL;
+	st_temp = sc_temp->symbols;
+	 
+	printf("I GOT HERE WITH SCOPE %d\n",scope);
+	while(st_temp!=NULL){
+		if(strcmp(st_temp->name,symbol_name)==0)return st_temp;
+		st_temp = st_temp->next;
+	}
+
+	return NULL;
 }
 
 st_entry * create_symbol(const char * name, unsigned int active, unsigned int scope,unsigned int line,st_entry_type type){
@@ -26,7 +104,8 @@ st_entry * create_symbol(const char * name, unsigned int active, unsigned int sc
 	if(memerror(symbol,"symbol"))return NULL;
 
 	symbol->name = malloc(strlen(name)+1);
-	if(memerror(symbol->name,"symbol:name"))return NULL;
+	if(memerror(symbol->name,"symbol:name"))
+		return NULL;
 
 	strcpy(symbol->name,name);
 	symbol->active = active;
@@ -113,19 +192,5 @@ arg_node * args_lookup(arg_node * args,const char * arg_name){
 }
 
 void symbol_set_hidden(st_entry ** symbol,const char hidden){
-	if(hidden)(*symbol)->active = 0;
-	else (*symbol)->active = 1;
-}
-
-void print_st(symbol_table * st){
-	int i;
-	st_entry * entry;
-
-	for(i=0;i<BUCKET_SIZE;i++){
-		entry = st->hash_table[i];
-		while(entry!=NULL){
-			printf("Symbol : %s\n",entry->name);
-			entry = entry->next;
-		}
-	}
+	(*symbol)->active = ~hidden;
 }

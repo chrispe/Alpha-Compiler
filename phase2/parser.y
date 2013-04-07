@@ -229,10 +229,10 @@ int main(int argc,char ** argv)
  	st_entry * s3;
  	st_entry * s4;
 
- 	s1 = create_symbol("a",0, 0, 0,LIBFUNC);
- 	s2 = create_symbol("b",0, 0, 0,GLOBAL);
- 	s3 = create_symbol("c",0, 0, 0,GLOBAL);
- 	s4 = create_symbol("d",0, 0, 0,GLOBAL);
+ 	s1 = create_symbol("a",0, 1, 1,LIBFUNC);
+ 	s2 = create_symbol("b",0, 1, 1,GLOBAL);
+ 	s3 = create_symbol("c",0, 2, 2,GLOBAL);
+ 	s4 = create_symbol("d",0, 2, 2,GLOBAL);
 	s1 = set_var_func(s1,"dds");
 
 	args_insert(&(s1->value_type.funVal->arguments),"const");
@@ -245,6 +245,20 @@ int main(int argc,char ** argv)
 	st_insert(&st,&s2);
 	st_insert(&st,&s3);
 	st_insert(&st,&s4);
+
+	if(st_lookup_table(st,"a")!=NULL)printf("1)OK\n");
+	if(st_lookup_table(st,"b")!=NULL)printf("2)OK\n");
+	if(st_lookup_table(st,"c")!=NULL)printf("3)OK\n");
+	if(st_lookup_table(st,"d")!=NULL)printf("4)OK\n");
+	if(st_lookup_table(st,"e")==NULL)printf("5)OK\n");
+
+	if(st_lookup_scope(st,"a",1)!=NULL)printf("6)OK\n");
+	if(st_lookup_scope(st,"a",2)==NULL)printf("7)OK\n");
+	if(st_lookup_scope(st,"a",3)==NULL)printf("8)OK\n");
+
+	if(st_lookup_scope(st,"c",2)!=NULL)printf("9)OK\n");
+	if(st_lookup_scope(st,"c",1)==NULL)printf("10)OK\n");
+	if(st_lookup_scope(st,"c",3)==NULL)printf("11)OK\n");
 
 	print_st(st);
 	/* Test end */
