@@ -143,11 +143,11 @@ lvalue:
 
 			if(st_lookup_scope(*((symbol_table **)st),$$,0)==NULL){
 				// Need to check for function argument
-				if(scope_main>0)printf("Error at line %d: Variable '%s' not declared as a global.\n",yylineno,$$);
+				if(scope_main>0)printf("Error at line %d: Variable '%s' not declared as a global variable.\n",yylineno,$$);
 				else {
 					st_entry * se = create_symbol($$,0,scope_main,yylineno,GLOBAL);
 					st_insert((symbol_table **)st,&se);
-					printf("Added variable %s in the symbol table.\n",$$);
+					printf("Added variable '%s' in the symbol table.\n",$$);
 				}
 			}
  
