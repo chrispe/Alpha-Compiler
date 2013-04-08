@@ -3,11 +3,19 @@
 	#include <stdlib.h>
 	#include <string.h>
  	#include "symbol_table.h"
+	#define YYPARSE_PARAM st
+	
 	int yyerror (const char * yaccProvideMessage);
+	
 	extern int yylex(void);
 	extern int yylineno;
 	extern char * yytext;
 	extern FILE * yyin;
+
+ 	unsigned int scope_main = 0;
+ 	unsigned int scope_loop = 0;
+ 	unsigned char in_func = 0;
+
 %}
 %error-verbose
 %start program
@@ -55,8 +63,14 @@ program:
 
 stmt:
 		expr SEMICOLON {}
-		| BREAK SEMICOLON {printf("break;\n");}
-		| CONTINUE SEMICOLON {printf("continue;\n");}
+		| BREAK SEMICOLON {
+			if(scope_loop>0)printf("break;\n");
+			else yyerror("Cannot use break; outside of a loop.");
+		}
+		| CONTINUE SEMICOLON {
+			if(scope_loop>0)printf("continue;\n");
+			else yyerror("Cannot use continue; outside of a loop.");
+		}
 		| forstmt {}
 		| whilestmt {}
 		| block {}
@@ -125,8 +139,22 @@ assignexpr:
 		;
 
 lvalue:
-		IDENTIFIER {printf("ID\n");}
-		| LOCAL IDENTIFIER {printf("LOCAL ID\n");}
+		IDENTIFIER {
+
+			if(st_lookup_scope(*((symbol_table **)st),$$,0)==NULL){
+				// Need to check for function argument
+				if(scope_main>0)printf("Error at line %d: Variable '%s' not declared as a global.\n",yylineno,$$);
+				else {
+					st_entry * se = create_symbol($$,0,scope_main,yylineno,GLOBAL);
+					st_insert((symbol_table **)st,&se);
+					printf("Added variable %s in the symbol table.\n",$$);
+				}
+			}
+ 
+
+		}
+		| LOCAL IDENTIFIER {
+			printf("LOCAL ID\n");}
 		| DCOLON IDENTIFIER {printf("::ID\n");}
 		| member {}
 		;
@@ -177,8 +205,8 @@ elist:
 		;
  
 funcdef:
-		FUNCTION IDENTIFIER PAREN_L idlist PAREN_R block {printf("Func <id> (<parameters>) \n");}
-		| FUNCTION PAREN_L idlist PAREN_R block {printf("Func (<parameters>) \n");}
+		FUNCTION IDENTIFIER PAREN_L{scope_main++;in_func=1;} idlist PAREN_R block {scope_main--;in_func=0;printf("Func <id> (<parameters>) \n");}
+		| FUNCTION PAREN_L{scope_main++;in_func=1;}  idlist PAREN_R block {scope_main--;in_func=0;printf("Func (<parameters>) \n");}
 		;
 
 idlist:
@@ -188,7 +216,7 @@ idlist:
 		;
 
 block:
-		BRACE_L block_in BRACE_R {}
+		BRACE_L {if(!in_func)scope_main++;} block_in BRACE_R {if(!in_func)scope_main--;}
 		;
  
 block_in:	
@@ -202,16 +230,28 @@ ifstmt:
 		;
 
 whilestmt:
-		WHILE PAREN_L expr PAREN_R stmt {printf("while (<expr>) <stmt>\n");}
+		WHILE PAREN_L    expr PAREN_R stmt {
+			printf("while (<expr>) <stmt>\n");
+			 
+		}
 		;
 
 forstmt:
-		FOR PAREN_L elist SEMICOLON expr SEMICOLON elist PAREN_R stmt {printf("for (<elist>;<expr>;<elist>) <stmt>\n ");}
+		FOR PAREN_L  elist SEMICOLON expr SEMICOLON elist PAREN_R stmt {
+			printf("for (<elist>;<expr>;<elist>) <stmt>\n ");
+			 
+		}
 		;
 
 returnstmt:
-		RETURN SEMICOLON {printf("return ;\n");}
-		| RETURN expr SEMICOLON {printf("return <expr>;\n");}
+		RETURN SEMICOLON {
+			if(!in_func)yyerror("Cannot use return; when not in a function.");
+			else printf("return ;\n");
+		}
+		| RETURN expr SEMICOLON {
+			if(!in_func)yyerror("Cannot use return; when not in a function.");
+			else printf("return <expr>;\n");
+		}
 		;
 
 %%
@@ -234,7 +274,7 @@ int main(int argc,char ** argv)
     	else
         	yyin = stdin;
 
-	yyparse();
+	yyparse(&st);
 	printf("\n <--[Parsing Completed]-->\n");
 	printf("Press [Enter] to continue with the symbol table.\n");
 	getchar();
