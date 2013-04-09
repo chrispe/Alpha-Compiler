@@ -70,7 +70,8 @@ void print_st(symbol_table * st){
 		while(entry!=NULL){
 			if(entry->type!=FORMAL){
 				printf("\tkey='%s' ",entry->name);
-				if(entry->type==GLOBAL)printf("type=(global variable) ");
+				if(entry->type==GLOBAL_VAR)printf("type=(global variable) ");
+				else if(entry->type==VAR)printf("type=(variable) ");
 				else if(entry->type==LCAL)printf("type=(local variable) ");
 				else if(entry->type==LIBFUNC)printf("type=(library function) ");
 				else{

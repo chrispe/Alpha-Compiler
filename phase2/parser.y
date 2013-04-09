@@ -51,7 +51,7 @@
 
 %type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall   term
 %type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt
-%type <intval> expr  
+%type <fltval> expr  
  
 %left EQUAL
 %left OR
@@ -167,7 +167,7 @@ lvalue:
 					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$$);
 			}
 			else {
-				se = create_symbol($$,0,scope_main,yylineno,GLOBAL);
+				se = create_symbol($$,0,scope_main,yylineno,VAR);
 				st_insert((symbol_table **)st,&se);
 				printf("Added variable '%s' in the symbol table.\n",$$);
 			}

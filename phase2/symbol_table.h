@@ -9,7 +9,7 @@
 
 // The type of the variable/function.
 typedef enum{
-	GLOBAL, LCAL, FORMAL,
+	GLOBAL_VAR, VAR, LCAL, FORMAL,
 	USERFUNC, LIBFUNC
 }st_entry_type;
 

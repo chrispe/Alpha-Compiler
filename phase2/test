@@ -18,6 +18,13 @@ k=5;
 sin=3;
  
 function g(){
-        y = 4;
+        
+        mv=3;
+
+        function k()
+        {
+                mv=5;
+        }
 }
  
+{{{{{{{ back=3; }}}}}}} 
