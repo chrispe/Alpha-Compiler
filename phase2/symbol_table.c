@@ -235,3 +235,10 @@ void scope_set_active(symbol_table ** st,unsigned int scope,char active){
 		}
 	}
 }
+
+char * generate_func_name(unsigned int id){
+
+	char * buffer = malloc(20);
+	sprintf (buffer, "$_%d", id);
+	return buffer;
+}

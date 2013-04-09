@@ -7,14 +7,26 @@
 	
 	int yyerror (const char * yaccProvideMessage);
 	
+	// Importing variables from yylex.
 	extern int yylex(void);
 	extern int yylineno;
 	extern char * yytext;
 	extern FILE * yyin;
 
+ 	// This is the main scope.
  	unsigned int scope_main = 0;
+
+ 	// This is a scope for how deep the loop is.
  	unsigned int scope_loop = 0;
- 	unsigned char in_func = 0;
+
+ 	// A boolean to know if we're in a function.
+ 	char in_func = 0;
+
+ 	// A number which indicates how many function we have set by the prefix '$_(id)'
+ 	unsigned int func_signed = 0;
+
+ 	// A boolean which indicates if a function name has been called.
+ 	char is_func_id = 0;
 
 %}
 %error-verbose
@@ -141,16 +153,26 @@ assignexpr:
 lvalue:
 		IDENTIFIER {
 
-			if(st_lookup_scope(*((symbol_table **)st),$$,0)==NULL){
-				// Need to check for function argument
-				if(scope_main>0)printf("Error at line %d: Variable '%s' not declared as a global variable.\n",yylineno,$$);
-				else {
-					st_entry * se = create_symbol($$,0,scope_main,yylineno,GLOBAL);
-					st_insert((symbol_table **)st,&se);
-					printf("Added variable '%s' in the symbol table.\n",$$);
-				}
+ 			int i;
+ 			st_entry * se;
+			for(i=scope_main;i>=0;i--){
+				se = st_lookup_scope(*((symbol_table **)st),$$,i);
+				if(se!=NULL)break;
 			}
- 
+
+			if(se!=NULL){
+				if(in_func & se->scope!=0 && se->type!=USERFUNC &&  se->type!=LIBFUNC)
+					printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
+				else if(se->type==LIBFUNC)
+					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$$);
+			}
+			else {
+				se = create_symbol($$,0,scope_main,yylineno,GLOBAL);
+				st_insert((symbol_table **)st,&se);
+				printf("Added variable '%s' in the symbol table.\n",$$);
+			}
+
+
 
 		}
 		| LOCAL IDENTIFIER {

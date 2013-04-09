@@ -1,24 +1,23 @@
 //global_var insert sto ST, scope 0;
 global_var = 0.5;
 if(x){
+        j=1;
+        y = 3;
 	return;
+        if(y==4){
+            y = 3;
+            j = 2;
+
+        }
+        else{
+            k=3;
+        }
 }
  
-return;
-break;
-if(x==2)return (2);
-
-
-        for(i=0;i<4;i++){
-                break;
-                l = 9;
-        }
-
-while(1){
-        break;
-
+k=5; 
+sin=3;
+ 
+function g(){
+        y = 4;
 }
-
-if(x==1)break;
-
  
