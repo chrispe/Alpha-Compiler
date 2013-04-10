@@ -95,6 +95,7 @@ void print_st(symbol_table * st){
 			}
 			entry = entry->next;
 		}
+		printf("\n");
 		sc = sc->next;
 	}
 }
@@ -250,7 +251,18 @@ void scope_set_active(symbol_table ** st,unsigned int scope,char active){
 
 char * generate_func_name(unsigned int id){
 
-	char * buffer = malloc(20);
-	sprintf (buffer, "$_%d", id);
-	return buffer;
+	char buffer[100];
+	char * func_name;
+	unsigned int len;
+
+	// We first create a string of the id to count its length
+	len = sprintf(buffer,"%d",id);
+
+	// We create another string with fixed size
+	func_name = malloc(len+3);
+
+	// Give a value to the string
+	sprintf (func_name, "$_%d", id);
+
+	return func_name;
 }

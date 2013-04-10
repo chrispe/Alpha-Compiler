@@ -21,13 +21,27 @@
 
  	// A boolean to know if we're in a function.
  	char in_func = 0;
+ 	unsigned int func_scope = 0;
 
  	// A number which indicates how many function we have set by the prefix '$_(id)'
  	unsigned int func_signed = 0;
 
  	// A boolean which indicates if a function name has been called.
- 	char is_func_id = 0;
  	char func_started = 0;
+
+ 	// A temporary string for a lot of uses.
+ 	char * temp_str;
+
+ 	// A variable which indicates if we recognized a function symbol.
+ 	char fun_rec = 0;
+
+ 	// A function which returns the modulo of two doubles,
+ 	// so as no floating point exception occures.
+	double modulo(double a, double b){
+		int result = (int)(a/b);
+		return a - (double)result * b;
+	}
+
 
 %}
 %error-verbose
@@ -75,7 +89,7 @@ program:
 		;
 
 stmt:
-		expr SEMICOLON {}
+		expr SEMICOLON {fun_rec=0;}
 		| BREAK SEMICOLON {
 			if(scope_loop>0)printf("break;\n");
 			else yyerror("Cannot use break; outside of a loop.");
@@ -100,12 +114,13 @@ expr:
 		|	expr MULTI expr {printf("<expr> * <expr>\n",$1,$3); $$ = $1 * $3;}
 		|	expr SLASH expr {
 					printf("<expr> / <expr>\n",$1,$3);
-					if($3!=0)$$ = (int)$1 / (int)$3;
+					if($3!=0)$$ = $1/$3;
 					else yyerror("Cannot divide by zero.");
 			}
 		|	expr PERCENT expr {
+
 					printf("<expr> %% <expr>\n",$1,$3);
-					if($3!=0)$$ = (int)$1 % (int)$3;
+					if($3!=0)$$ = modulo($1,$3);
 					else yyerror("Cannot divide by zero.");
 			}
 		|	expr GREATER expr {printf("<expr> > <expr>\n",$1,$3); $$ = ($1 > $3)?1:0;}
@@ -148,7 +163,7 @@ const:
 		;
 
 assignexpr:
-		lvalue EQUAL expr {}
+		lvalue EQUAL{} expr {if(fun_rec)printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$$);}
 		;
 
 lvalue:
@@ -169,14 +184,14 @@ lvalue:
 			// If the symbol was found then we need to detect if we have access to it.
 			if(se!=NULL){
 
-				//In case we are in a function and we try to access a non-global variable
-				if(in_func & se->scope!=0 && se->type!=USERFUNC &&  se->type!=LIBFUNC)
-					printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
-				else if(se->active && se->type==USERFUNC)
-					printf("Error at line %d: '%s' is an activated user function, cannot be shadowed.\n",yylineno,$$);
-				else if(se->type==LIBFUNC)
-					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$$);
-				else printf("Variable '%s' was detected and used.\n", $$);
+				if(se->type!=USERFUNC && se->type!=LIBFUNC){
+					//In case we are in a function and we try to access a non-global variable
+					if(in_func && se->scope!=scope_main && se->scope!=0)
+						printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
+					else 
+						printf("Variable '%s' was detected and used.\n", $$);
+				}
+				else fun_rec = 1;
 			}
 			else {
 				// Else if the symbol could not be found we insert it in the symbol table.
@@ -237,10 +252,11 @@ member:
 call:
 		call PAREN_L elist PAREN_R {printf("funccall(<elist>)\n");}
 		| lvalue callsuffix {}
+		| PAREN_L funcdef PAREN_R PAREN_L elist PAREN_R {}
 		;
 
 callsuffix:
-		normcall {}
+		normcall {printf("funcall %s()\n",$$);}
 		| methodcall {}
 		;
 
@@ -273,13 +289,32 @@ elist:
 		;
  
 funcdef:
-		FUNCTION IDENTIFIER PAREN_L{scope_main++;in_func=1;func_started=1;} idlist PAREN_R block { in_func=0;printf("Func <id> (<parameters>) \n");}
-		| FUNCTION PAREN_L{scope_main++;in_func=1;func_started=1;}  idlist PAREN_R block { in_func=0;printf("Func (<parameters>) \n");}
+		FUNCTION IDENTIFIER PAREN_L{scope_main++;in_func=1;func_started=1;func_scope++;} 
+		idlist PAREN_R block {func_scope--;in_func=0;printf("Func <id> (<parameters>) \n");}
+		| FUNCTION PAREN_L{
+		 
+			func_scope++;
+
+			in_func=1;
+			func_started=1;
+
+		 	st_entry * se = NULL;
+		 	temp_str = generate_func_name(func_signed);
+			se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC);
+			st_insert((symbol_table **)st,&se);
+
+			func_signed++;
+			scope_main++;
+
+			
+
+
+		}idlist PAREN_R block { func_scope--;in_func=0;printf("Func (<parameters>) \n");}
 		;
 
 idlist:
-		IDENTIFIER {}
-		| idlist COMMA IDENTIFIER {}
+		IDENTIFIER {printf("fun par:%s %s\n",$$,$1);}
+		| idlist COMMA IDENTIFIER {printf("fun par:%s %s\n",$$,$1);}
 		| {}
 		;
 
@@ -300,19 +335,19 @@ block_in:
 		;
 
 ifstmt:
-		IF PAREN_L expr PAREN_R stmt %prec IF_TERM {scope_main++;printf("if (<expr>) <stmt>\n");}
-		| IF PAREN_L expr PAREN_R stmt ELSE stmt {scope_main++;printf("if (<expr>) <stmt> else <stmt>\n");}
+		IF PAREN_L expr PAREN_R stmt %prec IF_TERM { printf("if (<expr>) <stmt>\n");}
+		| IF PAREN_L expr PAREN_R stmt ELSE stmt { printf("if (<expr>) <stmt> else <stmt>\n");}
 		;
 
 whilestmt:
-		WHILE PAREN_L  expr PAREN_R stmt {
+		WHILE {scope_loop++;} PAREN_L expr PAREN_R stmt{scope_loop--;} {
 			printf("while (<expr>) <stmt>\n");
 	 
 		}
 		;
 
 forstmt:
-		FOR PAREN_L elist SEMICOLON expr SEMICOLON elist PAREN_R stmt {
+		FOR {scope_loop++;} PAREN_L elist SEMICOLON expr SEMICOLON{scope_loop--;} elist PAREN_R stmt {
 			printf("for (<elist>;<expr>;<elist>) <stmt>\n ");
 			 
 		}
@@ -320,11 +355,11 @@ forstmt:
 
 returnstmt:
 		RETURN SEMICOLON {
-			if(!in_func)yyerror("Cannot use return; when not in a function.");
+			if(func_scope==0)yyerror("Cannot use return; when not in a function.");
 			else printf("return ;\n");
 		}
 		| RETURN expr SEMICOLON {
-			if(!in_func)yyerror("Cannot use return; when not in a function.");
+			if(func_scope==0)yyerror("Cannot use return; when not in a function.");
 			else printf("return <expr>;\n");
 		}
 		;

@@ -1,17 +1,22 @@
-while(g==3){
-    y++;
-}
- 
-for(i=0;i<4;i++){
-    c++;
-    for(j=0;j<5;j++){
-        c++;
-    }
-    j=5;
-} 
 
-if(x==5){
-    v++;
+a1 = a2 = a3 = a4 = nil;
+
+global_var = 0;
+
+{
+        local a1 = 2;
 }
 
-lol=3;
+function foo() {
+        ::global_var = 1;
+}
+
+//here global_var must be 1;
+print(global_var, "\n");
+
+function foo1(){
+        local global_var = 2;
+        //here (local) global_var must be 2
+        print(global_var, "\n");
+        wtf=2;
+}
