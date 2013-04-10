@@ -3,6 +3,7 @@
 int st_insert(symbol_table ** st, st_entry ** symbol){
 	unsigned int key = generate_key((*symbol)->name);
 	scope_entry * temp = (*st)->scope_list;
+	scope_entry * previous = NULL;
 
 	// Making a copy of the symbol to link it to the scope list.
 	st_entry * symbol_cpy = create_symbol((*symbol)->name,(*symbol)->active,(*symbol)->scope,(*symbol)->line,(*symbol)->type);
@@ -15,21 +16,31 @@ int st_insert(symbol_table ** st, st_entry ** symbol){
 	} 
 	
 	// Insertion in the scope list.
-	while(temp!=NULL && temp->scope!=(*symbol)->scope)
+	while(temp!=NULL && temp->scope<(*symbol)->scope){
+		previous = temp;
 		temp = temp->next;
-
-	if(temp==NULL){
-		temp = (scope_entry *)malloc(sizeof(scope_entry));
-		if(memerror(temp,"scope entry"))return 0;
-		temp->next = (*st)->scope_list;
-		temp->scope = (*symbol)->scope;
-		(*st)->scope_list = temp;
-		(*st)->scope_list->symbols = symbol_cpy;
 	}
-	else{
-		symbol_cpy->next = temp->symbols;
+
+	if(temp==NULL || temp->scope!=(*symbol)->scope){
+		temp = (scope_entry *)malloc(sizeof(scope_entry));
+		temp->scope = (*symbol)->scope;
+		if(memerror(temp,"scope entry"))
+			return 0;
+
+		if(previous!=NULL){
+			temp->next = previous->next;
+			previous->next = temp;
+		}
+		else{
+			temp->next = (*st)->scope_list;
+			(*st)->scope_list = temp;
+		}
 		temp->symbols = symbol_cpy;
 	}
+	else 
+		symbol_cpy->next = temp->symbols;
+	 
+	temp->symbols = symbol_cpy;
 
 	return 1;
 }
@@ -93,7 +104,7 @@ st_entry * st_lookup_table(symbol_table * st,const char * symbol_name){
 	st_entry * temp = st->hash_table[key];
 
 	while(temp!=NULL){
-		if(strcmp(temp->name,symbol_name)==0)return temp;
+		if(strcmp(temp->name,symbol_name)==0 && temp->active==1)return temp;
 		temp = temp->next;
 	}
 
@@ -111,7 +122,7 @@ st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned i
 	st_temp = sc_temp->symbols;
 	 
 	while(st_temp!=NULL){
-		if(strcmp(st_temp->name,symbol_name)==0)return st_temp;
+		if(strcmp(st_temp->name,symbol_name)==0 && st_temp->active==1)return st_temp;
 		st_temp = st_temp->next;
 	}
 
