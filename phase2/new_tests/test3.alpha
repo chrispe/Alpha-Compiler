@@ -1,14 +1,12 @@
 
 
-{
-	x=3;
-}
+
 
 function g(){
         x=6;
 }
 
 function h(y,z){
-        local y=4;
+        g=5;
 }
 
