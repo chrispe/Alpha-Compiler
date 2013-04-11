@@ -38,6 +38,9 @@
  	// A variable which indicates if we reading the parameters of a function.
  	char func_var = 0;
 
+ 	// A temporary pointer to the argument stack of a function.
+ 	arg_node * arg_tmp = NULL;
+
  	// A function which returns the modulo of two doubles,
  	// so as no floating point exception occures.
 	double modulo(double a, double b){
@@ -210,34 +213,34 @@ lvalue:
  			int i;
  			st_entry * se = NULL;
 
- 				// Lookup symbol table starting at the current 
- 				// scope and going one level down in each loop
- 				// until we get to know if the symbol exists.
+ 			// Lookup symbol table starting at the current 
+ 			// scope and going one level down in each loop
+ 			// until we get to know if the symbol exists.
 
-				for(i=scope_main;i>=0;i--){
-					se = st_lookup_scope(*((symbol_table **)st),$$,i);
-					if(se!=NULL)break;
-				}
+			for(i=scope_main;i>=0;i--){
+				se = st_lookup_scope(*((symbol_table **)st),$$,i);
+				if(se!=NULL)break;
+			}
 
-				// If the symbol was found then we need to detect if we have access to it.
-				if(se!=NULL){
+			// If the symbol was found then we need to detect if we have access to it.
+			if(se!=NULL){
 
-					if(se->type!=USERFUNC && se->type!=LIBFUNC){
-						//In case we are in a function and we try to access a non-global variable
-						if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
-							strcmp(se->value_type.varVal->used_in_func,top(func_names))!=0))
-							printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
-						else 
-							printf("Variable '%s' was detected and used.\n", $$);
-					}
-					else fun_rec = 1;
+				if(se->type!=USERFUNC && se->type!=LIBFUNC){
+					//In case we are in a function and we try to access a non-global variable
+					if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
+						strcmp(se->value_type.varVal->used_in_func,top(func_names))!=0))
+						printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
+					else 
+						printf("Variable '%s' was detected and used.\n", $$);
 				}
-				else {
-					// Else if the symbol could not be found we insert it in the symbol table.
-					se = create_symbol($$,1,scope_main,yylineno,VAR);
-					st_insert((symbol_table **)st,&se);
-					printf("Added variable '%s' in the symbol table.\n",$$);
-				}
+				else fun_rec = 1;
+			}
+			else {
+				// Else if the symbol could not be found we insert it in the symbol table.
+				se = create_symbol($$,1,scope_main,yylineno,VAR);
+				st_insert((symbol_table **)st,&se);
+				printf("Added variable '%s' in the symbol table.\n",$$);
+			}
 			
 		}
 		| LOCAL IDENTIFIER {
@@ -274,9 +277,7 @@ lvalue:
 						printf("Added variable '%s' in the symbol table.\n",$2);
 					}
 				}
-			
 				st_insert((symbol_table **)st,&se);
-
 			}
 
 		}
@@ -285,9 +286,9 @@ lvalue:
 			// We perform a lookup in the global scope
 			se = st_lookup_scope(*((symbol_table **)st),$2,0);
 			if(se==NULL)
-				printf("Global variable '%s' could not be detected.\n",$2);
+				printf("Error at line %d: Global variable '%s' could not be detected.\n",yylineno,$2);
 			else
-				printf("Global variable '%s' was detected and used.\n",$2); 
+				printf("Error at line %d: Global variable '%s' was detected and used.\n",yylineno,$2); 
 		}
 		| member {}
 		;
@@ -339,13 +340,29 @@ elist:
 		;
  
 func_temp:
-		IDENTIFIER{push(&func_names,$1);} PAREN_L{
+		IDENTIFIER{
+			push(&func_names,$1);
+			st_entry * se = NULL;
+
+			// We check that there is no symbol using the same
+			// name with this of the new function.
+			se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
+
+			// If a symbol has been detected we show the error.
+			if(se!=NULL){
+				if(se->type==LIBFUNC)printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$1);
+				else printf("Error at line %d: '%s' has already been declared as a variable/function.\n",yylineno,$1);
+			}
+			else{
+				// else we add the new symbol to the symbol table.
+				se = create_symbol($1,1,scope_main,yylineno,USERFUNC);
+				st_insert((symbol_table **)st,&se);
+			}
+		} PAREN_L{
 			scope_main++;
 			in_func=1;
 			func_started=1;
 			func_scope++;
-			 
-
 		} 
 		idlist PAREN_R  block { func_scope--;in_func=0;pop(&func_names);printf("Func <id> (<parameters>) \n");}
 		| PAREN_L{
@@ -364,9 +381,11 @@ func_temp:
 			// and insert the symbol to the symbol table
 		 	st_entry * se = NULL;
 		 	temp_str = generate_func_name(func_signed);
+		 	push(&func_names,temp_str);
 			se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC);
+			
 			st_insert((symbol_table **)st,&se);
-
+			printf("have added");
 			func_signed++;
 			scope_main++;
 
@@ -378,9 +397,12 @@ funcdef:
 		;
 
 idlist:
-		IDENTIFIER {printf("fun par:%s\n",$1);
- 				printf("Runned for %s\n",$1);
+		IDENTIFIER {
+
+				printf("fun par:%s\n",$1);
+
  				st_entry * se = NULL;
+
  				// We check that there is no other variable using the same name on the same scope.
  				se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
  				if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,$1);
@@ -393,13 +415,18 @@ idlist:
  						se = create_symbol($1,1,scope_main,yylineno,FORMAL);
  						se = set_var_func(se,top(func_names));
  						st_insert((symbol_table **)st,&se);
+ 						se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main-1);
+ 						args_insert(&(se->value_type.funVal->arguments),$1);
  					}
  				}
 
 		}
-		| idlist COMMA IDENTIFIER {printf("fun par:%s \n",$3);
+		| idlist COMMA IDENTIFIER {
+
+				printf("fun par:%s \n",$3);
 
  				st_entry * se = NULL;
+
  				// We check that there is no other variable using the same name on the same scope.
  				se = st_lookup_scope(*((symbol_table **)st),$3,scope_main);
  				if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,$3);
@@ -412,9 +439,11 @@ idlist:
  						se = create_symbol($3,1,scope_main,yylineno,FORMAL);
  						se = set_var_func(se,top(func_names));
  						st_insert((symbol_table **)st,&se);
+ 						args_insert(&arg_tmp,$3);
+ 						se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main-1);
+ 						args_insert(&(se->value_type.funVal->arguments),$3);
  					}
  				}
-
 		}
 		| {}
 		;
@@ -443,7 +472,6 @@ ifstmt:
 whilestmt:
 		WHILE {scope_loop++;} PAREN_L expr PAREN_R stmt{scope_loop--;} {
 			printf("while (<expr>) <stmt>\n");
-	 
 		}
 		;
 

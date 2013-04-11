@@ -91,7 +91,10 @@ void print_st(symbol_table * st){
 				else{
 					printf("user_function(");
 					arg = entry->value_type.funVal->arguments;
-					while(arg!=NULL)printf("%s,",arg->name);
+					while(arg!=NULL){
+						printf("%s,",arg->name);
+						arg = arg->next;
+					}
 					printf(") ");
 				}
 				printf("line=%d scope=%d active=%d\n",entry->line,entry->scope,entry->active);

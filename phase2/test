@@ -1,9 +1,5 @@
-function  d(a,c){
-	a=3;
-	c=4;
-	p=4;
- 	function gp(c){
- 		c=5;
- 	}
- 	ga=4;
+function b(){
+	
 }
+
+a = b();
