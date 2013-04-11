@@ -7,6 +7,9 @@ int st_insert(symbol_table ** st, st_entry ** symbol){
 
 	// Making a copy of the symbol to link it to the scope list.
 	st_entry * symbol_cpy = create_symbol((*symbol)->name,(*symbol)->active,(*symbol)->scope,(*symbol)->line,(*symbol)->type);
+	if((*symbol)->value_type.varVal->used_in_func!=NULL)
+		symbol_cpy =  set_var_func(symbol_cpy,(*symbol)->value_type.varVal->used_in_func);
+
 
 	// Insertion in the hash table.
 	if((*st)->hash_table[key]==NULL)(*st)->hash_table[key] = *symbol;

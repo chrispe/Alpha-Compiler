@@ -22,6 +22,7 @@
  	// A boolean to know if we're in a function.
  	char in_func = 0;
  	unsigned int func_scope = 0;
+ 	char * last_func_name;
 
  	// A number which indicates how many function we have set by the prefix '$_(id)'
  	unsigned int func_signed = 0;
@@ -186,7 +187,8 @@ lvalue:
 
 				if(se->type!=USERFUNC && se->type!=LIBFUNC){
 					//In case we are in a function and we try to access a non-global variable
-					if(in_func && se->scope!=scope_main && se->scope!=0)
+					if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
+						strcmp(se->value_type.varVal->used_in_func,last_func_name)!=0))
 						printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
 					else 
 						printf("Variable '%s' was detected and used.\n", $$);
@@ -196,6 +198,7 @@ lvalue:
 			else {
 				// Else if the symbol could not be found we insert it in the symbol table.
 				se = create_symbol($$,1,scope_main,yylineno,VAR);
+	 
 				st_insert((symbol_table **)st,&se);
 				printf("Added variable '%s' in the symbol table.\n",$$);
 			}
@@ -226,7 +229,10 @@ lvalue:
 					se = create_symbol($2,1,scope_main,yylineno,LCAL);
 					printf("Added local variable '%s' in the symbol table.\n",$2);
 				}
+				
+			 	if(last_func_name!=NULL)se = set_var_func(se,last_func_name);
 				st_insert((symbol_table **)st,&se);
+
 			}
 
 		}
@@ -289,7 +295,14 @@ elist:
 		;
  
 funcdef:
-		FUNCTION IDENTIFIER PAREN_L{scope_main++;in_func=1;func_started=1;func_scope++;} 
+		FUNCTION IDENTIFIER PAREN_L{
+			scope_main++;
+			in_func=1;
+			func_started=1;
+			func_scope++;
+			last_func_name = malloc(strlen($2)+1);
+			strcpy(last_func_name,$2);
+		} 
 		idlist PAREN_R block {func_scope--;in_func=0;printf("Func <id> (<parameters>) \n");}
 		| FUNCTION PAREN_L{
 		 
@@ -323,7 +336,7 @@ block:
 			if(!func_started)scope_main++;
 			else func_started = 0;
 		} block_in BRACE_R {
-			// We de-active the local variables of the current scope
+			// We disable the local variables of the current scope
 			scope_set_active((symbol_table **)st,scope_main,0);
 			scope_main--;
 		}
@@ -347,9 +360,9 @@ whilestmt:
 		;
 
 forstmt:
-		FOR {scope_loop++;} PAREN_L elist SEMICOLON expr SEMICOLON{scope_loop--;} elist PAREN_R stmt {
+		FOR {scope_loop++;} PAREN_L elist SEMICOLON expr SEMICOLON elist PAREN_R stmt {
 			printf("for (<elist>;<expr>;<elist>) <stmt>\n ");
-			 
+			scope_loop--;
 		}
 		;
 
