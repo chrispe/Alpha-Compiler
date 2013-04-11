@@ -1,9 +1,9 @@
-function  d(b,c){
-	b=3;
+function  d(a,c){
+	a=3;
 	c=4;
-	a=7;
-	local b=5;
-	function hello(){
-		b=4;
-	}
+	p=4;
+ 	function gp(c){
+ 		c=5;
+ 	}
+ 	ga=4;
 }

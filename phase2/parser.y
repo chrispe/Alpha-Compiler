@@ -207,33 +207,8 @@ assignexpr:
 
 lvalue:
 		IDENTIFIER {
-
  			int i;
  			st_entry * se = NULL;
-
-
-
- 			// IF id is used as an argument
- 			if(func_var == 1){
- 				printf("Runned for %s\n",$$);
- 				// We check that there is no other variable using the same name on the same scope.
- 				se = st_lookup_scope(*((symbol_table **)st),$$,scope_main);
- 				if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,$$);
- 				else
- 				{
- 					// We check that there is no library function shadowing.
- 					se = st_lookup_scope(*((symbol_table **)st),$$,0);
- 					if(se!=NULL && se->type==LIBFUNC)printf("Error at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,$$);
- 					else{
- 						se = create_symbol($$,1,scope_main,yylineno,FORMAL);
- 						se = set_var_func(se,top(func_names));
- 						st_insert((symbol_table **)st,&se);
- 					}
- 				}
- 			}
- 			else
- 			{
- 				//ELSE :
 
  				// Lookup symbol table starting at the current 
  				// scope and going one level down in each loop
@@ -263,7 +238,7 @@ lvalue:
 					st_insert((symbol_table **)st,&se);
 					printf("Added variable '%s' in the symbol table.\n",$$);
 				}
-			}
+			
 		}
 		| LOCAL IDENTIFIER {
 			st_entry * se  = NULL;
@@ -395,7 +370,7 @@ func_temp:
 			func_signed++;
 			scope_main++;
 
-		}idlist PAREN_R{ } block { func_var=0;func_scope--;in_func=0;printf("Func (<parameters>) \n");}
+		}idlist PAREN_R{ } block { func_var=0;func_scope--;in_func=0;pop(&func_names);printf("Func (<parameters>) \n");}
 		; 
 
 funcdef:
@@ -403,9 +378,45 @@ funcdef:
 		;
 
 idlist:
-		IDENTIFIER {printf("fun par:%s\n",$1);}
-		| idlist COMMA IDENTIFIER {printf("fun par:%s \n",$3);}
-		| 
+		IDENTIFIER {printf("fun par:%s\n",$1);
+ 				printf("Runned for %s\n",$1);
+ 				st_entry * se = NULL;
+ 				// We check that there is no other variable using the same name on the same scope.
+ 				se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
+ 				if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,$1);
+ 				else
+ 				{
+ 					// We check that there is no library function shadowing.
+ 					se = st_lookup_scope(*((symbol_table **)st),$1,0);
+ 					if(se!=NULL && se->type==LIBFUNC)printf("Error at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,$1);
+ 					else{
+ 						se = create_symbol($1,1,scope_main,yylineno,FORMAL);
+ 						se = set_var_func(se,top(func_names));
+ 						st_insert((symbol_table **)st,&se);
+ 					}
+ 				}
+
+		}
+		| idlist COMMA IDENTIFIER {printf("fun par:%s \n",$3);
+
+ 				st_entry * se = NULL;
+ 				// We check that there is no other variable using the same name on the same scope.
+ 				se = st_lookup_scope(*((symbol_table **)st),$3,scope_main);
+ 				if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,$3);
+ 				else
+ 				{
+ 					// We check that there is no library function shadowing.
+ 					se = st_lookup_scope(*((symbol_table **)st),$3,0);
+ 					if(se!=NULL && se->type==LIBFUNC)printf("Error at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,$3);
+ 					else{
+ 						se = create_symbol($3,1,scope_main,yylineno,FORMAL);
+ 						se = set_var_func(se,top(func_names));
+ 						st_insert((symbol_table **)st,&se);
+ 					}
+ 				}
+
+		}
+		| {}
 		;
 
 block:
