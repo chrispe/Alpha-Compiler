@@ -82,12 +82,12 @@ void print_st(symbol_table * st){
 		printf("Symbol Table scope:<%d>\n",sc->scope);
 		entry = sc->symbols;
 		while(entry!=NULL){
-			if(entry->type!=FORMAL){
 				printf("\tkey='%s' ",entry->name);
 				if(entry->type==GLOBAL_VAR)printf("type=(global variable) ");
 				else if(entry->type==VAR)printf("type=(variable) ");
-				else if(entry->type==LCAL)printf("type=(local variable) ");
+				else if(entry->type==LCAL)printf("type=(local variable at : %s) ",entry->value_type.varVal->used_in_func);
 				else if(entry->type==LIBFUNC)printf("type=(library function) ");
+				else if(entry->type==FORMAL)printf("type=(formal at : %s)",entry->value_type.varVal->used_in_func);
 				else{
 					printf("user_function(");
 					arg = entry->value_type.funVal->arguments;
@@ -95,7 +95,7 @@ void print_st(symbol_table * st){
 					printf(") ");
 				}
 				printf("line=%d scope=%d active=%d\n",entry->line,entry->scope,entry->active);
-			}
+			
 			entry = entry->next;
 		}
 		printf("\n");

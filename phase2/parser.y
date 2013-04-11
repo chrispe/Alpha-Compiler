@@ -22,7 +22,6 @@
  	// A boolean to know if we're in a function.
  	char in_func = 0;
  	unsigned int func_scope = 0;
- 	char * last_func_name;
 
  	// A number which indicates how many function we have set by the prefix '$_(id)'
  	unsigned int func_signed = 0;
@@ -36,6 +35,9 @@
  	// A variable which indicates if we recognized a function symbol.
  	char fun_rec = 0;
 
+ 	// A variable which indicates if we reading the parameters of a function.
+ 	char func_var = 0;
+
  	// A function which returns the modulo of two doubles,
  	// so as no floating point exception occures.
 	double modulo(double a, double b){
@@ -43,6 +45,42 @@
 		return a - (double)result * b;
 	}
 
+	typedef struct str_stack_node{
+		char * str;
+		struct str_stack_node * next;
+	}str_stack_node;
+
+	// A stack which we push every time we visit a function
+	// and pop each time we leave a function.
+	str_stack_node * func_names = NULL;
+
+	void push(str_stack_node ** top,const char * newString){
+		str_stack_node * newNode = malloc(sizeof(str_stack_node));
+		newNode->str = malloc(strlen(newString)+1);
+		strcpy(newNode->str,newString);
+		if(*top==NULL){
+			newNode->next = NULL;
+			*top = newNode;
+		}
+		else{
+			newNode->next = *top;
+			*top = newNode;
+		}
+	}
+
+	void pop(str_stack_node ** top){
+		str_stack_node * temp;
+		temp = *top;
+		if(*top!=NULL){
+			*top = (*top)->next;
+			free(temp);
+		}
+	}
+
+	char * top(str_stack_node * top){
+		if(top!=NULL)return top->str;
+		return NULL;
+	}
 
 %}
 %error-verbose
@@ -66,7 +104,7 @@
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
 %type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall   term
-%type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt
+%type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt func_temp
 %type <fltval> expr  
  
 %left EQUAL
@@ -173,36 +211,59 @@ lvalue:
  			int i;
  			st_entry * se = NULL;
 
- 			// Lookup symbol table starting at the current 
- 			// scope and going one level down in each loop
- 			// until we get to know if the symbol exists.
 
-			for(i=scope_main;i>=0;i--){
-				se = st_lookup_scope(*((symbol_table **)st),$$,i);
-				if(se!=NULL)break;
-			}
 
-			// If the symbol was found then we need to detect if we have access to it.
-			if(se!=NULL){
+ 			// IF id is used as an argument
+ 			if(func_var == 1){
+ 				printf("Runned for %s\n",$$);
+ 				// We check that there is no other variable using the same name on the same scope.
+ 				se = st_lookup_scope(*((symbol_table **)st),$$,scope_main);
+ 				if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,$$);
+ 				else
+ 				{
+ 					// We check that there is no library function shadowing.
+ 					se = st_lookup_scope(*((symbol_table **)st),$$,0);
+ 					if(se!=NULL && se->type==LIBFUNC)printf("Error at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,$$);
+ 					else{
+ 						se = create_symbol($$,1,scope_main,yylineno,FORMAL);
+ 						se = set_var_func(se,top(func_names));
+ 						st_insert((symbol_table **)st,&se);
+ 					}
+ 				}
+ 			}
+ 			else
+ 			{
+ 				//ELSE :
 
-				if(se->type!=USERFUNC && se->type!=LIBFUNC){
-					//In case we are in a function and we try to access a non-global variable
-					if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
-						strcmp(se->value_type.varVal->used_in_func,last_func_name)!=0))
-						printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
-					else 
-						printf("Variable '%s' was detected and used.\n", $$);
+ 				// Lookup symbol table starting at the current 
+ 				// scope and going one level down in each loop
+ 				// until we get to know if the symbol exists.
+
+				for(i=scope_main;i>=0;i--){
+					se = st_lookup_scope(*((symbol_table **)st),$$,i);
+					if(se!=NULL)break;
 				}
-				else fun_rec = 1;
-			}
-			else {
-				// Else if the symbol could not be found we insert it in the symbol table.
-				se = create_symbol($$,1,scope_main,yylineno,VAR);
-	 
-				st_insert((symbol_table **)st,&se);
-				printf("Added variable '%s' in the symbol table.\n",$$);
-			}
 
+				// If the symbol was found then we need to detect if we have access to it.
+				if(se!=NULL){
+
+					if(se->type!=USERFUNC && se->type!=LIBFUNC){
+						//In case we are in a function and we try to access a non-global variable
+						if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
+							strcmp(se->value_type.varVal->used_in_func,top(func_names))!=0))
+							printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
+						else 
+							printf("Variable '%s' was detected and used.\n", $$);
+					}
+					else fun_rec = 1;
+				}
+				else {
+					// Else if the symbol could not be found we insert it in the symbol table.
+					se = create_symbol($$,1,scope_main,yylineno,VAR);
+					st_insert((symbol_table **)st,&se);
+					printf("Added variable '%s' in the symbol table.\n",$$);
+				}
+			}
 		}
 		| LOCAL IDENTIFIER {
 			st_entry * se  = NULL;
@@ -226,11 +287,19 @@ lvalue:
 					printf("Added global variable '%s' in the symbol table.\n",$2);
 				}
 				else{
-					se = create_symbol($2,1,scope_main,yylineno,LCAL);
-					printf("Added local variable '%s' in the symbol table.\n",$2);
+					// If we are under a function then it is ok to set local 
+					// else we set it as a simple variable
+					if(in_func){
+						se = create_symbol($2,1,scope_main,yylineno,LCAL);
+						se = set_var_func(se,top(func_names));
+						printf("Added local variable '%s' in the symbol table.\n",$2);
+					}
+					else{
+						se = create_symbol($2,1,scope_main,yylineno,VAR);
+						printf("Added variable '%s' in the symbol table.\n",$2);
+					}
 				}
-				
-			 	if(last_func_name!=NULL)se = set_var_func(se,last_func_name);
+			
 				st_insert((symbol_table **)st,&se);
 
 			}
@@ -294,23 +363,30 @@ elist:
 		| {}
 		;
  
-funcdef:
-		FUNCTION IDENTIFIER PAREN_L{
+func_temp:
+		IDENTIFIER{push(&func_names,$1);} PAREN_L{
 			scope_main++;
 			in_func=1;
 			func_started=1;
 			func_scope++;
-			last_func_name = malloc(strlen($2)+1);
-			strcpy(last_func_name,$2);
+			 
+
 		} 
-		idlist PAREN_R block {func_scope--;in_func=0;printf("Func <id> (<parameters>) \n");}
-		| FUNCTION PAREN_L{
+		idlist PAREN_R  block { func_scope--;in_func=0;pop(&func_names);printf("Func <id> (<parameters>) \n");}
+		| PAREN_L{
 		 
+ 
+		 	// We increase the scope of the function
 			func_scope++;
 
+			// We set that we are in a function
 			in_func=1;
+
+			// ...and the function has just started.
 			func_started=1;
 
+			// We generate a function name for this function
+			// and insert the symbol to the symbol table
 		 	st_entry * se = NULL;
 		 	temp_str = generate_func_name(func_signed);
 			se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC);
@@ -319,16 +395,17 @@ funcdef:
 			func_signed++;
 			scope_main++;
 
-			
+		}idlist PAREN_R{ } block { func_var=0;func_scope--;in_func=0;printf("Func (<parameters>) \n");}
+		; 
 
-
-		}idlist PAREN_R block { func_scope--;in_func=0;printf("Func (<parameters>) \n");}
+funcdef:
+		FUNCTION{func_var=1;printf("FUNCTION\n");} func_temp
 		;
 
 idlist:
-		IDENTIFIER {printf("fun par:%s %s\n",$$,$1);}
-		| idlist COMMA IDENTIFIER {printf("fun par:%s %s\n",$$,$1);}
-		| {}
+		IDENTIFIER {printf("fun par:%s\n",$1);}
+		| idlist COMMA IDENTIFIER {printf("fun par:%s \n",$3);}
+		| 
 		;
 
 block:
