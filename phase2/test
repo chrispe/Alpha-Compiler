@@ -1,5 +1,11 @@
-function b(){
+a = input();
+b = input();
+c = input();
+a=3;
+a=5;
+sup = input();
+function sup(){
 	
 }
 
-a = b();
+ 

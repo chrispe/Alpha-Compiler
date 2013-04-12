@@ -30,7 +30,35 @@ global_var = global_var * 2;
 global_var = global_var / 2;
 global_var = global_var % global_var;
 
- 
+global_var = true;
+
+if (not global_var)
+        global_var = true;
+
+else
+        global_var = false;
+
+for (i = 0; (i < 10 and global_var) or (i > 20); ++i) {
+        i++;
+
+        if( i != 1)
+                print();
+
+        if ( i <= 2) {
+                i=9;
+                print();
+                i--;
+                --i;
+        }
+
+        if (i == 1)
+                ;
+
+        else if (i >= 4)
+                ;
+        else
+                continue;
+}
 
 while (not global_var) {
 
@@ -54,8 +82,8 @@ object.test = 2;
 
 object = (function (){});
 
-function  (){
-        function  (){
+function test (){
+        function test1(){
                 return test;
         }
         return test1;
@@ -67,10 +95,10 @@ test()()();
 
 
 
-function  (){
+function test1 (){
         return [
-                {"a":1}
-       
+                {"a":1},
+                {"x" : [ {"y":[]}] }
         ];
 }
 

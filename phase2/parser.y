@@ -41,6 +41,8 @@
  	// A temporary pointer to the argument stack of a function.
  	arg_node * arg_tmp = NULL;
 
+ 	char expr_started = 0;
+
  	// A function which returns the modulo of two doubles,
  	// so as no floating point exception occures.
 	double modulo(double a, double b){
@@ -205,7 +207,7 @@ const:
 		;
 
 assignexpr:
-		lvalue EQUAL{} expr {if(fun_rec)printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$$);}
+		lvalue EQUAL{expr_started=1;printf("Expr started");} expr { expr_started=0;if(fun_rec)printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$$);fun_rec=0;}
 		;
 
 lvalue:
@@ -233,7 +235,7 @@ lvalue:
 					else 
 						printf("Variable '%s' was detected and used.\n", $$);
 				}
-				else fun_rec = 1;
+				else if(expr_started==0){fun_rec = 1;printf("FUNCION RECOGNIZED\n");}
 			}
 			else {
 				// Else if the symbol could not be found we insert it in the symbol table.
@@ -255,29 +257,40 @@ lvalue:
 				// else we make a reference to that variable.
 				if(se->type==LIBFUNC)
 					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$2);
-				else printf("Local variable '%s' was detected and used.\n",$2);
+				else 
+					printf("Local variable '%s' was detected and used.\n",$2);
 			}
 			else{
-				// If the symbol could not be detected we insert it to
-				// the symbol table on the current scope.
-				if(scope_main==0){
-					se = create_symbol($2,1,0,yylineno,GLOBAL_VAR);
-					printf("Added global variable '%s' in the symbol table.\n",$2);
-				}
+
+				// We need to make sure that there is no library function with that name.
+				// So we need to lookup on the global scope.
+				se = st_lookup_scope(*((symbol_table **)st),$2,0);
+
+				if(se->type==LIBFUNC)
+					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$2);
 				else{
-					// If we are under a function then it is ok to set local 
-					// else we set it as a simple variable
-					if(in_func){
-						se = create_symbol($2,1,scope_main,yylineno,LCAL);
-						se = set_var_func(se,top(func_names));
-						printf("Added local variable '%s' in the symbol table.\n",$2);
+
+					// If the symbol could not be detected we insert it to
+					// the symbol table on the current scope.
+					if(scope_main==0){
+						se = create_symbol($2,1,0,yylineno,GLOBAL_VAR);
+						printf("Added global variable '%s' in the symbol table.\n",$2);
 					}
 					else{
-						se = create_symbol($2,1,scope_main,yylineno,VAR);
-						printf("Added variable '%s' in the symbol table.\n",$2);
+						// If we are under a function then it is ok to set local 
+						// else we set it as a simple variable
+						if(in_func){
+							se = create_symbol($2,1,scope_main,yylineno,LCAL);
+							se = set_var_func(se,top(func_names));
+							printf("Added local variable '%s' in the symbol table.\n",$2);
+						}
+						else{
+							se = create_symbol($2,1,scope_main,yylineno,VAR);
+							printf("Added variable '%s' in the symbol table.\n",$2);
+						}
 					}
+					st_insert((symbol_table **)st,&se);
 				}
-				st_insert((symbol_table **)st,&se);
 			}
 
 		}
@@ -288,7 +301,7 @@ lvalue:
 			if(se==NULL)
 				printf("Error at line %d: Global variable '%s' could not be detected.\n",yylineno,$2);
 			else
-				printf("Error at line %d: Global variable '%s' was detected and used.\n",yylineno,$2); 
+				printf("Global variable '%s' was detected and used.\n",$2); 
 		}
 		| member {}
 		;
@@ -350,15 +363,23 @@ func_temp:
 
 			// If a symbol has been detected we show the error.
 			if(se!=NULL){
-				if(se->type==LIBFUNC)printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$1);
-				else printf("Error at line %d: '%s' has already been declared as a variable/function.\n",yylineno,$1);
+				if(se->type==LIBFUNC)
+					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$1);
+				else {
+					printf("Error at line %d: '%s' has already been declared as a ",yylineno,$1);
+					if(se->type==USERFUNC)
+						printf("function.\n");
+					else
+						printf("variable.\n");
+				}
 			}
 			else{
 				// else we add the new symbol to the symbol table.
 				se = create_symbol($1,1,scope_main,yylineno,USERFUNC);
 				st_insert((symbol_table **)st,&se);
 			}
-		} PAREN_L{
+		} 
+		PAREN_L {
 			scope_main++;
 			in_func=1;
 			func_started=1;
@@ -385,7 +406,6 @@ func_temp:
 			se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC);
 			
 			st_insert((symbol_table **)st,&se);
-			printf("have added");
 			func_signed++;
 			scope_main++;
 
