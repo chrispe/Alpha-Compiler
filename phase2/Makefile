@@ -15,5 +15,5 @@ st.o: symbol_table.c symbol_table.h
 clean:
 	rm -f *.o
 	rm -f lex.yy.c
-	rm -f parser.h
 	rm -f parser.c
+	rm -f parser.h
