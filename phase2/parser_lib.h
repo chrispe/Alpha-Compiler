@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include "symbol_table.h"
 
-
 /* =======================================================
 	Struct and functions for storing strings in a stack 
    ======================================================= */
