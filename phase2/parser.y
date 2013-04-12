@@ -191,7 +191,7 @@ normcall:
 		;
 
 methodcall:
-		DDOT IDENTIFIER PAREN_L elist PAREN_R {printf("..id(elist)")}
+		DDOT IDENTIFIER PAREN_L elist PAREN_R {printf("..id(elist)");}
 		;
 
 objectdef:
