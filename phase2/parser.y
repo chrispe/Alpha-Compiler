@@ -2,7 +2,7 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
- 	#include "symbol_table.h"
+ 	#include "parser_lib.h"
 	#define YYPARSE_PARAM st
 	
 	int yyerror (const char * yaccProvideMessage);
@@ -12,81 +12,6 @@
 	extern int yylineno;
 	extern char * yytext;
 	extern FILE * yyin;
-
- 	// This is the main scope.
- 	unsigned int scope_main = 0;
-
- 	// This is a scope for how deep the loop is.
- 	unsigned int scope_loop = 0;
-
- 	// A boolean to know if we're in a function.
- 	char in_func = 0;
- 	unsigned int func_scope = 0;
-
- 	// A number which indicates how many function we have set by the prefix '$_(id)'
- 	unsigned int func_signed = 0;
-
- 	// A boolean which indicates if a function name has been called.
- 	char func_started = 0;
-
- 	// A temporary string for a lot of uses.
- 	char * temp_str;
-
- 	// A variable which indicates if we recognized a function symbol.
- 	char fun_rec = 0;
-
- 	// A variable which indicates if we reading the parameters of a function.
- 	char func_var = 0;
-
- 	// A temporary pointer to the argument stack of a function.
- 	arg_node * arg_tmp = NULL;
-
- 	char expr_started = 0;
-
- 	// A function which returns the modulo of two doubles,
- 	// so as no floating point exception occures.
-	double modulo(double a, double b){
-		int result = (int)(a/b);
-		return a - (double)result * b;
-	}
-
-	typedef struct str_stack_node{
-		char * str;
-		struct str_stack_node * next;
-	}str_stack_node;
-
-	// A stack which we push every time we visit a function
-	// and pop each time we leave a function.
-	str_stack_node * func_names = NULL;
-
-	void push(str_stack_node ** top,const char * newString){
-		str_stack_node * newNode = malloc(sizeof(str_stack_node));
-		newNode->str = malloc(strlen(newString)+1);
-		strcpy(newNode->str,newString);
-		if(*top==NULL){
-			newNode->next = NULL;
-			*top = newNode;
-		}
-		else{
-			newNode->next = *top;
-			*top = newNode;
-		}
-	}
-
-	void pop(str_stack_node ** top){
-		str_stack_node * temp;
-		temp = *top;
-		if(*top!=NULL){
-			*top = (*top)->next;
-			free(temp);
-		}
-	}
-
-	char * top(str_stack_node * top){
-		if(top!=NULL)return top->str;
-		return NULL;
-	}
-
 %}
 %error-verbose
 %start program
@@ -133,10 +58,12 @@ program:
 		;
 
 stmt:
-		expr SEMICOLON {fun_rec=0;}
+		expr SEMICOLON { fun_rec=0; }
 		| BREAK SEMICOLON {
-			if(scope_loop>0)printf("break;\n");
-			else yyerror("Cannot use break; outside of a loop.");
+			if(scope_loop>0)
+				printf("break;\n");
+			else
+				yyerror("Cannot use break; outside of a loop.");
 		}
 		| CONTINUE SEMICOLON {
 			if(scope_loop>0)printf("continue;\n");
@@ -207,108 +134,43 @@ const:
 		;
 
 assignexpr:
-		lvalue EQUAL{expr_started=1;printf("Expr started");} expr { expr_started=0;if(fun_rec)printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$$);fun_rec=0;}
+		lvalue EQUAL{expr_started=1;printf("Expr started\n");} 
+		expr { 
+			expr_started=0; 
+			if(fun_rec)
+				printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$$);
+			fun_rec=0;
+		}
 		;
 
 lvalue:
 		IDENTIFIER {
- 			int i;
- 			st_entry * se = NULL;
 
- 			// Lookup symbol table starting at the current 
- 			// scope and going one level down in each loop
- 			// until we get to know if the symbol exists.
-
-			for(i=scope_main;i>=0;i--){
-				se = st_lookup_scope(*((symbol_table **)st),$$,i);
-				if(se!=NULL)break;
-			}
-
-			// If the symbol was found then we need to detect if we have access to it.
-			if(se!=NULL){
-
-				if(se->type!=USERFUNC && se->type!=LIBFUNC){
-					//In case we are in a function and we try to access a non-global variable
-					if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
-						strcmp(se->value_type.varVal->used_in_func,top(func_names))!=0))
-						printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,$$);
-					else 
-						printf("Variable '%s' was detected and used.\n", $$);
-				}
-				else if(expr_started==0){fun_rec = 1;printf("FUNCION RECOGNIZED\n");}
-			}
-			else {
-				// Else if the symbol could not be found we insert it in the symbol table.
-				se = create_symbol($$,1,scope_main,yylineno,VAR);
-				st_insert((symbol_table **)st,&se);
-				printf("Added variable '%s' in the symbol table.\n",$$);
-			}
-			
+			// Adding the id to the symbol table.
+			// Every required checking is included in the following function.
+			add_variable((symbol_table **)st, $$,yylineno);
+ 		 			
 		}
 		| LOCAL IDENTIFIER {
-			st_entry * se  = NULL;
 
-			// We perform a lookup in the current scope
-			se = st_lookup_scope(*((symbol_table **)st),$2,scope_main);
-
-			// If the symbol was found
-			if(se!=NULL){
-				// We need to check that there is no collusion with library function.
-				// else we make a reference to that variable.
-				if(se->type==LIBFUNC)
-					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$2);
-				else 
-					printf("Local variable '%s' was detected and used.\n",$2);
-			}
-			else{
-
-				// We need to make sure that there is no library function with that name.
-				// So we need to lookup on the global scope.
-				se = st_lookup_scope(*((symbol_table **)st),$2,0);
-
-				if(se->type==LIBFUNC)
-					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$2);
-				else{
-
-					// If the symbol could not be detected we insert it to
-					// the symbol table on the current scope.
-					if(scope_main==0){
-						se = create_symbol($2,1,0,yylineno,GLOBAL_VAR);
-						printf("Added global variable '%s' in the symbol table.\n",$2);
-					}
-					else{
-						// If we are under a function then it is ok to set local 
-						// else we set it as a simple variable
-						if(in_func){
-							se = create_symbol($2,1,scope_main,yylineno,LCAL);
-							se = set_var_func(se,top(func_names));
-							printf("Added local variable '%s' in the symbol table.\n",$2);
-						}
-						else{
-							se = create_symbol($2,1,scope_main,yylineno,VAR);
-							printf("Added variable '%s' in the symbol table.\n",$2);
-						}
-					}
-					st_insert((symbol_table **)st,&se);
-				}
-			}
+			// Adding the local id to the symbol table.
+			// Every required checking is included in the following function.
+			add_local_variable((symbol_table **)st, $2,yylineno);
 
 		}
 		| DCOLON IDENTIFIER {
-			st_entry * se = NULL;
-			// We perform a lookup in the global scope
-			se = st_lookup_scope(*((symbol_table **)st),$2,0);
-			if(se==NULL)
-				printf("Error at line %d: Global variable '%s' could not be detected.\n",yylineno,$2);
-			else
-				printf("Global variable '%s' was detected and used.\n",$2); 
+
+			// We check that the global variable exists
+			// The whole proccess is handled by the following funciton.
+			check_global_variable((symbol_table **)st, $2,yylineno);
+
 		}
 		| member {}
 		;
 
 member:
-		lvalue DOT IDENTIFIER {}
-		| lvalue BRACKET_L expr BRACKET_R {}
+		lvalue DOT IDENTIFIER {printf("lvalue.id\n");}
+		| lvalue BRACKET_L expr BRACKET_R {printf("lvalue[expr]\n");}
 		| call DOT IDENTIFIER {}
 		| call BRACKET_L expr BRACKET_R {}
 		;
@@ -329,7 +191,7 @@ normcall:
 		;
 
 methodcall:
-		DDOT IDENTIFIER PAREN_L elist PAREN_R {}
+		DDOT IDENTIFIER PAREN_L elist PAREN_R {printf("..id(elist)")}
 		;
 
 objectdef:
@@ -354,30 +216,11 @@ elist:
  
 func_temp:
 		IDENTIFIER{
-			push(&func_names,$1);
-			st_entry * se = NULL;
 
-			// We check that there is no symbol using the same
-			// name with this of the new function.
-			se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
+			// Adding the function(with name) to the symbol table.
+			// Every required checking is included in the following method.
+			add_function((symbol_table **)st,$1,yylineno,1);
 
-			// If a symbol has been detected we show the error.
-			if(se!=NULL){
-				if(se->type==LIBFUNC)
-					printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,$1);
-				else {
-					printf("Error at line %d: '%s' has already been declared as a ",yylineno,$1);
-					if(se->type==USERFUNC)
-						printf("function.\n");
-					else
-						printf("variable.\n");
-				}
-			}
-			else{
-				// else we add the new symbol to the symbol table.
-				se = create_symbol($1,1,scope_main,yylineno,USERFUNC);
-				st_insert((symbol_table **)st,&se);
-			}
 		} 
 		PAREN_L {
 			scope_main++;
@@ -388,28 +231,12 @@ func_temp:
 		idlist PAREN_R  block { func_scope--;in_func=0;pop(&func_names);printf("Func <id> (<parameters>) \n");}
 		| PAREN_L{
 		 
+ 			// Adding the function(without name) to the symbol table.
+			// Every required checking is included in the following method.
+			add_function((symbol_table **)st,NULL,yylineno,0);
  
-		 	// We increase the scope of the function
-			func_scope++;
 
-			// We set that we are in a function
-			in_func=1;
-
-			// ...and the function has just started.
-			func_started=1;
-
-			// We generate a function name for this function
-			// and insert the symbol to the symbol table
-		 	st_entry * se = NULL;
-		 	temp_str = generate_func_name(func_signed);
-		 	push(&func_names,temp_str);
-			se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC);
-			
-			st_insert((symbol_table **)st,&se);
-			func_signed++;
-			scope_main++;
-
-		}idlist PAREN_R{ } block { func_var=0;func_scope--;in_func=0;pop(&func_names);printf("Func (<parameters>) \n");}
+		} idlist PAREN_R{ } block { func_var=0;func_scope--;in_func=0;pop(&func_names);printf("Func (<parameters>) \n");}
 		; 
 
 funcdef:
@@ -418,64 +245,36 @@ funcdef:
 
 idlist:
 		IDENTIFIER {
-
-				printf("fun par:%s\n",$1);
-
- 				st_entry * se = NULL;
-
- 				// We check that there is no other variable using the same name on the same scope.
- 				se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
- 				if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,$1);
- 				else
- 				{
- 					// We check that there is no library function shadowing.
- 					se = st_lookup_scope(*((symbol_table **)st),$1,0);
- 					if(se!=NULL && se->type==LIBFUNC)printf("Error at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,$1);
- 					else{
- 						se = create_symbol($1,1,scope_main,yylineno,FORMAL);
- 						se = set_var_func(se,top(func_names));
- 						st_insert((symbol_table **)st,&se);
- 						se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main-1);
- 						args_insert(&(se->value_type.funVal->arguments),$1);
- 					}
- 				}
+ 
+ 			// Adding the argument of a function to the symbol table.
+			// Every required checking is included in the following method.
+ 			add_function_argument((symbol_table **)st,$1,yylineno,0);
 
 		}
 		| idlist COMMA IDENTIFIER {
 
-				printf("fun par:%s \n",$3);
+			// Adding the argument of a function to the symbol table.
+			// Every required checking is included in the following method.
+			add_function_argument((symbol_table **)st,$3,yylineno,1);
 
- 				st_entry * se = NULL;
-
- 				// We check that there is no other variable using the same name on the same scope.
- 				se = st_lookup_scope(*((symbol_table **)st),$3,scope_main);
- 				if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,$3);
- 				else
- 				{
- 					// We check that there is no library function shadowing.
- 					se = st_lookup_scope(*((symbol_table **)st),$3,0);
- 					if(se!=NULL && se->type==LIBFUNC)printf("Error at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,$3);
- 					else{
- 						se = create_symbol($3,1,scope_main,yylineno,FORMAL);
- 						se = set_var_func(se,top(func_names));
- 						st_insert((symbol_table **)st,&se);
- 						args_insert(&arg_tmp,$3);
- 						se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main-1);
- 						args_insert(&(se->value_type.funVal->arguments),$3);
- 					}
- 				}
 		}
 		| {}
 		;
 
 block:
 		BRACE_L {
-			if(!func_started)scope_main++;
-			else func_started = 0;
+
+			if(!func_started)
+				scope_main++;
+			else
+				func_started = 0;
+
 		} block_in BRACE_R {
+
 			// We disable the local variables of the current scope
 			scope_set_active((symbol_table **)st,scope_main,0);
 			scope_main--;
+
 		}
 		;
  
@@ -485,12 +284,12 @@ block_in:
 		;
 
 ifstmt:
-		IF PAREN_L expr PAREN_R stmt %prec IF_TERM { printf("if (<expr>) <stmt>\n");}
-		| IF PAREN_L expr PAREN_R stmt ELSE stmt { printf("if (<expr>) <stmt> else <stmt>\n");}
+		IF PAREN_L expr PAREN_R stmt %prec IF_TERM { printf("if (<expr>) <stmt>\n"); }
+		| IF PAREN_L expr PAREN_R stmt ELSE stmt { printf("if (<expr>) <stmt> else <stmt>\n"); }
 		;
 
 whilestmt:
-		WHILE {scope_loop++;} PAREN_L expr PAREN_R stmt{scope_loop--;} {
+		WHILE {scope_loop++;} PAREN_L expr PAREN_R stmt {scope_loop--;} {
 			printf("while (<expr>) <stmt>\n");
 		}
 		;

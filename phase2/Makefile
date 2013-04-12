@@ -1,11 +1,13 @@
-parser: lex.yy.c parser.c lex_lib.o st.o
-	gcc -o parser lex.yy.c lex_lib.o st.o parser.c -lfl
+parser: lex.yy.c parser.c lex_lib.o st.o par_lib.o
+	gcc -o parser lex.yy.c lex_lib.o st.o parser.c par_lib.o -lfl
 	rm *.o
 	rm -f lex.yy.c
 	rm -f parser.c
 	rm -f parser.h
 parser.c:
 	bison --yacc parser.y
+par_lib.o:
+	gcc -o par_lib.o -c parser_lib.c
 lex.yy.c:
 	flex lex_analyzer.l
 lex_lib.o: lex_lib.c lex_lib.h
@@ -17,3 +19,4 @@ clean:
 	rm -f lex.yy.c
 	rm -f parser.c
 	rm -f parser.h
+	rm -f parser
