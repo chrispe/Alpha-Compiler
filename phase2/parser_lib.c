@@ -1,8 +1,5 @@
 #include "parser_lib.h"
 
-
-
-
 // This is the main scope.
 unsigned int scope_main = 0;
 
