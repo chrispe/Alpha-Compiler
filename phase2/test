@@ -1,11 +1,9 @@
-a = input();
-b = input();
-c = input();
-a=3;
-a=5;
-sup = input();
-function sup(){
-	
+local print;
+function g(a,b,c,d,e,f,g){
+
+	function h(q,w,e,r,t,y,u,i,o,p,a,s,d,f,g,h,j,k,l){}
 }
 
- 
+
+
+a = g;

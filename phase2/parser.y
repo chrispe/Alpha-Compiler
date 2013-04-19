@@ -109,10 +109,19 @@ term:
 		PAREN_L expr PAREN_R	{printf("(expr)\n");}
 		| MINUS expr %prec UMINUS {printf("-<expr>\n");}
 		| NOT expr {printf("!<expr>\n");}
-		| lvalue DPLUS {printf("lvalue++\n");}
-		| DPLUS lvalue {printf("++lvalue\n");}
-		| lvalue DMINUS {printf("lvalue--\n");}
-		| DMINUS lvalue {printf("--lvalue\n");}
+		| lvalue DPLUS {
+			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			else printf("lvalue++\n");}
+		| DPLUS lvalue {
+			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			else printf("++lvalue\n");}
+		| lvalue DMINUS {
+			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			else printf("lvalue--\n");
+		}
+		| DMINUS lvalue {
+			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			else printf("--lvalue\n");}
 		| primary {}
 		;
 

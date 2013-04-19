@@ -199,6 +199,8 @@ int generate_key(const char * name){
 }
 
 int args_insert(arg_node ** args,const char * arg_name){
+	arg_node * temp = *args;
+
 	if(args_lookup(*args,arg_name)!=NULL)return 0;
 
 	arg_node * arg = (arg_node *)malloc(sizeof(arg_node));
@@ -208,10 +210,16 @@ int args_insert(arg_node ** args,const char * arg_name){
 	if(memerror(arg->name,"func arg:name"))return 0;
 	strcpy(arg->name,arg_name);
 
-	if(*args==NULL)arg->next = NULL;
-	else arg->next = *args;
+	arg->next = NULL;
 
-	*args = arg;
+	if(*args==NULL)
+		*args = arg;
+	else{
+		while((*args)->next!=NULL)*args = (*args)->next;
+		(*args)->next = arg;
+		*args = temp;
+	}
+
 	return 1;
 }
 

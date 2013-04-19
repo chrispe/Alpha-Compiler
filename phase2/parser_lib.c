@@ -107,7 +107,7 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 	if(se!=NULL){
 		// We need to check that there is no collusion with library function.
 		// else we make a reference to that variable.
-		if(se->type==LIBFUNC)
+		if(se->type==LIBFUNC && scope_main!=0)
 			printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,variable);
 		else 
 			printf("Local variable '%s' was detected and used.\n",variable);
