@@ -1,3 +1,7 @@
+:
+:
+
+
 local print;
 function g(a,b,c,d,e,f,g){
 

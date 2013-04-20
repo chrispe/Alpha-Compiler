@@ -33,7 +33,7 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall   term
+%type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall   term   index_temp
 %type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt func_temp
 %type <fltval> expr  
  
@@ -158,7 +158,7 @@ lvalue:
 			// Adding the id to the symbol table.
 			// Every required checking is included in the following function.
 			add_variable((symbol_table **)st, $$,yylineno);
- 		 			
+ 		 	
 		}
 		| LOCAL IDENTIFIER {
 
@@ -210,13 +210,16 @@ objectdef:
 
 indexed:
 		indexedelem {}
-		| indexed COMMA indexedelem {}
+		|indexed COMMA indexedelem {}
 		;
 
 indexedelem:
-		BRACE_L expr COLON expr BRACE_R {}
+		BRACE_L index_temp BRACE_R {}
 		;
 
+index_temp:
+		expr COLON expr {}
+		;
 elist:
 		expr {}
 		| elist COMMA expr {}

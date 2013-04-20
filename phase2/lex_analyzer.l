@@ -18,7 +18,7 @@ INTEGER_HEX    (0[xX][0-9A-Fa-f]+)
 
 INTEGER_DEC    [0-9]*
 
-STRING         \"(\\\"|.)*\"
+STRING \"(\\\"|[^\"])*\"
 
 WRONG_STR      \"
 
