@@ -34,12 +34,27 @@ char expr_started = 0;
 // and pop each time we leave a function.
 str_stack_node * func_names = NULL;
 
+// A stack which keeps the loop scope when entering a function.
+str_stack_node * loop_stack = NULL;
+
 void push(str_stack_node ** top,const char * newString){
 	str_stack_node * newNode = malloc(sizeof(str_stack_node));
 	newNode->str = malloc(strlen(newString)+1);
 	strcpy(newNode->str,newString);
 	newNode->next = *top;
 	*top = newNode;
+}
+
+void push_value(str_stack_node ** top,unsigned int  val){
+	str_stack_node * newNode = malloc(sizeof(str_stack_node));
+	newNode->value = val;
+	newNode->next = *top;
+	*top = newNode;
+}
+
+unsigned int  top_value(str_stack_node * top){
+	if(top!=NULL)return top->value;
+	return -1;
 }
 
 void pop(str_stack_node ** top){

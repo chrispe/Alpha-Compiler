@@ -252,7 +252,7 @@ func_temp:
 		; 
 
 funcdef:
-		FUNCTION{func_var=1;printf("FUNCTION\n");} func_temp
+		FUNCTION{func_var=1;printf("FUNCTION\n");push_value(&loop_stack,scope_loop);scope_loop=0;} func_temp {scope_loop = top_value(loop_stack);pop(&loop_stack);}
 		;
 
 idlist:

@@ -1,13 +1,13 @@
-:
-:
-
-
-local print;
-function g(a,b,c,d,e,f,g){
-
-	function h(q,w,e,r,t,y,u,i,o,p,a,s,d,f,g,h,j,k,l){}
+while(i<5){
+	function g(){
+	while(1){
+		function p(){
+			{break;}
+		}
+		break;
+	}
+	}
+	break;
 }
 
-
-
-a = g;
+function(){break;}

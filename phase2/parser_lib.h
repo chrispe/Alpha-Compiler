@@ -11,17 +11,20 @@
 // storing temporary strings of functions.
 typedef struct str_stack_node{
 	char * str;
+	unsigned int  value;
 	struct str_stack_node * next;
 }str_stack_node;
 
 // The function for pushing elements in the stack.
 void push(str_stack_node **,const char *);
-
-// The function for popping elemens from the stack.
-void pop(str_stack_node **);
+void push_value(str_stack_node ** top,unsigned int  val);
 
 // The function for getting the top of the stack.
 char * top(str_stack_node *);
+unsigned int top_value(str_stack_node * top);
+
+// The function for popping elemens from the stack.
+void pop(str_stack_node **);
 
 /* ==================================================
 	Some global variables used for the right parsing 
@@ -63,6 +66,9 @@ extern char expr_started;
 // A stack which we push every time we visit a function
 // and pop each time we leave a function.
 extern str_stack_node * func_names;
+
+// A stack which keeps the loop scope when entering a function.
+extern str_stack_node * loop_stack;
 
 /* ===========================================================
 	The functions for adding variables to the symbol table 
