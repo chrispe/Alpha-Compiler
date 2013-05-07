@@ -60,7 +60,7 @@ extern unsigned int quads_total;
 extern unsigned int curr_quad;
 
 /* Some useful defined keywords for the
-   reallocation of the array.		 */
+   reallocation of the quads array.	 */
 #define EXPAND_SIZE 1024
 #define CURR_SIZE (quads_total*sizeof(quad))
 #define NEW_SIZE (EXPAND_SIZE*sizeof(quad) + CURR_SIZE)
