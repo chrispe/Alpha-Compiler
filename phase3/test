@@ -1,5 +1,5 @@
 while(i<5){
-	function g(){
+	function g(a,b,c){
 	while(1){
 		function p(){
 			{break;}

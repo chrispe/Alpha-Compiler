@@ -1,11 +1,13 @@
-parser: lex.yy.c parser.c lex_lib.o st.o par_lib.o
-	gcc -o parser lex.yy.c lex_lib.o st.o parser.c par_lib.o -lfl
+parser: lex.yy.c parser.c lex_lib.o st.o par_lib.o ic_gen.o
+	gcc -o parser lex.yy.c lex_lib.o st.o parser.c par_lib.o ic_gen.o -lfl
 	rm *.o
 	rm -f lex.yy.c
 	rm -f parser.c
 	rm -f parser.h
 parser.c:
 	bison --yacc parser.y
+ic_gen.o:	
+	gcc -o ic_gen.o -c ic_generator.c
 par_lib.o:
 	gcc -o par_lib.o -c parser_lib.c
 lex.yy.c:

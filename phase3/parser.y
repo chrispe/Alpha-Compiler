@@ -2,7 +2,8 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
- 	#include "parser_lib.h"
+ 
+ 	#include "ic_generator.h"
 	#define YYPARSE_PARAM st
 	
 	int yyerror (const char * yaccProvideMessage);
