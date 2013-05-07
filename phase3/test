@@ -1,0 +1,13 @@
+while(i<5){
+	function g(){
+	while(1){
+		function p(){
+			{break;}
+		}
+		break;
+	}
+	}
+	break;
+}
+
+function(){break;}
