@@ -27,6 +27,9 @@ unsigned int top_value(str_stack_node * top);
 // The function for popping elemens from the stack.
 void pop(str_stack_node **);
 
+// Sets the top of the stack to a value.
+void set_top_value(str_stack_node **top,unsigned int value);
+
 /* ==================================================
 	Some global variables used for the right parsing 
    ================================================== */
@@ -143,6 +146,9 @@ void set_curr_scope_offset(unsigned int);
 
 /* Increases the current scope offset */
 void increase_curr_scope_offset(void);
+
+/* Resets the current scope offset to zero */
+void reset_curr_scope_offset(void);
 
 /* Increases the scope space counter 
    We use this when we enter a scope space */

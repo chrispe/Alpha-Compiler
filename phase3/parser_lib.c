@@ -88,6 +88,10 @@ char * top(str_stack_node * top){
 	return NULL;
 }
 
+void set_top_value(str_stack_node **top,unsigned int value){
+	(*top)->value = value;
+}
+
 double modulo(double a, double b){
 	int result = (int)(a/b);
 	return a - (double)result * b;
@@ -212,7 +216,8 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 		}
 		else{
 			// else we add the new symbol to the symbol table.
-			se = create_symbol(function,1,scope_main,yylineno,USERFUNC,get_current_scope_offset(),get_current_scope_space());
+			se = create_symbol(function,1,scope_main,yylineno,USERFUNC,top_value(scope_offset_stack),get_current_scope_space());
+			set_top_value(&scope_offset_stack,top_value(scope_offset_stack)+1);
 			st_insert((symbol_table **)st,&se);
 		}
 	}
@@ -230,8 +235,9 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 		// and insert the symbol to the symbol table
 		temp_str = generate_func_name(func_signed);
 		push(&func_names,temp_str);
-		se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC,get_current_scope_offset(),get_current_scope_space());
+		se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC,top_value(scope_offset_stack),get_current_scope_space());
 			
+		set_top_value(&scope_offset_stack,top_value(scope_offset_stack)+1);	
 		st_insert((symbol_table **)st,&se);
 		func_signed++;
 		scope_main++;
@@ -294,7 +300,7 @@ char * generate_temp_var_name(unsigned int id){
 	var_name = malloc(len+4);
 
 	// Give a value to the string
-	sprintf (var_name, "$v_%d", id);
+	sprintf(var_name, "$t_%d", id);
 
 	return var_name;
 }
@@ -360,6 +366,10 @@ void set_curr_scope_offset(unsigned int offset){
 		case FORMAL_ARG  : formal_arg_offset  = offset; break;
 		default: assert(0);
 	}
+}
+
+void reset_curr_scope_offset(void){
+	set_curr_scope_offset(0);
 }
 
 void enter_scope_space(void){

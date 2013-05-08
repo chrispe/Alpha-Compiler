@@ -38,3 +38,25 @@ void emit(opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,u
 	current_quad->label = label;
 	current_quad->line = line;
 }
+ 
+void write_quads(void){
+	int i;
+	FILE * quads_output; 
+
+	char * ops[] = {"assign","add","sub","mul","op_div","mod","uminus","and","or","not"
+					"if_eq","if_neq","if_leq","if_greq","if_less","if_greater"
+					"call","param","ret","get_ret_val","func_start","func_end"
+					"jump","table_create","table_get_elem","table_set_elem" };
+
+	quads_output = fopen("quads.txt","w"); 
+	if(quads_output==NULL)
+		quads_output = stderr;  
+
+	for(i=0;i<quads_total;i++){
+		if((quads[i].op >= add && quads[i].op < uminus)|| quads[i].op==and || quads[i].op==or){
+ 
+		}
+	}
+ 
+	fclose(quads_output);  
+}

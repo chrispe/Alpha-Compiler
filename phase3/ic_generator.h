@@ -8,7 +8,7 @@ typedef enum iopcode {
 	if_eq, if_neq, if_leq,
 	if_greq, if_less, if_greater,
 	call, param, ret, get_ret_val,
-	func_start, func_end, table_create,
+	func_start, func_end, jump, table_create,
 	table_get_elem, table_set_elem
 }opcode;
 
@@ -71,3 +71,6 @@ void expand(void);
 /* This function is for the insertion
    of a new quad to the quads array. */
 void emit(opcode,expr *,expr *, expr *, unsigned int,unsigned int);
+
+/* This function prints the quads to a text file */
+void write_quads(void);

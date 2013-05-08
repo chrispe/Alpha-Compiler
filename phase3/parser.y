@@ -273,7 +273,7 @@ funcdef:
 			push_value(&scope_offset_stack,get_current_scope_offset());
 
 			// We set the new scope offset and loop scope to zero
-			set_curr_scope_offset(0);
+			reset_curr_scope_offset();
 			scope_loop=0;
 		} 
 		func_temp {
@@ -385,10 +385,7 @@ int main(int argc,char ** argv)
 
 	yyparse(&st);
 
-	FILE * quads_file; 
-	quads_file = fopen("quads.txt","a+"); 
-	fprintf(quads_file,"%s","<CODE>");
-	fclose(quads_file);  
+
 
 	printf("\n <--[Parsing Completed]-->\n");
 	printf("Press [Enter] to continue with the symbol table.\n");

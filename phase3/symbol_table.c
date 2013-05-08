@@ -269,3 +269,4 @@ void scope_set_active(symbol_table ** st,unsigned int scope,char active){
 		}
 	}
 }
+ 
