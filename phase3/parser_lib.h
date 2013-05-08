@@ -42,7 +42,7 @@ extern char in_func;
 // An integer counting the scope at a function.
 extern unsigned int func_scope;
 
-// A number which indicates how many function we have set by the prefix '$_(id)'
+// A number which indicates how many function we have set by the prefix '$f_(id)'
 extern unsigned int func_signed;
 
 // A boolean which indicates if a function name has been called.

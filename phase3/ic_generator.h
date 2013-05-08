@@ -64,3 +64,51 @@ extern unsigned int curr_quad;
 #define EXPAND_SIZE 1024
 #define CURR_SIZE (quads_total*sizeof(quad))
 #define NEW_SIZE (EXPAND_SIZE*sizeof(quad) + CURR_SIZE)
+
+/* This function is used to expand the quads array */
+void expand(void);
+
+/* This function is for the insertion
+   of a new quad to the quads array. */
+void emit(opcode,expr *,expr *, expr *, unsigned int,unsigned int);
+
+/* Generates a name for a temporary variable */
+char * generate_temp_var(unsigned int id);
+
+/* A number which indicates how many temporary
+   variables we have set by the prefix '$v_(id)' */
+extern unsigned int var_signed;
+
+/* Resets the counter of the temporary variables. */
+void reset_temp_vars(void);
+
+/* Returns the current scope */
+unsigned int get_current_scope(void);
+
+/* Returns a symbol to be used for a temporary variable */
+st_entry * get_temp_var(symbol_table * st, unsigned int line);
+
+/* Variables used to get the offset of each kind of symbol */
+extern unsigned int program_var_offset;
+extern unsigned int func_local_offset;
+extern unsigned int formal_arg_offset;
+
+/* A counter for the scope space */
+extern unsigned int scope_space_counter;
+
+/* Returns the current scope space */
+scopespace_t get_current_scope_space(void);
+
+/* Returns the current scope offset */
+unsigned int get_current_scope_offset(void);
+ 
+/* Increases the current scope offset */
+void increase_curr_scope_offset(void);
+
+/* Increases the scope space counter 
+   We use this when we enter a scope space */
+void enter_scope_space(void);
+
+/* Decreases the scope space counter
+   We use this when we exit a scope space */
+void exit_scope_space(void);

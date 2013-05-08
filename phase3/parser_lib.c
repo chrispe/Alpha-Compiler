@@ -10,7 +10,7 @@ unsigned int scope_loop = 0;
 char in_func = 0;
 unsigned int func_scope = 0;
 
-// A number which indicates how many function we have set by the prefix '$_(id)'
+// A number which indicates how many function we have set by the prefix '$f_(id)'
 unsigned int func_signed = 0;
 
 // A boolean which indicates if a function name has been called.
@@ -28,6 +28,7 @@ char func_var = 0;
 // A temporary pointer to the argument stack of a function.
 arg_node * arg_tmp = NULL;
 
+// A boolean which indicates if an expression after equal has started.
 char expr_started = 0;
 
 // A stack which we push every time we visit a function
@@ -76,7 +77,6 @@ double modulo(double a, double b){
 	return a - (double)result * b;
 }
 
-
 void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 	 			int i;
  			st_entry * se = NULL;
@@ -110,7 +110,6 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 				printf("Added variable '%s' in the symbol table.\n",variable);
 			}
 }
-
 
 void add_local_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 	st_entry * se  = NULL;

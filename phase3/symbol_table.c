@@ -88,6 +88,7 @@ void print_st(symbol_table * st){
 				else if(entry->type==LCAL)printf("type=(local variable at : %s) ",entry->value_type.varVal->used_in_func);
 				else if(entry->type==LIBFUNC)printf("type=(library function) ");
 				else if(entry->type==FORMAL)printf("type=(formal at : %s)",entry->value_type.varVal->used_in_func);
+				else if(entry->type==TEMP_VAR)printf("type=(temp variable) ");
 				else{
 					printf("user_function(");
 					arg = entry->value_type.funVal->arguments;
@@ -273,10 +274,10 @@ char * generate_func_name(unsigned int id){
 	len = sprintf(buffer,"%d",id);
 
 	// We create another string with fixed size
-	func_name = malloc(len+3);
+	func_name = malloc(len+4);
 
 	// Give a value to the string
-	sprintf (func_name, "$_%d", id);
+	sprintf (func_name, "$f_%d", id);
 
 	return func_name;
 }

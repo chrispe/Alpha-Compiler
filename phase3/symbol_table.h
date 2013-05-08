@@ -10,8 +10,14 @@
 // The type of the variable/function.
 typedef enum{
 	GLOBAL_VAR, VAR, LCAL, FORMAL,
-	USERFUNC, LIBFUNC
+	USERFUNC, LIBFUNC, TEMP_VAR
 }st_entry_type;
+
+typedef enum{
+	PROGRAM_VAR,
+	FUNC_LOCAL,
+	FORMAL_ARG
+}scopespace_t;
 
 // A linked list used to save the arguments of a function.
 typedef struct ArgNode{
@@ -35,6 +41,8 @@ typedef struct SymbolTableEntry{
 	unsigned int active;
 	unsigned int scope;
 	unsigned int line;
+	unsigned int offset;
+	scopespace_t space;
 	st_entry_type type;
 	union{
 		variable * varVal;
