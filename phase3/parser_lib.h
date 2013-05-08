@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <assert.h>
 #include "symbol_table.h"
 
 /* =======================================================
@@ -85,16 +86,65 @@ void check_global_variable(symbol_table ** st, char * variable,unsigned int yyli
 
 
 /* ======================================================================
-	The general function for inserting <functions> to the symbol table 
+	Some general procedures for adding functions to a symbol.
    ====================================================================== */
+
 void add_function(symbol_table ** st, char * function,unsigned int yylineno,const char has_name);
 
+// Generates a special function name with the prefix "$_f[id]" where id the argument
+char * generate_func_name(unsigned int id);
 
 /* =====================================================
 	The general function for adding an argument to 
 	the symbol table and to the function symbol.
    ===================================================== */
 void add_function_argument(symbol_table ** st, char * argument,unsigned int yylineno,const char comma);
+
+
+/* ======================================================
+	Some variables and functions for the symbol scoping
+   ====================================================== */
+
+/* Generates a name for a temporary variable */
+char * generate_temp_var(unsigned int id);
+
+/* A number which indicates how many temporary
+   variables we have set by the prefix '$v_(id)' */
+extern unsigned int var_signed;
+
+/* Resets the counter of the temporary variables. */
+void reset_temp_vars(void);
+
+/* Returns the current scope */
+unsigned int get_current_scope(void);
+
+/* Returns a symbol to be used for a temporary variable */
+st_entry * get_temp_var(symbol_table * st, unsigned int line);
+
+/* Variables used to get the offset of each kind of symbol */
+extern unsigned int program_var_offset;
+extern unsigned int func_local_offset;
+extern unsigned int formal_arg_offset;
+
+/* A counter for the scope space */
+extern unsigned int scope_space_counter;
+
+/* Returns the current scope space */
+scopespace_t get_current_scope_space(void);
+
+/* Returns the current scope offset */
+unsigned int get_current_scope_offset(void);
+ 
+/* Increases the current scope offset */
+void increase_curr_scope_offset(void);
+
+/* Increases the scope space counter 
+   We use this when we enter a scope space */
+void enter_scope_space(void);
+
+/* Decreases the scope space counter
+   We use this when we exit a scope space */
+void exit_scope_space(void);
 
 
 /* =====================================================

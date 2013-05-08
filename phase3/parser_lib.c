@@ -38,6 +38,19 @@ str_stack_node * func_names = NULL;
 // A stack which keeps the loop scope when entering a function.
 str_stack_node * loop_stack = NULL;
 
+
+/* A number which indicates how many temporary
+   variables we have set by the prefix '$v_(id)' */
+unsigned int var_signed = 0;
+
+/* Variables used to get the offset of each kind of symbol */
+unsigned int program_var_offset = 0;
+unsigned int func_local_offset = 0;
+unsigned int formal_arg_offset = 0;
+
+/* A counter for the scope space */
+unsigned int scope_space_counter = 1;
+
 void push(str_stack_node ** top,const char * newString){
 	str_stack_node * newNode = malloc(sizeof(str_stack_node));
 	newNode->str = malloc(strlen(newString)+1);
@@ -105,7 +118,7 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 			}
 			else {
 				// Else if the symbol could not be found we insert it in the symbol table.
-				se = create_symbol(variable,1,scope_main,yylineno,VAR);
+				se = create_symbol(variable,1,scope_main,yylineno,VAR,get_current_scope_offset(),get_current_scope_space());
 				st_insert((symbol_table **)st,&se);
 				printf("Added variable '%s' in the symbol table.\n",variable);
 			}
@@ -139,19 +152,19 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 			// If the symbol could not be detected we insert it to
 			// the symbol table on the current scope.
 			if(scope_main==0){
-				se = create_symbol(variable,1,0,yylineno,GLOBAL_VAR);
+				se = create_symbol(variable,1,0,yylineno,GLOBAL_VAR,get_current_scope_offset(),get_current_scope_space());
 				printf("Added global variable '%s' in the symbol table.\n",variable);
 			}
 			else{
 				// If we are under a function then it is ok to set local 
 				// else we set it as a simple variable
 				if(in_func){
-					se = create_symbol(variable,1,scope_main,yylineno,LCAL);
+					se = create_symbol(variable,1,scope_main,yylineno,LCAL,get_current_scope_offset(),get_current_scope_space());
 					se = set_var_func(se,top(func_names));
 					printf("Added local variable '%s' in the symbol table.\n",variable);
 				}
 				else{
-					se = create_symbol(variable,1,scope_main,yylineno,VAR);
+					se = create_symbol(variable,1,scope_main,yylineno,VAR,get_current_scope_offset(),get_current_scope_space());
 					printf("Added variable '%s' in the symbol table.\n",variable);
 				}
 			}
@@ -195,7 +208,7 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 		}
 		else{
 			// else we add the new symbol to the symbol table.
-			se = create_symbol(function,1,scope_main,yylineno,USERFUNC);
+			se = create_symbol(function,1,scope_main,yylineno,USERFUNC,get_current_scope_offset(),get_current_scope_space());
 			st_insert((symbol_table **)st,&se);
 		}
 	}
@@ -213,7 +226,7 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 		// and insert the symbol to the symbol table
 		temp_str = generate_func_name(func_signed);
 		push(&func_names,temp_str);
-		se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC);
+		se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC,get_current_scope_offset(),get_current_scope_space());
 			
 		st_insert((symbol_table **)st,&se);
 		func_signed++;
@@ -236,7 +249,7 @@ void add_function_argument(symbol_table ** st, char * argument,unsigned int yyli
  		if(se!=NULL && se->type==LIBFUNC)
  			printf("Error at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,argument);
  		else{
- 			se = create_symbol(argument,1,scope_main,yylineno,FORMAL);
+ 			se = create_symbol(argument,1,scope_main,yylineno,FORMAL,get_current_scope_offset(),get_current_scope_space());
  			se = set_var_func(se,top(func_names));
  			st_insert((symbol_table **)st,&se);
  			if(comma)args_insert(&arg_tmp,argument);
@@ -244,4 +257,103 @@ void add_function_argument(symbol_table ** st, char * argument,unsigned int yyli
  			args_insert(&(se->value_type.funVal->arguments),argument);
  		}
  	}
+}
+
+char * generate_func_name(unsigned int id){
+
+	char buffer[100];
+	char * func_name;
+	unsigned int len;
+
+	// We first create a string of the id to count its length
+	len = sprintf(buffer,"%d",id);
+
+	// We create another string with fixed size
+	func_name = malloc(len+4);
+
+	// Give a value to the string
+	sprintf (func_name, "$f_%d", id);
+
+	return func_name;
+}
+
+char * generate_temp_var_name(unsigned int id){
+
+	char buffer[100];
+	char * var_name;
+	unsigned int len;
+
+	// We first create a string of the id to count its length
+	len = sprintf(buffer,"%d",id);
+
+	// We create another string with fixed size
+	var_name = malloc(len+4);
+
+	// Give a value to the string
+	sprintf (var_name, "$v_%d", id);
+
+	return var_name;
+}
+
+void reset_temp_vars(void){
+	var_signed = 0;
+}
+
+unsigned int get_current_scope(void){
+	return scope_main;
+}
+
+// Stuff to be added here! 
+st_entry * get_temp_var(symbol_table * st, unsigned int line){
+
+	// We generate a name for the new temporary variable.
+	char * var_name = generate_temp_var_name(var_signed);
+
+	/* if the symbol using that name already exists then we
+	   use this symbol else we create a new one.         */
+	st_entry * symbol = st_lookup_scope(st,var_name,get_current_scope());
+	if(symbol==NULL)
+		symbol = create_symbol(var_name,1,scope_main,line,TEMP_VAR,get_current_scope_offset(),get_current_scope_space());
+
+	symbol->space = get_current_scope_space();
+	symbol->offset = get_current_scope_offset();
+
+	var_signed++;
+
+	return symbol;
+}
+
+scopespace_t get_current_scope_space(void){
+	if(scope_space_counter == 1)
+		return PROGRAM_VAR;
+	else if(scope_space_counter % 2 == 0)
+		return FORMAL_ARG;
+	return FUNC_LOCAL;		
+}
+
+unsigned int get_current_scope_offset(void){
+	switch(get_current_scope_space()) {
+		case PROGRAM_VAR : return program_var_offset;
+		case FUNC_LOCAL  : return func_local_offset;
+		case FORMAL_ARG  : return formal_arg_offset;
+		default: assert(0);
+	}
+}
+
+void increase_curr_scope_offset(void){
+	switch(get_current_scope_space()) {
+		case PROGRAM_VAR : program_var_offset++; break;
+		case FUNC_LOCAL  : func_local_offset++;  break;
+		case FORMAL_ARG  : formal_arg_offset++;  break;
+		default: assert(0);
+	}
+}
+
+void enter_scope_space(void){
+	scope_space_counter++;
+}
+
+void exit_scope_space(void){
+	assert(scope_space_counter>1);
+	scope_space_counter--;
 }

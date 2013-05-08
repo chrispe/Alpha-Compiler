@@ -109,7 +109,4 @@ int memerror(void * ptr, const char * name);
 st_entry * set_var_func(st_entry * symbol,const char * func_name);
 
 // Creates a symbol with the given parameters (name,active,scope,line,type)
-st_entry * create_symbol(const char *, unsigned int, unsigned int,unsigned int,st_entry_type);
-
-// Generates a special function name with the prefix "$_f[id]" where id the argument
-char * generate_func_name(unsigned int id);
+st_entry * create_symbol(const char *, unsigned int, unsigned int,unsigned int,st_entry_type,unsigned int offset, scopespace_t space);

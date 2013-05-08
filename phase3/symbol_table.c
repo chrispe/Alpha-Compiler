@@ -6,7 +6,7 @@ int st_insert(symbol_table ** st, st_entry ** symbol) {
 	scope_entry * previous = NULL;
 
 	// Making a copy of the symbol to link it to the scope list.
-	st_entry * symbol_cpy = create_symbol((*symbol)->name,(*symbol)->active,(*symbol)->scope,(*symbol)->line,(*symbol)->type);
+	st_entry * symbol_cpy = create_symbol((*symbol)->name,(*symbol)->active,(*symbol)->scope,(*symbol)->line,(*symbol)->type,(*symbol)->offset,(*symbol)->space);
 	if((*symbol)->value_type.varVal->used_in_func != NULL)
 		symbol_cpy =  set_var_func(symbol_cpy,(*symbol)->value_type.varVal->used_in_func);
 
@@ -64,7 +64,7 @@ symbol_table * create_symbol_table(){
 
 	// We add all the library functions from the beginning in the symbol table.
 	for(i=0;i<12;i++){
-		symbol = create_symbol(lib_functions[i],1,0,0,LIBFUNC);
+		symbol = create_symbol(lib_functions[i],1,0,0,LIBFUNC,0,0);
 		if(memerror(symbol,"initalize lib func"))return NULL;
 		st_insert(&st,&symbol);
 	}
@@ -98,9 +98,13 @@ void print_st(symbol_table * st){
 					}
 					printf(") ");
 				}
-				printf("line=%d scope=%d active=%d\n",entry->line,entry->scope,entry->active);
-			
-			entry = entry->next;
+				
+				if(entry->space==PROGRAM_VAR)printf("space='program_var'");
+				else if(entry->space==FUNC_LOCAL)printf("space='func_local'");
+				else printf("space='func_arg'");
+				printf(" line=%d scope=%d active=%d offset=%d\n",entry->line,entry->scope,entry->active,entry->offset);
+				entry = entry->next;
+
 		}
 		printf("\n");
 		sc = sc->next;
@@ -137,7 +141,7 @@ st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned i
 	return NULL;
 }
 
-st_entry * create_symbol(const char * name, unsigned int active, unsigned int scope,unsigned int line,st_entry_type type){
+st_entry * create_symbol(const char * name, unsigned int active, unsigned int scope,unsigned int line,st_entry_type type, unsigned int offset, scopespace_t space){
 	st_entry * symbol = (st_entry *)malloc(sizeof(st_entry));
 	if(memerror(symbol,"symbol"))return NULL;
 
@@ -150,6 +154,8 @@ st_entry * create_symbol(const char * name, unsigned int active, unsigned int sc
 	symbol->scope = scope;
 	symbol->line = line;
 	symbol->type = type;
+	symbol->offset = offset;
+	symbol->space = space;
 
 	// Depending on the symbol type we set the correct variables.
 	if(type==USERFUNC || type==LIBFUNC){
@@ -262,22 +268,4 @@ void scope_set_active(symbol_table ** st,unsigned int scope,char active){
 			st_temp = st_temp->next;
 		}
 	}
-}
-
-char * generate_func_name(unsigned int id){
-
-	char buffer[100];
-	char * func_name;
-	unsigned int len;
-
-	// We first create a string of the id to count its length
-	len = sprintf(buffer,"%d",id);
-
-	// We create another string with fixed size
-	func_name = malloc(len+4);
-
-	// Give a value to the string
-	sprintf (func_name, "$f_%d", id);
-
-	return func_name;
 }
