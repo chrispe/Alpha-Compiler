@@ -72,5 +72,8 @@ void expand(void);
    of a new quad to the quads array. */
 void emit(opcode,expr *,expr *, expr *, unsigned int,unsigned int);
 
+/* Sets the label of a quad in the array */
+void patch_label(unsigned int, unsigned int);
+
 /* This function prints the quads to a text file */
 void write_quads(void);

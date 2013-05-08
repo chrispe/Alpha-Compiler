@@ -325,9 +325,6 @@ st_entry * get_temp_var(symbol_table * st, unsigned int line){
 	if(symbol==NULL)
 		symbol = create_symbol(var_name,1,scope_main,line,TEMP_VAR,get_current_scope_offset(),get_current_scope_space());
 
-	symbol->space = get_current_scope_space();
-	symbol->offset = get_current_scope_offset();
-
 	var_signed++;
 
 	return symbol;

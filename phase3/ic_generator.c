@@ -39,6 +39,12 @@ void emit(opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,u
 	current_quad->line = line;
 }
  
+void patch_label(unsigned int quad_id, unsigned int label){
+	assert(quad_id<curr_quad);
+	quads[quad_id].label = label
+}
+
+// TO DO 
 void write_quads(void){
 	int i;
 	FILE * quads_output; 
