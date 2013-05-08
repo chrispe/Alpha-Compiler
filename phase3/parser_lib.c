@@ -51,6 +51,9 @@ unsigned int formal_arg_offset = 0;
 /* A counter for the scope space */
 unsigned int scope_space_counter = 1;
 
+// A stack which keeps the scope offset for each function.
+str_stack_node * scope_offset_stack = NULL;
+
 void push(str_stack_node ** top,const char * newString){
 	str_stack_node * newNode = malloc(sizeof(str_stack_node));
 	newNode->str = malloc(strlen(newString)+1);
@@ -120,6 +123,7 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 				// Else if the symbol could not be found we insert it in the symbol table.
 				se = create_symbol(variable,1,scope_main,yylineno,VAR,get_current_scope_offset(),get_current_scope_space());
 				st_insert((symbol_table **)st,&se);
+				increase_curr_scope_offset();
 				printf("Added variable '%s' in the symbol table.\n",variable);
 			}
 }
@@ -345,6 +349,15 @@ void increase_curr_scope_offset(void){
 		case PROGRAM_VAR : program_var_offset++; break;
 		case FUNC_LOCAL  : func_local_offset++;  break;
 		case FORMAL_ARG  : formal_arg_offset++;  break;
+		default: assert(0);
+	}
+}
+
+void set_curr_scope_offset(unsigned int offset){
+	switch(get_current_scope_space()) {
+		case PROGRAM_VAR : program_var_offset = offset; break;
+		case FUNC_LOCAL  : func_local_offset  = offset; break;
+		case FORMAL_ARG  : formal_arg_offset  = offset; break;
 		default: assert(0);
 	}
 }

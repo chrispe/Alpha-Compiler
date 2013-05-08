@@ -9,7 +9,7 @@
    ======================================================= */
 
 // A stack data stracture for
-// storing temporary strings of functions.
+// storing temporary strings/values of functions.
 typedef struct str_stack_node{
 	char * str;
 	unsigned int  value;
@@ -64,12 +64,15 @@ extern arg_node * arg_tmp;
 // A boolean which indicates if an expression after equal has started.
 extern char expr_started;
 
-// A stack which we push every time we visit a function
+// A stack which we push every time we visit a function.
 // and pop each time we leave a function.
 extern str_stack_node * func_names;
 
 // A stack which keeps the loop scope when entering a function.
 extern str_stack_node * loop_stack;
+
+// A stack which keeps the scope offset for each function.
+extern str_stack_node * scope_offset_stack;
 
 /* ===========================================================
 	The functions for adding variables to the symbol table 
@@ -135,6 +138,9 @@ scopespace_t get_current_scope_space(void);
 /* Returns the current scope offset */
 unsigned int get_current_scope_offset(void);
  
+/* Sets the current scope to a fixed offset.*/
+void set_curr_scope_offset(unsigned int);
+
 /* Increases the current scope offset */
 void increase_curr_scope_offset(void);
 
@@ -145,7 +151,6 @@ void enter_scope_space(void);
 /* Decreases the scope space counter
    We use this when we exit a scope space */
 void exit_scope_space(void);
-
 
 /* =====================================================
 	General Functions

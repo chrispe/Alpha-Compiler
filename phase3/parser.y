@@ -233,36 +233,64 @@ func_temp:
 			// Adding the function(with name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,$1,yylineno,1);
-
 		} 
 		PAREN_L {
 			scope_main++;
 			in_func=1;
 			func_started=1;
 			func_scope++;
+		 	enter_scope_space();
 		} 
-		idlist PAREN_R  block { func_scope--;in_func=0;pop(&func_names);printf("Func <id> (<parameters>) \n");}
+		idlist PAREN_R{enter_scope_space();}  block { 
+			func_scope--;
+			in_func=0;
+			pop(&func_names);
+			printf("Func <id> (<parameters>) \n");
+		}
 		| PAREN_L{
 		 
  			// Adding the function(without name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,NULL,yylineno,0);
- 
+ 		 	enter_scope_space();
 
-		} idlist PAREN_R{ } block { func_var=0;func_scope--;in_func=0;pop(&func_names);printf("Func (<parameters>) \n");}
+		} idlist PAREN_R{enter_scope_space();} block {   
+			func_var=0;
+			func_scope--;
+			in_func=0;
+			pop(&func_names);
+			printf("Func (<parameters>) \n");
+		}
 		; 
 
 funcdef:
 		FUNCTION{
 			// Starting function
 			func_var=1;printf("FUNCTION\n");
+
+			// We push the loop scope and the offset to a stack
 			push_value(&loop_stack,scope_loop);
+			push_value(&scope_offset_stack,get_current_scope_offset());
+
+			// We set the new scope offset and loop scope to zero
+			set_curr_scope_offset(0);
 			scope_loop=0;
 		} 
 		func_temp {
 			// Function definition ended
+
+			// We set the scope loop to the previous value
 			scope_loop = top_value(loop_stack);
+			 
 			pop(&loop_stack);
+			 
+			// We decrease the scope space by two. 
+			exit_scope_space();
+			exit_scope_space();
+
+			// We set the scope offset to the previous scope
+			set_curr_scope_offset(top_value(scope_offset_stack));
+			pop(&scope_offset_stack);
 		}
 		;
 
@@ -272,14 +300,14 @@ idlist:
  			// Adding the argument of a function to the symbol table.
 			// Every required checking is included in the following method.
  			add_function_argument((symbol_table **)st,$1,yylineno,0);
-
+ 			increase_curr_scope_offset();
 		}
 		| idlist COMMA IDENTIFIER {
 
 			// Adding the argument of a function to the symbol table.
 			// Every required checking is included in the following method.
 			add_function_argument((symbol_table **)st,$3,yylineno,1);
-
+			increase_curr_scope_offset();
 		}
 		| {}
 		;
@@ -356,6 +384,12 @@ int main(int argc,char ** argv)
         	yyin = stdin;
 
 	yyparse(&st);
+
+	FILE * quads_file; 
+	quads_file = fopen("quads.txt","a+"); 
+	fprintf(quads_file,"%s","<CODE>");
+	fclose(quads_file);  
+
 	printf("\n <--[Parsing Completed]-->\n");
 	printf("Press [Enter] to continue with the symbol table.\n");
 	getchar();
