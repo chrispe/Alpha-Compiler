@@ -125,7 +125,7 @@ void reset_temp_vars(void);
 unsigned int get_current_scope(void);
 
 /* Returns a symbol to be used for a temporary variable */
-st_entry * get_temp_var(symbol_table * st, unsigned int line);
+st_entry * new_temp_var(symbol_table ** st, unsigned int line);
 
 /* Variables used to get the offset of each kind of symbol */
 extern unsigned int program_var_offset;

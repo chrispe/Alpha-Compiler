@@ -67,6 +67,7 @@ typedef struct ScopeEntry{
 typedef struct Symbol_Table{
 	st_entry * hash_table[BUCKET_SIZE];
 	scope_entry * scope_list;
+	st_entry * last_symbol;
 }symbol_table;
 
 /* 

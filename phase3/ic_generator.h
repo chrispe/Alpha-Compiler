@@ -32,7 +32,7 @@ typedef enum expression_type{
 /* This is the structure of a stored expression. */
 typedef struct Expr {
 	expr_t type;
-	st_entry * s;
+	st_entry * sym;
 	struct Expr * index;
 	double num_value;
 	char * str_value;
@@ -72,8 +72,24 @@ void expand(void);
    of a new quad to the quads array. */
 void emit(opcode,expr *,expr *, expr *, unsigned int,unsigned int);
 
-/* Sets the label of a quad in the array */
+/* A 'special' emit function for the
+   management of the table items. */
+expr * emit_iftableitem(expr *,symbol_table **,unsigned int);
+
+/* Sets the label of a quad in the array. */
 void patch_label(unsigned int, unsigned int);
 
-/* This function prints the quads to a text file */
+/* This function prints the quads to a text file. */
 void write_quads(void);
+
+/* Creates an expression based on a symbol. */
+expr * lvalue_expr(st_entry *);
+
+/* Creates a new expression based on expression type argument. */
+expr * new_expr(expr_t);
+
+/* Creates a new expression for a string value. */
+expr * new_expr_const_str(char *);
+
+/* Creates a new member item expression */
+expr * new_member_item_expr(expr *,char *,symbol_table **,unsigned int);

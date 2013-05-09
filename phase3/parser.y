@@ -275,6 +275,10 @@ funcdef:
 			// We set the new scope offset and loop scope to zero
 			reset_curr_scope_offset();
 			scope_loop=0;
+
+			// We add funcstart quad
+			emit(func_start,NULL,NULL, lvalue_expr((*((symbol_table **)st))->last_symbol), curr_quad,yylineno);
+
 		} 
 		func_temp {
 			// Function definition ended
@@ -291,6 +295,10 @@ funcdef:
 			// We set the scope offset to the previous scope
 			set_curr_scope_offset(top_value(scope_offset_stack));
 			pop(&scope_offset_stack);
+
+			// We add funcend quad
+			emit(func_end,NULL,NULL, lvalue_expr((*((symbol_table **)st))->last_symbol), curr_quad,yylineno);
+
 		}
 		;
 
@@ -385,7 +393,7 @@ int main(int argc,char ** argv)
 
 	yyparse(&st);
 
-
+	write_quads();
 
 	printf("\n <--[Parsing Completed]-->\n");
 	printf("Press [Enter] to continue with the symbol table.\n");

@@ -41,7 +41,7 @@ void emit(opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,u
  
 void patch_label(unsigned int quad_id, unsigned int label){
 	assert(quad_id<curr_quad);
-	quads[quad_id].label = label
+	quads[quad_id].label = label;
 }
 
 // TO DO 
@@ -58,11 +58,66 @@ void write_quads(void){
 	if(quads_output==NULL)
 		quads_output = stderr;  
 
-	for(i=0;i<quads_total;i++){
+	for(i=0;i<curr_quad;i++){
+		// For the instruction format : op tmp1 tmp2 tmp3 
 		if((quads[i].op >= add && quads[i].op < uminus)|| quads[i].op==and || quads[i].op==or){
  
 		}
+		//printf("Quad  (line %d)  : %d\n",quads[i].line,i);
 	}
  
 	fclose(quads_output);  
+}
+
+expr *lvalue_expr(st_entry * sym){   
+   
+	// Initialization of an expression.
+	expr * sym_expr;
+   	sym_expr = (expr *)malloc(sizeof(expr));
+   
+   	// Setting up the attributes of the expression.
+   	sym_expr->next = NULL;
+   	sym_expr->sym = sym;
+
+   	switch(sym->type){
+   		case GLOBAL_VAR || VAR || LCAL : sym_expr->type = var_e; break;
+   		case LIBFUNC : sym_expr->type = library_func_e; break;
+   		case USERFUNC : sym_expr->type = program_func_e; break;
+   		default : assert(0);
+   	}
+
+   	return sym_expr;
+}
+
+expr * new_expr(expr_t type){
+	expr * e = (expr *)malloc(sizeof(expr));
+	e->type = type;
+	return e;
+}
+
+expr * new_expr_const_str(char *s){
+	expr * e = new_expr(const_str_e);
+	e->str_value = strdup(s);
+	return e;
+}
+
+expr * emit_iftableitem(expr *e,symbol_table ** st,unsigned int line){
+	if(e->type != table_item_e)
+		return e;
+	expr * result = new_expr(var_e);
+	result->sym = new_temp_var(st,line);
+	emit(table_get_elem,e,e->index,result,curr_quad,line);
+	return result;
+}
+
+expr * new_member_item_expr(expr * lvalue,char * name,symbol_table ** st,unsigned int line){
+	
+	// We emit if the item is used as r-value
+	lvalue = emit_iftableitem(lvalue,st,line);
+
+	// We create the item expression
+	expr * item = new_expr(table_item_e);
+	item->sym = lvalue->sym;
+	item->index = new_expr_const_str(name);
+	return item;
 }

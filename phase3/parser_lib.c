@@ -314,16 +314,23 @@ unsigned int get_current_scope(void){
 }
 
 // Stuff to be added here! 
-st_entry * get_temp_var(symbol_table * st, unsigned int line){
+st_entry * new_temp_var(symbol_table ** st, unsigned int line){
 
 	// We generate a name for the new temporary variable.
 	char * var_name = generate_temp_var_name(var_signed);
 
 	/* if the symbol using that name already exists then we
 	   use this symbol else we create a new one.         */
-	st_entry * symbol = st_lookup_scope(st,var_name,get_current_scope());
-	if(symbol==NULL)
+	st_entry * symbol = st_lookup_scope(*st,var_name,get_current_scope());
+	if(symbol==NULL){
+		increase_curr_scope_offset();
 		symbol = create_symbol(var_name,1,scope_main,line,TEMP_VAR,get_current_scope_offset(),get_current_scope_space());
+		st_insert(st,&symbol);
+	}
+	else{
+		symbol->offset = get_current_scope_offset();
+		symbol->space = get_current_scope_space();
+	}
 
 	var_signed++;
 
