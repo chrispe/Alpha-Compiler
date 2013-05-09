@@ -30,14 +30,14 @@ typedef enum expression_type{
 }expr_t;
 
 /* This is the structure of a stored expression. */
-typedef struct Expr {
+typedef struct expr_s {
 	expr_t type;
 	st_entry * sym;
-	struct Expr * index;
+	struct expr_s * index;
 	double num_value;
 	char * str_value;
 	unsigned char bool_value;
-	struct Expr * next;
+	struct expr_s * next;
 }expr;
 
 /* This is the structure of the quad. */

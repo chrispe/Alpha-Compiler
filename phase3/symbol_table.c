@@ -46,7 +46,8 @@ int st_insert(symbol_table ** st, st_entry ** symbol) {
 	temp->symbols = symbol_cpy;
 
 	// Seting the pointer to the last symbol that was added
-	(*st)->last_symbol = symbol_cpy;
+	if(symbol_cpy->type!=FORMAL)
+		(*st)->last_symbol = symbol_cpy;
 
 	return 1;
 }

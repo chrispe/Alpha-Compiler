@@ -63,7 +63,7 @@ void write_quads(void){
 		if((quads[i].op >= add && quads[i].op < uminus)|| quads[i].op==and || quads[i].op==or){
  
 		}
-		//printf("Quad  (line %d)  : %d\n",quads[i].line,i);
+		 printf("Quad  (line %d)  (label:%d) (name:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name);
 	}
  
 	fclose(quads_output);  
@@ -83,7 +83,7 @@ expr *lvalue_expr(st_entry * sym){
    		case GLOBAL_VAR || VAR || LCAL : sym_expr->type = var_e; break;
    		case LIBFUNC : sym_expr->type = library_func_e; break;
    		case USERFUNC : sym_expr->type = program_func_e; break;
-   		default : assert(0);
+   		default : assert(0); break;
    	}
 
    	return sym_expr;

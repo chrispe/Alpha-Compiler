@@ -13,6 +13,9 @@
 	extern int yylineno;
 	extern char * yytext;
 	extern FILE * yyin;
+
+	st_entry * func_entry = NULL;
+
 %}
 %error-verbose
 %start program
@@ -23,6 +26,8 @@
 	int intval;
 	double fltval;
 	char * strval;
+	struct st_entry * symbol;
+	struct expr_s * expression;
 }
 
 %token <intval> INTEGER;
@@ -34,9 +39,10 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt assignexpr lvalue const primary member call callsuffix normcall methodcall   term   index_temp
+%type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall   term   index_temp
 %type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt func_temp
-%type <fltval> expr  
+%type <expression> expr lvalue  
+ 
  
 %left EQUAL
 %left OR
@@ -81,28 +87,26 @@ stmt:
 
 expr:
 		assignexpr {}
-		|	expr PLUS expr 	{printf("<expr> + <expr>\n",$1,$3); $$ = $1 + $3;}
-		|	expr MINUS expr	{printf("<expr> - <expr>\n",$1,$3); $$ = $1 - $3;}
-		|	expr MULTI expr {printf("<expr> * <expr>\n",$1,$3); $$ = $1 * $3;}
+		|	expr PLUS expr 	{printf("<expr> + <expr>\n",$1,$3);}
+		|	expr MINUS expr	{printf("<expr> - <expr>\n",$1,$3);}
+		|	expr MULTI expr {printf("<expr> * <expr>\n",$1,$3);}
 		|	expr SLASH expr {
 					printf("<expr> / <expr>\n",$1,$3);
-					if($3!=0)$$ = $1/$3;
-					else yyerror("Cannot divide by zero.");
+					if($3==0)yyerror("Cannot divide by zero.");
 			}
 		|	expr PERCENT expr {
 
 					printf("<expr> %% <expr>\n",$1,$3);
-					if($3!=0)$$ = modulo($1,$3);
-					else yyerror("Cannot divide by zero.");
+					if($3==0)yyerror("Cannot divide by zero.");
 			}
-		|	expr GREATER expr {printf("<expr> > <expr>\n",$1,$3); $$ = ($1 > $3)?1:0;}
-		|	expr EQ_GREATER expr {printf("<expr> >= <expr>\n",$1,$3); $$ = ($1 >= $3)?1:0;}
-		|	expr LESS expr {printf("<expr> < <expr>\n",$1,$3); $$ = ($1 < $3)?1:0;}
-		|   	expr EQ_LESS expr {printf("<expr> <= <expr>d\n",$1,$3);$$ = ($1 <= $3)?1:0;}
-		|	expr DEQUAL expr {printf("<expr> == <expr>\n",$1,$3); $$ = ($1 == $3)?1:0;}
-		|	expr NEQUAL expr {printf("<expr> != <expr>\n",$1,$3); $$ = ($1 != $3)?1:0;}
-		|	expr AND expr {printf("<expr> and <expr>\n",$1,$3); $$ = ($1 && $3)?1:0;}
-		|	expr OR expr {printf("<expr> or <expr>\n",$1,$3); $$ = ($1 || $3)?1:0;}
+		|	expr GREATER expr {printf("<expr> > <expr>\n",$1,$3);}
+		|	expr EQ_GREATER expr {printf("<expr> >= <expr>\n",$1,$3);}
+		|	expr LESS expr {printf("<expr> < <expr>\n",$1,$3);}
+		|   	expr EQ_LESS expr {printf("<expr> <= <expr>d\n",$1,$3);}
+		|	expr DEQUAL expr {printf("<expr> == <expr>\n",$1,$3); }
+		|	expr NEQUAL expr {printf("<expr> != <expr>\n",$1,$3);}
+		|	expr AND expr {printf("<expr> and <expr>\n",$1,$3);}
+		|	expr OR expr {printf("<expr> or <expr>\n",$1,$3);}
 		| 	term {}
 		;
 
@@ -148,8 +152,9 @@ assignexpr:
 		expr { 
 			expr_started=0; 
 			if(fun_rec)
-				printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$$);
+				printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$2);
 			fun_rec=0;
+
 		}
 		;
 
@@ -158,7 +163,7 @@ lvalue:
 
 			// Adding the id to the symbol table.
 			// Every required checking is included in the following function.
-			add_variable((symbol_table **)st, $$,yylineno);
+			add_variable((symbol_table **)st, $1,yylineno);
  		 	
 		}
 		| LOCAL IDENTIFIER {
@@ -179,8 +184,21 @@ lvalue:
 		;
 
 member:
-		lvalue DOT IDENTIFIER {printf("lvalue.id\n");}
-		| lvalue BRACKET_L expr BRACKET_R {printf("lvalue[expr]\n");}
+		lvalue DOT IDENTIFIER {
+			printf("lvalue.id\n");
+			printf("%s.%s\n",$2,$3);
+		 
+			$<expression>$ = new_member_item_expr($1,$3,st,yylineno);
+
+		}
+		| lvalue BRACKET_L expr BRACKET_R {
+			printf("lvalue[expr]\n");
+			$1 = emit_iftableitem($1,st,yylineno);
+			$<expression>$ = new_expr(table_item_e);
+			($<expression>$)->sym = ($1)->sym;
+			($<expression>$)->index = $3;
+	 		
+		}
 		| call DOT IDENTIFIER {}
 		| call BRACKET_L expr BRACKET_R {}
 		;
@@ -233,6 +251,12 @@ func_temp:
 			// Adding the function(with name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,$1,yylineno,1);
+			func_entry = (*((symbol_table **)st))->last_symbol;
+
+			// We add funcstart quad
+			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
+			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
+
 		} 
 		PAREN_L {
 			scope_main++;
@@ -244,14 +268,23 @@ func_temp:
 		idlist PAREN_R{enter_scope_space();}  block { 
 			func_scope--;
 			in_func=0;
+						// We add funcend quad
+			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
+			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			pop(&func_names);
 			printf("Func <id> (<parameters>) \n");
+
 		}
 		| PAREN_L{
 		 
  			// Adding the function(without name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,NULL,yylineno,0);
+
+			// We add funcstart quad
+			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
+			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
+
  		 	enter_scope_space();
 
 		} idlist PAREN_R{enter_scope_space();} block {   
@@ -275,10 +308,6 @@ funcdef:
 			// We set the new scope offset and loop scope to zero
 			reset_curr_scope_offset();
 			scope_loop=0;
-
-			// We add funcstart quad
-			emit(func_start,NULL,NULL, lvalue_expr((*((symbol_table **)st))->last_symbol), curr_quad,yylineno);
-
 		} 
 		func_temp {
 			// Function definition ended
@@ -296,8 +325,7 @@ funcdef:
 			set_curr_scope_offset(top_value(scope_offset_stack));
 			pop(&scope_offset_stack);
 
-			// We add funcend quad
-			emit(func_end,NULL,NULL, lvalue_expr((*((symbol_table **)st))->last_symbol), curr_quad,yylineno);
+
 
 		}
 		;

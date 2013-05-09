@@ -13,16 +13,19 @@
 typedef struct str_stack_node{
 	char * str;
 	unsigned int  value;
+	st_entry * symbol;
 	struct str_stack_node * next;
 }str_stack_node;
 
 // The function for pushing elements in the stack.
 void push(str_stack_node **,const char *);
 void push_value(str_stack_node ** top,unsigned int  val);
+void push_symbol(str_stack_node ** top, st_entry * s);
 
 // The function for getting the top of the stack.
 char * top(str_stack_node *);
 unsigned int top_value(str_stack_node * top);
+st_entry * top_symbol(str_stack_node * top);
 
 // The function for popping elemens from the stack.
 void pop(str_stack_node **);

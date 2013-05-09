@@ -1,13 +1,22 @@
 a=1;
 b=2;
 function three_func(one,two){
-	mhden=0;
-	ena=1;
-	dyo=2;
-	tria=3;
+ 
 	function lol(){
 		m=0;
 	}
+
 	tesera=4;
 }
 c=3;
+
+
+function alpha(){
+	function beta(){
+		function gama(){
+			function delta(){
+			
+			}
+		}
+	}
+}

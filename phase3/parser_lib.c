@@ -69,6 +69,18 @@ void push_value(str_stack_node ** top,unsigned int  val){
 	*top = newNode;
 }
 
+void push_symbol(str_stack_node ** top, st_entry * s){
+	str_stack_node * newNode = malloc(sizeof(str_stack_node));
+	newNode->symbol = s;
+	newNode->next = *top;
+	*top = newNode;
+}
+
+st_entry * top_symbol(str_stack_node * top){
+	if(top!=NULL)return top->symbol;
+	return NULL;
+}
+
 unsigned int  top_value(str_stack_node * top){
 	if(top!=NULL)return top->value;
 	return -1;
