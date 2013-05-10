@@ -69,6 +69,8 @@ void write_quads(void){
 		}
 		 if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
 		 	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
+		 else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
+		 	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].arg1->sym->name,opcode_to_str(quads[i].op));
 		 else
 		 	printf("Quad  (line %d)  (label:%d) (name:unknown symbol) (type:%s) \n",quads[i].line,quads[i].label,opcode_to_str(quads[i].op));
 	}
@@ -79,15 +81,15 @@ void write_quads(void){
 char * opcode_to_str(opcode op){
  
 	switch(op){
-		case assign:	return("assign"); break;
-		case func_start: return("func_start"); break;
-		case func_end: return("func_end"); break;
-		case table_get_elem: return("table_get_elem"); break;
-		case table_set_elem: return("table_set_elem");  break;
-		case get_ret_val: return("get_ret_val"); break;
-		case param: return("param"); break;
-		case call: return("call");break;
-		default : return("wtf"); break;
+		case assign:	return("assign"); 
+		case func_start: return("func_start");
+		case func_end: return("func_end");
+		case table_get_elem: return("table_get_elem"); 
+		case table_set_elem: return("table_set_elem");  
+		case get_ret_val: return("get_ret_val"); 
+		case param: return("param"); 
+		case call: return("call");
+		default : return("wtf");
 	}
 }
 
@@ -102,7 +104,7 @@ expr *lvalue_expr(st_entry * sym){
    	sym_expr->sym = sym;
 
    	switch(sym->type){
-   		case GLOBAL_VAR || VAR || LCAL : sym_expr->type = var_e; break;
+   		case GLOBAL_VAR || VAR || LCAL || FORMAL || TEMP_VAR : sym_expr->type = var_e; break;
    		case LIBFUNC : sym_expr->type = library_func_e; break;
    		case USERFUNC : sym_expr->type = program_func_e; break;
    		default : assert(0); break;
@@ -145,25 +147,34 @@ expr * new_member_item_expr(expr * lvalue,char * name,symbol_table ** st,unsigne
 }
 
 expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line){
-	assert(lvalue!=NULL);
-	int i = 0;
+
+	// Some variables
 	expr * func = emit_iftableitem(lvalue,st,line);
-	expr * elist_tmp = elist;
-	expr * params[512];
+	expr * params = NULL;
+	expr * temp;
 
-	while(elist_tmp){
-		params[i] = elist_tmp;
-		elist_tmp = elist_tmp->next;
-		i++;
+	// We use params as a stack for the elist
+	params = elist;
+	elist = elist->next;
+	params->next = NULL;
+	 
+	// We create the stack 
+	while(elist){
+		temp = elist->next;
+		elist->next = params;
+		params = elist;
+		elist =temp;
 	}
+ 	
+ 	// We emit each expression of the stack
+ 	while(params){
+ 		emit(param,NULL,NULL,params,curr_quad,line);
+ 		params = params->next;
+ 	}
 
-	for(i;i>=0;i--){
-		emit(param,NULL,NULL,params[i],0,line);
-	}
-
-	emit(call,NULL,NULL,func,0,line);
+	emit(call,NULL,NULL,func,curr_quad,line);
 	expr * result = new_expr(var_e);
 	result->sym = new_temp_var(st,line);
-	emit(get_ret_val,NULL,NULL,result,0,line);
+	emit(get_ret_val,NULL,NULL,result,curr_quad,line);
 	return result;
 }

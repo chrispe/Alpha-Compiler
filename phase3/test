@@ -1,3 +1,1 @@
-function three_func(one,two){
-         tesera=4;
- }
+sprite..move(dx,dy);

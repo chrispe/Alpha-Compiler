@@ -14,10 +14,13 @@
 	extern char * yytext;
 	extern FILE * yyin;
 
+	// A temporary symbol pointing to the last function
 	st_entry * func_entry = NULL;
 
+	// Some parameters for the elist
 	method_call_param m_param;
-	 
+ 
+
 %}
 %error-verbose
 %start program
@@ -43,7 +46,7 @@
 
 %type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall   term   index_temp
 %type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp
-%type <expression> expr lvalue  
+%type <expression> expr lvalue con_elist
  
  
 %left EQUAL
@@ -227,7 +230,7 @@ member:
 call:
 		call PAREN_L elist PAREN_R {
 			printf("funccall(<elist>)\n");
-			//$<expression>$ = make_call($<expression>1,m_param.elist,(symbol_table **)st,yylineno);
+			$<expression>$ = make_call($<expression>1,m_param.elist,(symbol_table **)st,yylineno);
 			m_param.elist = NULL;
 		}
 		| lvalue callsuffix {
@@ -243,7 +246,7 @@ call:
 		| PAREN_L funcdef PAREN_R PAREN_L elist PAREN_R {
 			expr * func = new_expr(program_func_e);
 			func->sym = (st_entry *)$<symbol>2;
-			//$<expression>$ = make_call(func,m_param.elist,(symbol_table **)st,yylineno);
+			$<expression>$ = make_call(func,m_param.elist,(symbol_table **)st,yylineno);
 			m_param.elist = NULL;
 		}
 		;
@@ -260,9 +263,8 @@ callsuffix:
 
 normcall:
 		PAREN_L elist PAREN_R {
-			m_param.elist = NULL;
 			m_param.method = 0;
-			m_param.name = NULL;
+		 
 		}
 		;
 
@@ -293,14 +295,23 @@ indexedelem:
 index_temp:
 		expr COLON expr {}
 		;
-elist:
-		expr {
- 
+
+elist:	expr con_elist{
+			$<expression>$ = $<expression>1;
+			$<expression>$->next = $<expression>2;
+			m_param.elist = $<expression>$;
+		} 
+		|
+		{
+			$<expression>$ = NULL;		
 		}
-		| elist COMMA expr {
-		 
-		}
-		| { }
+		;
+
+con_elist: COMMA expr con_elist	{
+			$<expression>$ = $<expression>2;
+			$<expression>$->next = $<expression>3;
+		} 
+		|	{$<expression>$ = NULL;}
 		;
  
 func_temp:
