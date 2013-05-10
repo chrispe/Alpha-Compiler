@@ -134,6 +134,7 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 						printf("Variable '%s' was detected and used.\n", variable);
 				}
 				else if(expr_started==0){fun_rec = 1;printf("Function recognized as lvalue\n");}
+				(*st)->last_symbol = se;
 			}
 			else {
 				// Else if the symbol could not be found we insert it in the symbol table.
@@ -158,6 +159,7 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 			printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,variable);
 		else 
 			printf("Local variable '%s' was detected and used.\n",variable);
+		(*st)->last_symbol = se;
 	}
 	else{
 
@@ -203,6 +205,7 @@ void check_global_variable(symbol_table ** st, char * variable,unsigned int yyli
 		printf("Error at line %d: Global variable '%s' could not be detected.\n",yylineno,variable);
 	else
 		printf("Global variable '%s' was detected and used.\n",variable); 
+	(*st)->last_symbol = se;
 }
 
 void add_function(symbol_table ** st, char * function,unsigned int yylineno,const char has_name){
@@ -225,6 +228,7 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 				else
 					printf("variable.\n");
 			}
+			(*st)->last_symbol = se;
 		}
 		else{
 			// else we add the new symbol to the symbol table.
@@ -340,6 +344,7 @@ st_entry * new_temp_var(symbol_table ** st, unsigned int line){
 		st_insert(st,&symbol);
 	}
 	else{
+		(*st)->last_symbol = symbol;
 		symbol->offset = get_current_scope_offset();
 		symbol->space = get_current_scope_space();
 	}
@@ -347,6 +352,10 @@ st_entry * new_temp_var(symbol_table ** st, unsigned int line){
 	var_signed++;
 
 	return symbol;
+}
+
+void reset_tmp_var_counter(){
+	var_signed = 0;
 }
 
 scopespace_t get_current_scope_space(void){

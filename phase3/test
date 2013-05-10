@@ -1,22 +1,3 @@
-a=1;
-b=2;
 function three_func(one,two){
- 
-	function lol(){
-		m=0;
-	}
-
-	tesera=4;
-}
-c=3;
-
-
-function alpha(){
-	function beta(){
-		function gama(){
-			function delta(){
-			
-			}
-		}
-	}
-}
+         tesera=4;
+ }

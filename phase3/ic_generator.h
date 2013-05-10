@@ -50,6 +50,12 @@ typedef struct Quad {
 	unsigned int line;
 }quad;
 
+typedef struct MethodCallParam{
+	expr * elist;
+	char method;
+	char * name;
+}method_call_param;
+
 /* The array of the quads. */
 extern quad * quads;
 
@@ -93,3 +99,9 @@ expr * new_expr_const_str(char *);
 
 /* Creates a new member item expression */
 expr * new_member_item_expr(expr *,char *,symbol_table **,unsigned int);
+
+/* Returns the opcode to string */
+char * opcode_to_str(opcode);
+
+/* For the function call */
+expr * make_call(expr *,expr *,symbol_table **,unsigned int);

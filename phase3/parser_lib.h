@@ -117,6 +117,9 @@ void add_function_argument(symbol_table ** st, char * argument,unsigned int yyli
 /* Generates a name for a temporary variable */
 char * generate_temp_var(unsigned int id);
 
+/* Resets the counter for the temporary variables */
+void reset_tmp_var_counter(void);
+
 /* A number which indicates how many temporary
    variables we have set by the prefix '$v_(id)' */
 extern unsigned int var_signed;

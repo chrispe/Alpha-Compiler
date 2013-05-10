@@ -10,6 +10,9 @@ unsigned int quads_total = 0;
 // The current index on the array of quads.
 unsigned int curr_quad = 0;
 
+/* An expression list for the elist */
+expr * elist_expr = NULL;
+
 void expand(void){
 	assert(quads_total==curr_quad);
 	
@@ -32,6 +35,7 @@ void emit(opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,u
 
 	// set the parameters of the new quad
 	quad * current_quad = quads + curr_quad++;
+	current_quad->op = op;
 	current_quad->arg1 = arg1;
 	current_quad->arg2 = arg2;
 	current_quad->result = result;
@@ -63,10 +67,28 @@ void write_quads(void){
 		if((quads[i].op >= add && quads[i].op < uminus)|| quads[i].op==and || quads[i].op==or){
  
 		}
-		 printf("Quad  (line %d)  (label:%d) (name:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name);
+		 if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
+		 	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
+		 else
+		 	printf("Quad  (line %d)  (label:%d) (name:unknown symbol) (type:%s) \n",quads[i].line,quads[i].label,opcode_to_str(quads[i].op));
 	}
  
 	fclose(quads_output);  
+}
+
+char * opcode_to_str(opcode op){
+ 
+	switch(op){
+		case assign:	return("assign"); break;
+		case func_start: return("func_start"); break;
+		case func_end: return("func_end"); break;
+		case table_get_elem: return("table_get_elem"); break;
+		case table_set_elem: return("table_set_elem");  break;
+		case get_ret_val: return("get_ret_val"); break;
+		case param: return("param"); break;
+		case call: return("call");break;
+		default : return("wtf"); break;
+	}
 }
 
 expr *lvalue_expr(st_entry * sym){   
@@ -120,4 +142,28 @@ expr * new_member_item_expr(expr * lvalue,char * name,symbol_table ** st,unsigne
 	item->sym = lvalue->sym;
 	item->index = new_expr_const_str(name);
 	return item;
+}
+
+expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line){
+	assert(lvalue!=NULL);
+	int i = 0;
+	expr * func = emit_iftableitem(lvalue,st,line);
+	expr * elist_tmp = elist;
+	expr * params[512];
+
+	while(elist_tmp){
+		params[i] = elist_tmp;
+		elist_tmp = elist_tmp->next;
+		i++;
+	}
+
+	for(i;i>=0;i--){
+		emit(param,NULL,NULL,params[i],0,line);
+	}
+
+	emit(call,NULL,NULL,func,0,line);
+	expr * result = new_expr(var_e);
+	result->sym = new_temp_var(st,line);
+	emit(get_ret_val,NULL,NULL,result,0,line);
+	return result;
 }

@@ -16,6 +16,8 @@
 
 	st_entry * func_entry = NULL;
 
+	method_call_param m_param;
+	 
 %}
 %error-verbose
 %start program
@@ -40,7 +42,7 @@
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
 %type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall   term   index_temp
-%type <strval> elist objectdef indexedelem indexed funcdef idlist block ifstmt block_in whilestmt forstmt func_temp
+%type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp
 %type <expression> expr lvalue  
  
  
@@ -65,7 +67,7 @@ program:
 		;
 
 stmt:
-		expr SEMICOLON { fun_rec=0; }
+		expr SEMICOLON { fun_rec=0; reset_tmp_var_counter(); }
 		| BREAK SEMICOLON {
 			if(scope_loop>0)
 				printf("break;\n");
@@ -127,15 +129,22 @@ term:
 		| DMINUS lvalue {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
 			else printf("--lvalue\n");}
-		| primary {}
+		| primary {$<expression>$ = $<expression>1;}
 		;
 
 primary:
-		lvalue	{}
-		| const {}
-		| call {}
-		| objectdef {}
-		| PAREN_L funcdef PAREN_R {}
+		lvalue	{
+			$<expression>$ = emit_iftableitem($1,st,yylineno);
+		}
+		| const { $<expression>$ = $<expression>1;}
+		| call  { $<expression>$ = $<expression>1;}
+		| objectdef {
+			$<expression>$ = new_expr(new_table_e);
+			$<expression>$ = $<expression>1;}
+		| PAREN_L funcdef PAREN_R {
+			$<expression>$ = new_expr(program_func_e);
+			($<expression>$)->sym = (st_entry *)$2;
+		}
 		;
 
 const:
@@ -155,6 +164,20 @@ assignexpr:
 				printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$2);
 			fun_rec=0;
 
+			// Careful with the labels
+			if(($1)->type==table_item_e){
+				emit(table_set_elem,$<expression>1,$<expression>1->index,$<expression>3,curr_quad,yylineno);
+				$<expression>$ = emit_iftableitem($<expression>1,st,yylineno);
+				$<expression>$->type=assign_expr_e;
+			}
+			else{
+				emit(assign,$<expression>3,NULL,$<expression>1,curr_quad,yylineno);
+				$<expression>$ = new_expr(assign_expr_e);
+				($<expression>$)->sym = new_temp_var(st,yylineno);
+				emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
+			}
+ 			
+
 		}
 		;
 
@@ -164,21 +187,21 @@ lvalue:
 			// Adding the id to the symbol table.
 			// Every required checking is included in the following function.
 			add_variable((symbol_table **)st, $1,yylineno);
- 		 	
+			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
 		}
 		| LOCAL IDENTIFIER {
 
 			// Adding the local id to the symbol table.
 			// Every required checking is included in the following function.
 			add_local_variable((symbol_table **)st, $2,yylineno);
-
+			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
 		}
 		| DCOLON IDENTIFIER {
 
 			// We check that the global variable exists
 			// The whole proccess is handled by the following funciton.
 			check_global_variable((symbol_table **)st, $2,yylineno);
-
+			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
 		}
 		| member {}
 		;
@@ -186,8 +209,6 @@ lvalue:
 member:
 		lvalue DOT IDENTIFIER {
 			printf("lvalue.id\n");
-			printf("%s.%s\n",$2,$3);
-		 
 			$<expression>$ = new_member_item_expr($1,$3,st,yylineno);
 
 		}
@@ -204,22 +225,55 @@ member:
 		;
 
 call:
-		call PAREN_L elist PAREN_R {printf("funccall(<elist>)\n");}
-		| lvalue callsuffix {}
-		| PAREN_L funcdef PAREN_R PAREN_L elist PAREN_R {}
+		call PAREN_L elist PAREN_R {
+			printf("funccall(<elist>)\n");
+			//$<expression>$ = make_call($<expression>1,m_param.elist,(symbol_table **)st,yylineno);
+			m_param.elist = NULL;
+		}
+		| lvalue callsuffix {
+			if(m_param.method){
+				expr * self = $1;
+				$1 = emit_iftableitem(new_member_item_expr(self,m_param.name,st,yylineno),st,yylineno);
+				self->next = m_param.elist;
+				m_param.elist = self;
+			}
+			$<expression>$ = make_call($1,m_param.elist,(symbol_table **)st,yylineno);
+			m_param.elist = NULL;
+		}
+		| PAREN_L funcdef PAREN_R PAREN_L elist PAREN_R {
+			expr * func = new_expr(program_func_e);
+			func->sym = (st_entry *)$<symbol>2;
+			//$<expression>$ = make_call(func,m_param.elist,(symbol_table **)st,yylineno);
+			m_param.elist = NULL;
+		}
 		;
 
 callsuffix:
-		normcall {printf("funcall %s()\n",$$);}
-		| methodcall {}
+		normcall {
+			printf("funcall %s()\n",$$);
+			$$ = $1;
+		}
+		| methodcall {
+			$$ = $1;
+		}
 		;
 
 normcall:
-		PAREN_L elist PAREN_R {}
+		PAREN_L elist PAREN_R {
+			m_param.elist = NULL;
+			m_param.method = 0;
+			m_param.name = NULL;
+		}
 		;
 
 methodcall:
-		DDOT IDENTIFIER PAREN_L elist PAREN_R {printf("..id(elist)\n");}
+		DDOT IDENTIFIER PAREN_L elist PAREN_R {
+			printf("..id(elist)\n");
+			m_param.elist = $<expression>4;
+			m_param.method = 1;
+			m_param.name = malloc(strlen($2)+1);
+			strcpy(m_param.name,$2);
+		}
 		;
 
 objectdef:
@@ -240,9 +294,13 @@ index_temp:
 		expr COLON expr {}
 		;
 elist:
-		expr {}
-		| elist COMMA expr {}
-		| {}
+		expr {
+ 
+		}
+		| elist COMMA expr {
+		 
+		}
+		| { }
 		;
  
 func_temp:
@@ -268,7 +326,8 @@ func_temp:
 		idlist PAREN_R{enter_scope_space();}  block { 
 			func_scope--;
 			in_func=0;
-						// We add funcend quad
+			
+			// We add funcend quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			pop(&func_names);
@@ -324,9 +383,6 @@ funcdef:
 			// We set the scope offset to the previous scope
 			set_curr_scope_offset(top_value(scope_offset_stack));
 			pop(&scope_offset_stack);
-
-
-
 		}
 		;
 
@@ -409,6 +465,7 @@ int main(int argc,char ** argv)
 {
  	symbol_table * st = NULL;
  	st = create_symbol_table();
+ 	m_param.elist = NULL;
 
     	if (argc > 1) {
         	if ((yyin = fopen(argv[1], "r")) == NULL) {
@@ -427,5 +484,6 @@ int main(int argc,char ** argv)
 	printf("Press [Enter] to continue with the symbol table.\n");
 	getchar();
 	print_st(st);
+ 
 	return 0;	
 }
