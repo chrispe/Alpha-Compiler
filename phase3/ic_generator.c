@@ -61,7 +61,7 @@ void write_quads(void){
 	quads_output = fopen("quads.txt","w"); 
 	if(quads_output==NULL)
 		quads_output = stderr;  
-
+	printf("WHAT");
 	for(i=0;i<curr_quad;i++){
 		// For the instruction format : op tmp1 tmp2 tmp3 
 		if((quads[i].op >= add && quads[i].op < uminus)|| quads[i].op==and || quads[i].op==or){
@@ -91,13 +91,10 @@ void write_quads(void){
 		else if(quads[i].op==assign){
 			fprintf(quads_output,"%d:\tASSIGN %s %s\n",i,quads[i].arg1->sym->name,quads[i].result->sym->name);
 		}
-
-		 if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
-		 	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
-		 else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
-		 	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].arg1->sym->name,opcode_to_str(quads[i].op));
-		 else
-		 	printf("Quad  (line %d)  (label:%d) (name:unknown symbol) (type:%s) \n",quads[i].line,quads[i].label,opcode_to_str(quads[i].op));
+		else if(quads[i].op==table_create){
+			fprintf(quads_output,"%d:\tTABLECREATE %s\n",i,quads[i].result->sym->name);
+		}
+ 
 	}
  
 	fclose(quads_output);  
@@ -169,6 +166,18 @@ expr * new_member_item_expr(expr * lvalue,char * name,symbol_table ** st,unsigne
 	item->sym = lvalue->sym;
 	item->index = new_expr_const_str(name);
 	return item;
+}
+
+expr * new_expr_const_num(double num){
+	expr * e = new_expr(const_num_e);
+	e->num_value = num;
+	return e;
+}
+
+expr * new_expr_const_int(int num){
+	expr * e = new_expr(const_int_e);
+	e->int_value = num;
+	return e;
 }
 
 expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line){

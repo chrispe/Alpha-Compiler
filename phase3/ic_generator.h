@@ -23,6 +23,7 @@ typedef enum expression_type{
 	bool_expr_e,
 	assign_expr_e,
 	new_table_e,
+	const_int_e,
 	const_num_e,
 	const_bool_e,
 	const_str_e,
@@ -34,6 +35,7 @@ typedef struct expr_s {
 	expr_t type;
 	st_entry * sym;
 	struct expr_s * index;
+	int int_value;
 	double num_value;
 	char * str_value;
 	unsigned char bool_value;
@@ -105,4 +107,9 @@ char * opcode_to_str(opcode);
 
 /* For the function call */
 expr * make_call(expr *,expr *,symbol_table **,unsigned int);
- 
+
+/* Creates an expression based on a constant double */ 
+expr * new_expr_const_num(double); 
+
+/* Creates an expression based on a constant integer */
+expr * new_expr_const_int(int);

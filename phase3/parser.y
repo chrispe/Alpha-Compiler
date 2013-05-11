@@ -157,8 +157,8 @@ primary:
 		;
 
 const:
-		REAL {}
-		| INTEGER {}
+		REAL {$<expression>$=new_expr_const_num(yylval.fltval);}
+		| INTEGER {$<expression>$=new_expr_const_int(yylval.intval);}
 		| STRING {$<expression>$ = new_expr_const_str(yylval.strval);}
 		| NIL {}
 		| TRUE {}
@@ -291,7 +291,20 @@ methodcall:
 		;
 
 objectdef:
-		BRACKET_L elist BRACKET_R {}
+		BRACKET_L elist BRACKET_R {
+			int i=0;
+			expr * table = new_expr(new_table_e);
+			table->sym = new_temp_var(st,yylineno);
+			emit(table_create,NULL,NULL,table,curr_quad,yylineno);
+
+			expr * temp = m_param.elist;
+			while(temp){
+				emit(table_set_elem,table,new_expr_const_int(i),temp,curr_quad,yylineno);
+				temp = temp->next;
+				i++;
+			}
+			$<expression>$ = table;
+		}
 		| BRACKET_L indexed BRACKET_R {}
 		;
 
