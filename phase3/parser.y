@@ -93,7 +93,7 @@ stmt:
 		;
 
 expr:
-		assignexpr {}
+		assignexpr {$<expression>$ = $<expression>1;}
 		|	expr PLUS expr 	{printf("<expr> + <expr>\n",$1,$3);}
 		|	expr MINUS expr	{printf("<expr> - <expr>\n",$1,$3);}
 		|	expr MULTI expr {printf("<expr> * <expr>\n",$1,$3);}
@@ -143,11 +143,13 @@ primary:
 			temp_expr = $<expression>$;
 		}
 		| const { $<expression>$ = $<expression>1;}
-		| call  { $<expression>$ = $<expression>1;}
+		| call  { $<expression>$ = $<expression>1; temp_expr = $<expression>$;}
 		| objectdef {
 
 			$<expression>$ = new_expr(new_table_e);
-			$<expression>$ = $<expression>1;}
+			$<expression>$ = $<expression>1;
+			temp_expr = $<expression>$;
+		}
 		| PAREN_L funcdef PAREN_R {
 			$<expression>$ = new_expr(program_func_e);
 			($<expression>$)->sym = (st_entry *)$2;
@@ -173,15 +175,20 @@ assignexpr:
 
 			// Careful with the labels
 			if(($1)->type==table_item_e){
-				emit(table_set_elem,$<expression>1,$<expression>1->index,$<expression>3,curr_quad,yylineno);
+				emit(table_set_elem,$<expression>1,$<expression>1->index,temp_expr,curr_quad,yylineno);
 				$<expression>$ = emit_iftableitem($<expression>1,st,yylineno);
 				$<expression>$->type=assign_expr_e;
 			}
 			else{
 				emit(assign,temp_expr,NULL,$<expression>1,curr_quad,yylineno);
 				$<expression>$ = new_expr(assign_expr_e);
-				($<expression>$)->sym = new_temp_var(st,yylineno);
-				emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
+				
+				if($<expression>1->sym->type!=TEMP_VAR){
+					($<expression>$)->sym = new_temp_var(st,yylineno);
+					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
+				}
+				else $<expression>$->sym = $<expression>1->sym;
+				 
 			}
 		}
 		;
@@ -279,6 +286,7 @@ methodcall:
 			m_param.method = 1;
 			m_param.name = malloc(strlen($2)+1);
 			strcpy(m_param.name,$2);
+
 		}
 		;
 

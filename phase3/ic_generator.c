@@ -86,10 +86,10 @@ void write_quads(void){
 			fprintf(quads_output,"%d:\tTABLEGETELEM %s %s %s\n",i,quads[i].arg1->sym->name,quads[i].arg2->str_value, quads[i].result->sym->name);
 		}
 		else if(quads[i].op==table_set_elem){
-			fprintf(quads_output,"%d:\tTABLESETELEM %s %s\n",i,quads[i].arg1->sym->name,quads[i].arg2->str_value);
+			fprintf(quads_output,"%d:\tTABLESETELEM %s %s %s\n",i,quads[i].arg1->sym->name,quads[i].arg2->str_value, quads[i].result->sym->name);
 		}
 		else if(quads[i].op==assign){
-			fprintf(quads_output,"%d:\tASSIGN %s %s\n",i,quads[i].result->sym->name,quads[i].arg1->sym->name);
+			fprintf(quads_output,"%d:\tASSIGN %s %s\n",i,quads[i].arg1->sym->name,quads[i].result->sym->name);
 		}
 
 		 if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
@@ -200,6 +200,7 @@ expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line
 	emit(call,NULL,NULL,func,curr_quad,line);
 	expr * result = new_expr(var_e);
 	result->sym = new_temp_var(st,line);
+	(*st)->last_symbol = result->sym;
 	emit(get_ret_val,NULL,NULL,result,curr_quad,line);
 	return result;
 
