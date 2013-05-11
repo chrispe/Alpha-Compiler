@@ -20,6 +20,8 @@
 	// Some parameters for the elist
 	method_call_param m_param;
  
+ 	// A temporary expression used to make some things easier.
+ 	expr * temp_expr = NULL;
 
 %}
 %error-verbose
@@ -112,7 +114,7 @@ expr:
 		|	expr NEQUAL expr {printf("<expr> != <expr>\n",$1,$3);}
 		|	expr AND expr {printf("<expr> and <expr>\n",$1,$3);}
 		|	expr OR expr {printf("<expr> or <expr>\n",$1,$3);}
-		| 	term {}
+		| 	term {$<expression>$ = $<expression>1;}
 		;
 
 term:
@@ -138,10 +140,12 @@ term:
 primary:
 		lvalue	{
 			$<expression>$ = emit_iftableitem($1,st,yylineno);
+			temp_expr = $<expression>$;
 		}
 		| const { $<expression>$ = $<expression>1;}
 		| call  { $<expression>$ = $<expression>1;}
 		| objectdef {
+
 			$<expression>$ = new_expr(new_table_e);
 			$<expression>$ = $<expression>1;}
 		| PAREN_L funcdef PAREN_R {
@@ -153,7 +157,7 @@ primary:
 const:
 		REAL {}
 		| INTEGER {}
-		| STRING {}
+		| STRING {$<expression>$ = new_expr_const_str(yylval.strval);}
 		| NIL {}
 		| TRUE {}
 		| FALSE {}
@@ -174,13 +178,11 @@ assignexpr:
 				$<expression>$->type=assign_expr_e;
 			}
 			else{
-				emit(assign,$<expression>3,NULL,$<expression>1,curr_quad,yylineno);
+				emit(assign,temp_expr,NULL,$<expression>1,curr_quad,yylineno);
 				$<expression>$ = new_expr(assign_expr_e);
 				($<expression>$)->sym = new_temp_var(st,yylineno);
 				emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
 			}
- 			
-
 		}
 		;
 
@@ -191,6 +193,7 @@ lvalue:
 			// Every required checking is included in the following function.
 			add_variable((symbol_table **)st, $1,yylineno);
 			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
+
 		}
 		| LOCAL IDENTIFIER {
 
@@ -213,7 +216,8 @@ member:
 		lvalue DOT IDENTIFIER {
 			printf("lvalue.id\n");
 			$<expression>$ = new_member_item_expr($1,$3,st,yylineno);
-
+			printf("lvalue.id %s\n",$<expression>$->index->str_value);
+			 
 		}
 		| lvalue BRACKET_L expr BRACKET_R {
 			printf("lvalue[expr]\n");

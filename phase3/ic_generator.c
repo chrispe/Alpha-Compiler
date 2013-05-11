@@ -67,6 +67,31 @@ void write_quads(void){
 		if((quads[i].op >= add && quads[i].op < uminus)|| quads[i].op==and || quads[i].op==or){
  
 		}
+		if(quads[i].op==call){
+			fprintf(quads_output,"%d:\tCALL %s\n",i,quads[i].result->sym->name);
+		}
+		else if(quads[i].op==func_start){
+			fprintf(quads_output,"%d:\tFUNCSTART %s\n",i,quads[i].result->sym->name);
+		}
+		else if(quads[i].op==func_end){
+			fprintf(quads_output,"%d:\tFUNCEND %s\n",i,quads[i].result->sym->name);
+		}
+		else if(quads[i].op==param){
+			fprintf(quads_output,"%d:\tPARAM %s \n",i,quads[i].result->sym->name);
+		}
+		else if(quads[i].op==get_ret_val){
+			fprintf(quads_output,"%d:\tGETRETVAL %s \n",i,quads[i].result->sym->name);
+		}
+		else if(quads[i].op==table_get_elem){
+			fprintf(quads_output,"%d:\tTABLEGETELEM %s %s %s\n",i,quads[i].arg1->sym->name,quads[i].arg2->str_value, quads[i].result->sym->name);
+		}
+		else if(quads[i].op==table_set_elem){
+			fprintf(quads_output,"%d:\tTABLESETELEM %s %s\n",i,quads[i].arg1->sym->name,quads[i].arg2->str_value);
+		}
+		else if(quads[i].op==assign){
+			fprintf(quads_output,"%d:\tASSIGN %s %s\n",i,quads[i].result->sym->name,quads[i].arg1->sym->name);
+		}
+
 		 if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
 		 	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
 		 else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
@@ -177,4 +202,6 @@ expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line
 	result->sym = new_temp_var(st,line);
 	emit(get_ret_val,NULL,NULL,result,curr_quad,line);
 	return result;
+
 }
+ 
