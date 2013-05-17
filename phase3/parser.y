@@ -386,7 +386,10 @@ func_temp:
 			// We add funcstart quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
 			temp_expr = lvalue_expr(se);
-
+			printf("I added %s\n",expr_to_str(temp_expr));
+			temp_expr->next = expr_stack;
+			expr_stack = temp_expr;
+			temp_expr = NULL;
 
 			printf("Expr : %s\n",expr_to_str(temp_expr));
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
@@ -407,6 +410,9 @@ func_temp:
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			pop(&func_names);
+			temp_expr = expr_stack;
+			printf("I got top %s\n",expr_to_str(temp_expr));
+			expr_stack = expr_stack->next;
 			printf("Func <id> (<parameters>) \n");
 
 		}
@@ -415,9 +421,15 @@ func_temp:
  			// Adding the function(without name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,NULL,yylineno,0);
-
+				temp_expr = NULL;
 			// We add funcstart quad
 			st_entry * se = (*(symbol_table **)(st))->last_symbol;
+
+			temp_expr = lvalue_expr(se);
+				printf("I added %s\n",expr_to_str(temp_expr));
+			temp_expr->next = expr_stack;
+			expr_stack = temp_expr;
+			temp_expr = NULL;
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 
  		 	enter_scope_space();
@@ -430,7 +442,9 @@ func_temp:
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			pop(&func_names);
-
+			temp_expr = expr_stack;
+			printf("I got top %s\n",expr_to_str(temp_expr));
+			expr_stack = expr_stack->next;
 			printf("Func (<parameters>) \n");
 		}
 		; 
