@@ -1,1 +1,2 @@
-t = [{"x":0},{"y":"ds"}];
+x = (function(a,b){print(a);});
+(function(){});

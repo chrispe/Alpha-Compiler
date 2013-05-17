@@ -137,7 +137,7 @@ expr *lvalue_expr(st_entry * sym){
    		case GLOBAL_VAR || VAR || LCAL || FORMAL || TEMP_VAR : sym_expr->type = var_e; break;
    		case LIBFUNC : sym_expr->type = library_func_e; break;
    		case USERFUNC : sym_expr->type = program_func_e; break;
-   		default : assert(0); break;
+   		default :   break;
    	}
 
    	return sym_expr;

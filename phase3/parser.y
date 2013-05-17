@@ -23,6 +23,10 @@
  	// A temporary expression used to make some things easier.
  	expr * temp_expr = NULL;
 
+ 	expr * expr_stack = NULL;
+
+ 	unsigned int assign_func = 0;
+
 %}
 %error-verbose
 %start program
@@ -152,7 +156,7 @@ primary:
 		}
 		| PAREN_L funcdef PAREN_R {
 			$<expression>$ = new_expr(program_func_e);
-			($<expression>$)->sym = (st_entry *)$2;
+			($<expression>$)->sym = (st_entry *)$<expression>2;
 		}
 		;
 
@@ -180,7 +184,12 @@ assignexpr:
 				$<expression>$->type=assign_expr_e;
 			}
 			else{
+				//if(assign_func)
+				//	emit(assign,$<expression>1,NULL,$<expression>1,curr_quad,yylineno);
+				//else
 				emit(assign,temp_expr,NULL,$<expression>1,curr_quad,yylineno);
+
+				//assign_func = 0;
 				$<expression>$ = new_expr(assign_expr_e);
 
 
@@ -189,7 +198,7 @@ assignexpr:
 					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
 				}
 				else $<expression>$->sym = $<expression>1->sym;
-				 
+				
 			}
 		}
 		;
@@ -319,6 +328,7 @@ objectdef:
 			}
 			$<expression>$ = table;
 			index_expr = NULL;
+		 	
 		}
 		;
 
@@ -365,6 +375,9 @@ con_elist: COMMA expr con_elist	{
 func_temp:
 		IDENTIFIER{
 
+			// TO DO :
+			// Make an expression stack and etc
+
 			// Adding the function(with name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,$1,yylineno,1);
@@ -372,8 +385,12 @@ func_temp:
 
 			// We add funcstart quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
-			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
+			temp_expr = lvalue_expr(se);
 
+
+			printf("Expr : %s\n",expr_to_str(temp_expr));
+			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
+			assign_func = 1;
 		} 
 		PAREN_L {
 			scope_main++;
@@ -400,16 +417,20 @@ func_temp:
 			add_function((symbol_table **)st,NULL,yylineno,0);
 
 			// We add funcstart quad
-			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
+			st_entry * se = (*(symbol_table **)(st))->last_symbol;
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 
  		 	enter_scope_space();
+ 		 	assign_func = 1;
 
 		} idlist PAREN_R{enter_scope_space();} block {   
 			func_var=0;
 			func_scope--;
 			in_func=0;
+			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
+			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			pop(&func_names);
+
 			printf("Func (<parameters>) \n");
 		}
 		; 
