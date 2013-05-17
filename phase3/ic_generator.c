@@ -10,9 +10,6 @@ unsigned int quads_total = 0;
 // The current index on the array of quads.
 unsigned int curr_quad = 0;
 
-/* An expression list for the elist */
-expr * elist_expr = NULL;
-
 /* An expression list for the index items */
 expr * index_expr = NULL;
 
@@ -64,7 +61,7 @@ void write_quads(void){
 	quads_output = fopen("quads.txt","w"); 
 	if(quads_output==NULL)
 		quads_output = stderr;  
-	printf("WHAT");
+
 	for(i=0;i<curr_quad;i++){
 		// For the instruction format : op tmp1 tmp2 tmp3 
 		if((quads[i].op >= add && quads[i].op < uminus)|| quads[i].op==and || quads[i].op==or){
@@ -119,7 +116,7 @@ char * opcode_to_str(opcode op){
 		case get_ret_val: return("get_ret_val"); 
 		case param: return("param"); 
 		case call: return("call");
-		default : return("wtf");
+		default : assert(0);
 	}
 }
 
@@ -137,7 +134,7 @@ expr *lvalue_expr(st_entry * sym){
    		case GLOBAL_VAR || VAR || LCAL || FORMAL || TEMP_VAR : sym_expr->type = var_e; break;
    		case LIBFUNC : sym_expr->type = library_func_e; break;
    		case USERFUNC : sym_expr->type = program_func_e; break;
-   		default :   break;
+   		default : break;
    	}
 
    	return sym_expr;
@@ -197,23 +194,20 @@ expr * new_expr_const_bool(unsigned int b){
 
 char * expr_to_str(expr * e){
 	char * temp = malloc(50);
-	if(e==NULL)return"";
-	if(e->type==const_int_e){
-		sprintf(temp, "%d", e->int_value);
-	}
-	else if(e->type==const_num_e){
-		sprintf(temp, "%lf", e->num_value);
-	}
-	else if(e->type==const_str_e){
-		return e->str_value;
-	}
-	else if(e->type==const_bool_e){
-		if(e->bool_value==1)return("TRUE");
-		return("FALSE");
-	}
-	else if(e->type==null_e)return "NIL";
-	else{
-		return(e->sym->name);
+	if(e==NULL)
+		return "" ; 
+
+	switch(e->type){
+		case const_int_e: sprintf(temp, "%d", e->int_value); break;
+		case const_num_e: sprintf(temp, "%lf", e->num_value);break;
+		case const_str_e: return e->str_value;
+		case null_e: return "";
+		case const_bool_e:{
+			if(e->bool_value==1)
+				return("TRUE");
+			return("FALSE");
+		}
+		default: return(e->sym->name);
 	}
 	return temp;
 }
@@ -250,6 +244,5 @@ expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line
 	(*st)->last_symbol = result->sym;
 	emit(get_ret_val,NULL,NULL,result,curr_quad,line);
 	return result;
-
 }
  

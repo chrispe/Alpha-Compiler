@@ -23,9 +23,8 @@
  	// A temporary expression used to make some things easier.
  	expr * temp_expr = NULL;
 
+ 	// A stack for pushing a useful variable when entering a function
  	expr * expr_stack = NULL;
-
- 	unsigned int assign_func = 0;
 
 %}
 %error-verbose
@@ -375,9 +374,6 @@ con_elist: COMMA expr con_elist	{
 func_temp:
 		IDENTIFIER{
 
-			// TO DO :
-			// Make an expression stack and etc
-
 			// Adding the function(with name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,$1,yylineno,1);
@@ -386,14 +382,12 @@ func_temp:
 			// We add funcstart quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
 			temp_expr = lvalue_expr(se);
-			printf("I added %s\n",expr_to_str(temp_expr));
 			temp_expr->next = expr_stack;
 			expr_stack = temp_expr;
 			temp_expr = NULL;
 
-			printf("Expr : %s\n",expr_to_str(temp_expr));
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
-			assign_func = 1;
+			 
 		} 
 		PAREN_L {
 			scope_main++;
@@ -411,7 +405,6 @@ func_temp:
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			pop(&func_names);
 			temp_expr = expr_stack;
-			printf("I got top %s\n",expr_to_str(temp_expr));
 			expr_stack = expr_stack->next;
 			printf("Func <id> (<parameters>) \n");
 
@@ -421,19 +414,19 @@ func_temp:
  			// Adding the function(without name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,NULL,yylineno,0);
-				temp_expr = NULL;
+			temp_expr = NULL;
+			
 			// We add funcstart quad
 			st_entry * se = (*(symbol_table **)(st))->last_symbol;
 
 			temp_expr = lvalue_expr(se);
-				printf("I added %s\n",expr_to_str(temp_expr));
 			temp_expr->next = expr_stack;
 			expr_stack = temp_expr;
 			temp_expr = NULL;
-			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 
+			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
  		 	enter_scope_space();
- 		 	assign_func = 1;
+ 		 
 
 		} idlist PAREN_R{enter_scope_space();} block {   
 			func_var=0;
@@ -443,7 +436,6 @@ func_temp:
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			pop(&func_names);
 			temp_expr = expr_stack;
-			printf("I got top %s\n",expr_to_str(temp_expr));
 			expr_stack = expr_stack->next;
 			printf("Func (<parameters>) \n");
 		}
