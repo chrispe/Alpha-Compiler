@@ -157,12 +157,12 @@ primary:
 		;
 
 const:
-		REAL {$<expression>$=new_expr_const_num(yylval.fltval);}
-		| INTEGER {$<expression>$=new_expr_const_int(yylval.intval);}
-		| STRING {$<expression>$ = new_expr_const_str(yylval.strval);}
-		| NIL {}
-		| TRUE {}
-		| FALSE {}
+		REAL {$<expression>$=new_expr_const_num(yylval.fltval);temp_expr = $<expression>$;}
+		| INTEGER {$<expression>$=new_expr_const_int(yylval.intval);temp_expr = $<expression>$;}
+		| STRING {$<expression>$ = new_expr_const_str(yylval.strval);temp_expr = $<expression>$;}
+		| NIL {$<expression>$ = new_expr(null_e);temp_expr = $<expression>$;}
+		| TRUE {$<expression>$ = new_expr_const_bool(1);temp_expr = $<expression>$;}
+		| FALSE {$<expression>$ = new_expr_const_bool(0);temp_expr = $<expression>$;}
 		;
 
 assignexpr:
@@ -182,7 +182,8 @@ assignexpr:
 			else{
 				emit(assign,temp_expr,NULL,$<expression>1,curr_quad,yylineno);
 				$<expression>$ = new_expr(assign_expr_e);
-				
+
+
 				if($<expression>1->sym->type!=TEMP_VAR){
 					($<expression>$)->sym = new_temp_var(st,yylineno);
 					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
@@ -299,26 +300,48 @@ objectdef:
 
 			expr * temp = m_param.elist;
 			while(temp){
-				emit(table_set_elem,table,new_expr_const_int(i),temp,curr_quad,yylineno);
+				emit(table_set_elem,table,new_expr_const_int(i),temp,0,yylineno);
 				temp = temp->next;
 				i++;
 			}
 			$<expression>$ = table;
 		}
-		| BRACKET_L indexed BRACKET_R {}
+		| BRACKET_L indexed BRACKET_R {
+			expr * table = new_expr(new_table_e);
+			expr * temp = index_expr;
+
+			table->sym = new_temp_var(st,yylineno);
+			emit(table_create,NULL,NULL,table,curr_quad,yylineno);
+
+			while(temp){
+				emit(table_set_elem,table,temp,temp->index,0,yylineno);
+				temp = temp->next;
+			}
+			$<expression>$ = table;
+			index_expr = NULL;
+		}
 		;
 
 indexed:
-		indexedelem {}
-		|indexed COMMA indexedelem {}
+		indexedelem {$<expression>$=$<expression>1;}
+		|indexed COMMA indexedelem {
+			$<expression>$ = $<expression>1;
+			$<expression>$->next = $<expression>3;
+			index_expr = $<expression>$;
+		}
 		;
 
 indexedelem:
-		BRACE_L index_temp BRACE_R {}
+		BRACE_L index_temp BRACE_R {
+			$<expression>$ = $<expression>2;
+		}
 		;
 
 index_temp:
-		expr COLON expr {}
+		expr COLON expr {
+			$<expression>$ = $<expression>1;
+			$<expression>$->index = $<expression>3;
+		}
 		;
 
 elist:	expr con_elist{

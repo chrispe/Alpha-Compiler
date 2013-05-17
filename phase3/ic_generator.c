@@ -13,6 +13,9 @@ unsigned int curr_quad = 0;
 /* An expression list for the elist */
 expr * elist_expr = NULL;
 
+/* An expression list for the index items */
+expr * index_expr = NULL;
+
 void expand(void){
 	assert(quads_total==curr_quad);
 	
@@ -83,18 +86,23 @@ void write_quads(void){
 			fprintf(quads_output,"%d:\tGETRETVAL %s \n",i,quads[i].result->sym->name);
 		}
 		else if(quads[i].op==table_get_elem){
-			fprintf(quads_output,"%d:\tTABLEGETELEM %s %s %s\n",i,quads[i].arg1->sym->name,quads[i].arg2->str_value, quads[i].result->sym->name);
+			fprintf(quads_output,"%d:\tTABLEGETELEM %s %s %s\n",i,expr_to_str(quads[i].arg1),expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
 		else if(quads[i].op==table_set_elem){
-			fprintf(quads_output,"%d:\tTABLESETELEM %s %s %s\n",i,quads[i].arg1->sym->name,quads[i].arg2->str_value, quads[i].result->sym->name);
+			fprintf(quads_output,"%d:\tTABLESETELEM %s %s %s\n",i,expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
 		else if(quads[i].op==assign){
-			fprintf(quads_output,"%d:\tASSIGN %s %s\n",i,quads[i].arg1->sym->name,quads[i].result->sym->name);
+			fprintf(quads_output,"%d:\tASSIGN %s %s\n",i,expr_to_str(quads[i].arg1),expr_to_str(quads[i].result));
 		}
 		else if(quads[i].op==table_create){
 			fprintf(quads_output,"%d:\tTABLECREATE %s\n",i,quads[i].result->sym->name);
 		}
- 
+ 		if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
+       		printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
+     	else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
+       		printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].arg1->sym->name,opcode_to_str(quads[i].op));
+     	else
+       		printf("Quad  (line %d)  (label:%d) (name:unknown symbol) (type:%s) \n",quads[i].line,quads[i].label,opcode_to_str(quads[i].op));
 	}
  
 	fclose(quads_output);  
@@ -178,6 +186,36 @@ expr * new_expr_const_int(int num){
 	expr * e = new_expr(const_int_e);
 	e->int_value = num;
 	return e;
+}
+
+expr * new_expr_const_bool(unsigned int b){
+	expr * e = malloc(sizeof(expr));
+	e->type = const_bool_e;
+	e->bool_value = b;
+	return e;
+}
+
+char * expr_to_str(expr * e){
+	char * temp = malloc(50);
+	if(e==NULL)return"";
+	if(e->type==const_int_e){
+		sprintf(temp, "%d", e->int_value);
+	}
+	else if(e->type==const_num_e){
+		sprintf(temp, "%lf", e->num_value);
+	}
+	else if(e->type==const_str_e){
+		return e->str_value;
+	}
+	else if(e->type==const_bool_e){
+		if(e->bool_value==1)return("TRUE");
+		return("FALSE");
+	}
+	else if(e->type==null_e)return "NIL";
+	else{
+		return(e->sym->name);
+	}
+	return temp;
 }
 
 expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line){

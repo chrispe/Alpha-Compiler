@@ -67,6 +67,9 @@ extern unsigned int quads_total;
 /* The current index on the array of quads. */
 extern unsigned int curr_quad;
 
+/* An expression list for the index items */
+extern expr * index_expr;
+
 /* Some useful defined keywords for the
    reallocation of the quads array.	 */
 #define EXPAND_SIZE 1024
@@ -113,3 +116,9 @@ expr * new_expr_const_num(double);
 
 /* Creates an expression based on a constant integer */
 expr * new_expr_const_int(int);
+
+/* Creates an expression based on a constan boolean */
+expr * new_expr_const_bool(unsigned int);
+
+/* Converts an expression to a string */
+char * expr_to_str(expr *);

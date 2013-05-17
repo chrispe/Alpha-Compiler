@@ -232,8 +232,9 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 		}
 		else{
 			// else we add the new symbol to the symbol table.
-			se = create_symbol(function,1,scope_main,yylineno,USERFUNC,top_value(scope_offset_stack),get_current_scope_space());
-			set_top_value(&scope_offset_stack,top_value(scope_offset_stack)+1);
+			//se = create_symbol(function,1,scope_main,yylineno,USERFUNC,top_value(scope_offset_stack),get_current_scope_space());
+			se = create_symbol(function,1,scope_main,yylineno,USERFUNC,0,get_current_scope_space());
+			//set_top_value(&scope_offset_stack,top_value(scope_offset_stack)+1);
 			st_insert((symbol_table **)st,&se);
 		}
 	}
@@ -251,9 +252,9 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 		// and insert the symbol to the symbol table
 		temp_str = generate_func_name(func_signed);
 		push(&func_names,temp_str);
-		se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC,top_value(scope_offset_stack),get_current_scope_space());
+		se = create_symbol(temp_str,1,scope_main,yylineno,USERFUNC,0,get_current_scope_space());
 			
-		set_top_value(&scope_offset_stack,top_value(scope_offset_stack)+1);	
+		//set_top_value(&scope_offset_stack,top_value(scope_offset_stack)+1);	
 		st_insert((symbol_table **)st,&se);
 		func_signed++;
 		scope_main++;
