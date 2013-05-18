@@ -53,10 +53,10 @@ void write_quads(void){
 	int i;
 	FILE * quads_output; 
 
-	char * ops[] = {"assign","add","sub","mul","op_div","mod","uminus","and","or","not"
-					"if_eq","if_neq","if_leq","if_greq","if_less","if_greater"
-					"call","param","ret","get_ret_val","func_start","func_end"
-					"jump","table_create","table_get_elem","table_set_elem" };
+	char * ops[] = {"ASSIGN","ADD","SUB","MUL","DIV","MODE","UMINUS","AND","OR","NOT"
+					"IF_EQ","IF_NOTEQ","IF_LESSEQ","IF_GREATEREQ","IF_LESS","IF_GREATER"
+					"CALL","PARAM","RET","GETRETVAL","FUNCSTART","FUNCEND"
+					"JUMP","TABLE_CREATE","TABLEGETELEM","TABLESETITEM" };
 
 	quads_output = fopen("quads.txt","w"); 
 	if(quads_output==NULL)
@@ -95,6 +95,12 @@ void write_quads(void){
 		else if(quads[i].op==table_create){
 			fprintf(quads_output,"%d:\tTABLECREATE %s\n",i,quads[i].result->sym->name);
 		}
+		else if(quads[i].op==jump){
+			fprintf(quads_output,"%d:\tJUMP %d\n",i,quads[i].result->int_value);
+		}
+		else if(quads[i].op>=if_eq && quads[i].op<=if_greater){
+			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
+		}
  		if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
        		printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
      	else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
@@ -104,25 +110,17 @@ void write_quads(void){
  
 	fclose(quads_output);  
 }
+ 
 
 char * opcode_to_str(opcode op){
- 
-	switch(op){
-		case assign:	return("ASSIGN"); 
-		case func_start: return("FUNCSTART");
-		case func_end: return("FUNCEND");
-		case table_get_elem: return("TABLEGETELEM"); 
-		case table_set_elem: return("TABLESETELEM");  
-		case get_ret_val: return("GETRETVAL"); 
-		case param: return("PARAM"); 
-		case call: return("CALL");
-		case uminus: return("UMINUS");
-		case not: return("NOT");
-		case add: return("ADD");
-		case sub: return("SUB");
-		default : assert(0);
-	}
+	char * ops[] = {"ASSIGN","ADD","SUB","MUL","DIV","MOD","UMINUS","AND","OR","NOT",
+					"IF_EQ","IF_NOTEQ","IF_LESSEQ","IF_GREATEREQ","IF_LESS","IF_GREATER",
+					"CALL","PARAM","RET","GETRETVAL","FUNCSTART","FUNCEND"
+					"JUMP","TABLE_CREATE","TABLEGETELEM","TABLESETITEM" };
+	return(ops[op-assign]);
 }
+ 
+
 
 expr *lvalue_expr(st_entry * sym){   
    
@@ -286,13 +284,16 @@ unsigned int is_num_expr(expr * e,unsigned int * is_float){
 		*is_float = 1;
 		return 1;
 	}
-	else if(e->type==const_int_e)return 1;
+	else if(e->type==const_int_e)
+		return 1;
 	return 0;
 }
 
 double get_expr_num_value(expr * e){
-	if(e->type==const_num_e)return(e->num_value);
-	else if(e->type==const_int_e)return((double)e->int_value);
+	if(e->type==const_num_e)
+		return(e->num_value);
+	else if(e->type==const_int_e)
+		return((double)e->int_value);
 	else assert(0);
 }
 
@@ -315,7 +316,8 @@ expr * emit_arithm(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * 
 				emit(add,arg1,arg2,result,label,line);
 		}
 	}
-	else comp_error("Invalid expression type for arithmetic operation.",line);
+	else 
+		comp_error("Invalid expression type for arithmetic operation.",line);
 	return result;
 }
 
@@ -341,3 +343,14 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 	}
 	return result;
 }
+
+expr * emit_relop(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,unsigned int line){
+	expr * e = new_expr(bool_expr_e);
+	e->sym = new_temp_var(st,line);
+	emit(op,arg1,arg2,new_expr_const_int(curr_quad+3),curr_quad,line);
+	emit(assign,new_expr_const_bool(0),NULL,e,curr_quad,line);
+	emit(jump,NULL,NULL,new_expr_const_int(curr_quad+2),curr_quad,line);
+	emit(assign,new_expr_const_bool(1),NULL,e,curr_quad,line);
+	return e;
+}
+ 

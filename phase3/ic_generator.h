@@ -151,3 +151,6 @@ expr * emit_arithm(symbol_table ** st,opcode,expr *,expr *, expr *, unsigned int
 
 /* Applies the arithmetic operation based on the op argument. */
 double apply_arithm_op(opcode,double,double,unsigned int);
+
+/* Emits the relop expressions */
+expr * emit_relop(symbol_table ** st,opcode,expr *,expr *, expr *, unsigned int,unsigned int);

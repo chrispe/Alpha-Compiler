@@ -102,33 +102,49 @@ stmt:
 expr:
 		assignexpr {$<expression>$ = $<expression>1;}
 		|	expr PLUS expr 	{
-			$<expression>$ = emit_arithm((symbol_table **)st,add,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
-			temp_expr = $<expression>$;
+				$<expression>$ = emit_arithm((symbol_table **)st,add,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
 		}
-		|	expr MINUS expr	{printf("<expr> - <expr>\n",$1,$3);
-			$<expression>$ = emit_arithm((symbol_table **)st,sub,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
-			temp_expr = $<expression>$;
+		|	expr MINUS expr	{
+				$<expression>$ = emit_arithm((symbol_table **)st,sub,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
 		}
-		|	expr MULTI expr {printf("<expr> * <expr>\n",$1,$3);
-			$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
-			temp_expr = $<expression>$;
+		|	expr MULTI expr {
+				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
 		}
 		|	expr SLASH expr {
-				printf("<expr> / <expr>\n",$1,$3);
 				$<expression>$ = emit_arithm((symbol_table **)st,op_div,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
 				temp_expr = $<expression>$;
 			}
 		|	expr PERCENT expr {
-				printf("<expr> %% <expr>\n",$1,$3);
 				$<expression>$ = emit_arithm((symbol_table **)st,mod,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
 				temp_expr = $<expression>$;
 			}
-		|	expr GREATER expr {printf("<expr> > <expr>\n",$1,$3);}
-		|	expr EQ_GREATER expr {printf("<expr> >= <expr>\n",$1,$3);}
-		|	expr LESS expr {printf("<expr> < <expr>\n",$1,$3);}
-		|   	expr EQ_LESS expr {printf("<expr> <= <expr>d\n",$1,$3);}
-		|	expr DEQUAL expr {printf("<expr> == <expr>\n",$1,$3); }
-		|	expr NEQUAL expr {printf("<expr> != <expr>\n",$1,$3);}
+		|	expr GREATER expr {
+				$<expression>$ = emit_relop((symbol_table **)st,if_greater,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
+		}
+		|	expr EQ_GREATER expr {
+				$<expression>$ = emit_relop((symbol_table **)st,if_greq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
+		}
+		|	expr LESS expr {
+				$<expression>$ = emit_relop((symbol_table **)st,if_less,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
+		}
+		|   expr EQ_LESS expr {
+				$<expression>$ = emit_relop((symbol_table **)st,if_leq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
+		}
+		|	expr DEQUAL expr {
+				$<expression>$ = emit_relop((symbol_table **)st,if_eq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
+		}
+		|	expr NEQUAL expr {
+				$<expression>$ = emit_relop((symbol_table **)st,if_neq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
+		}
 		|	expr AND expr {printf("<expr> and <expr>\n",$1,$3);}
 		|	expr OR expr {printf("<expr> or <expr>\n",$1,$3);}
 		| 	term {$<expression>$ = $<expression>1;}
@@ -139,10 +155,16 @@ term:
 		| MINUS expr %prec UMINUS {
 			printf("-<expr>\n");
 			check_uminus($<expression>2,yylineno);
-			$<expression>$ = new_expr(arithm_expr_e);
-			$<expression>$->sym =  new_temp_var(st,yylineno);
+			unsigned int is_float = 0;
+			if(is_num_expr($<expression>2,&is_float)){
+				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>2,new_expr_const_int(-1),$<expression>$,curr_quad,yylineno);
+			}
+			else{
+				$<expression>$ = new_expr(arithm_expr_e);
+				$<expression>$->sym =  new_temp_var(st,yylineno);
+				emit(uminus,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+			}
 			temp_expr = $<expression>$;
-			emit(uminus,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
 		}
 		| NOT expr {
 			printf("!<expr>\n");
