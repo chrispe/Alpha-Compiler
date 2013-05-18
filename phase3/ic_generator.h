@@ -27,7 +27,7 @@ typedef enum expression_type{
 	const_num_e,
 	const_bool_e,
 	const_str_e,
-	null_e
+	nil_e
 }expr_t;
 
 /* This is the structure of a stored expression. */
@@ -122,3 +122,10 @@ expr * new_expr_const_bool(unsigned int);
 
 /* Converts an expression to a string */
 char * expr_to_str(expr *);
+
+/* Checks if uminus is used incorrectly and
+   prints an error message in case it does. */
+void check_uminus(expr *,unsigned int);
+
+/* Prints a compile error message */
+void comp_error(char * error,unsigned int line);

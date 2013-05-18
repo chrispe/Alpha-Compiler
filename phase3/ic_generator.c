@@ -64,8 +64,9 @@ void write_quads(void){
 
 	for(i=0;i<curr_quad;i++){
 		// For the instruction format : op tmp1 tmp2 tmp3 
-		if((quads[i].op >= add && quads[i].op < uminus)|| quads[i].op==and || quads[i].op==or){
- 
+		if(quads[i].op == uminus || quads[i].op == not){
+
+			fprintf(quads_output,"%d:\t%s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].result));
 		}
 		if(quads[i].op==call){
 			fprintf(quads_output,"%d:\tCALL %s\n",i,quads[i].result->sym->name);
@@ -82,8 +83,8 @@ void write_quads(void){
 		else if(quads[i].op==get_ret_val){
 			fprintf(quads_output,"%d:\tGETRETVAL %s \n",i,quads[i].result->sym->name);
 		}
-		else if(quads[i].op==table_get_elem){
-			fprintf(quads_output,"%d:\tTABLEGETELEM %s %s %s\n",i,expr_to_str(quads[i].arg1),expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
+		else if(quads[i].op==table_get_elem || quads[i].op==add || quads[i].op==sub){
+			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
 		else if(quads[i].op==table_set_elem){
 			fprintf(quads_output,"%d:\tTABLESETELEM %s %s %s\n",i,expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
@@ -108,14 +109,18 @@ void write_quads(void){
 char * opcode_to_str(opcode op){
  
 	switch(op){
-		case assign:	return("assign"); 
-		case func_start: return("func_start");
-		case func_end: return("func_end");
-		case table_get_elem: return("table_get_elem"); 
-		case table_set_elem: return("table_set_elem");  
-		case get_ret_val: return("get_ret_val"); 
-		case param: return("param"); 
-		case call: return("call");
+		case assign:	return("ASSIGN"); 
+		case func_start: return("FUNCSTART");
+		case func_end: return("FUNCEND");
+		case table_get_elem: return("TABLEGETELEM"); 
+		case table_set_elem: return("TABLESETELEM");  
+		case get_ret_val: return("GETRETVAL"); 
+		case param: return("PARAM"); 
+		case call: return("CALL");
+		case uminus: return("UMINUS");
+		case not: return("NOT");
+		case add: return("ADD");
+		case sub: return("SUB");
 		default : assert(0);
 	}
 }
@@ -201,7 +206,7 @@ char * expr_to_str(expr * e){
 		case const_int_e: sprintf(temp, "%d", e->int_value); break;
 		case const_num_e: sprintf(temp, "%lf", e->num_value);break;
 		case const_str_e: return e->str_value;
-		case null_e: return "";
+		case nil_e: return "";
 		case const_bool_e:{
 			if(e->bool_value==1)
 				return("TRUE");
@@ -245,4 +250,18 @@ expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line
 	emit(get_ret_val,NULL,NULL,result,curr_quad,line);
 	return result;
 }
- 
+
+void check_uminus(expr * e,unsigned int line){
+	if(	e->type == const_bool_e	 	||
+		e->type == const_str_e   	||
+		e->type == nil_e  		 	||
+		e->type == new_table_e   	||
+		e->type == program_func_e   ||
+		e->type == library_func_e   ||
+		e->type == bool_expr_e)
+		comp_error("Illegal expression to unary minus.\n",line);
+}
+
+void comp_error(char * error,unsigned int line){
+	printf("Compile error at line %d : %s\n",line,error);
+}

@@ -122,21 +122,96 @@ expr:
 
 term:
 		PAREN_L expr PAREN_R	{printf("(expr)\n");}
-		| MINUS expr %prec UMINUS {printf("-<expr>\n");}
-		| NOT expr {printf("!<expr>\n");}
+		| MINUS expr %prec UMINUS {
+			printf("-<expr>\n");
+			check_uminus($<expression>2,yylineno);
+			$<expression>$ = new_expr(arithm_expr_e);
+			$<expression>$->sym = new_temp_var(st,yylineno);
+			temp_expr = $<expression>$;
+			emit(uminus,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+		}
+		| NOT expr {
+			printf("!<expr>\n");
+			$<expression>$ = new_expr(bool_expr_e);
+			$<expression>$->sym = new_temp_var(st,yylineno);
+			temp_expr = $<expression>$;
+			emit(not,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+
+		}
 		| lvalue DPLUS {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
-			else printf("lvalue++\n");}
+			else{
+				printf("lvalue++\n");
+				$<expression>$ = new_expr(var_e);
+				$<expression>$->sym = new_temp_var(st,yylineno);
+				if($<expression>1->type==table_item_e){
+					expr * value = emit_iftableitem($<expression>1,st,yylineno);
+					emit(assign,value,NULL,$<expression>$,curr_quad,yylineno);
+					emit(add,value,new_expr_const_int(1),value,curr_quad,yylineno);
+					emit(table_set_elem,$<expression>1,$<expression>1->index,value,curr_quad,yylineno);
+				}
+				else{
+					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
+					emit(add,$<expression>1,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
+				}
+				temp_expr = $<expression>$;
+			}
+		}
 		| DPLUS lvalue {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
-			else printf("++lvalue\n");}
+			else {
+				printf("++lvalue\n");
+				if($<expression>2->type == table_item_e){
+					$<expression>$ = emit_iftableitem($<expression>2,st,yylineno);
+					emit(add,$<expression>$,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
+					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,curr_quad,yylineno);
+				}
+				else{
+					emit(add,$<expression>2,new_expr_const_int(1),$<expression>2,curr_quad,yylineno);
+					$<expression>$ = new_expr(arithm_expr_e);
+					$<expression>$->sym = new_temp_var(st,yylineno);
+					emit(assign,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+				}
+				temp_expr = $<expression>$;
+			}
+		}
 		| lvalue DMINUS {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
-			else printf("lvalue--\n");
+			else{
+				printf("lvalue--\n");
+				$<expression>$ = new_expr(var_e);
+				$<expression>$->sym = new_temp_var(st,yylineno);
+				if($<expression>1->type==table_item_e){
+					expr * value = emit_iftableitem($<expression>1,st,yylineno);
+					emit(assign,value,NULL,$<expression>$,curr_quad,yylineno);
+					emit(sub,value,new_expr_const_int(1),value,curr_quad,yylineno);
+					emit(table_set_elem,$<expression>1,$<expression>1->index,value,curr_quad,yylineno);
+				}
+				else{
+					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
+					emit(sub,$<expression>1,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
+				}
+			}
+			temp_expr = $<expression>$;
 		}
 		| DMINUS lvalue {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
-			else printf("--lvalue\n");}
+			else {
+				printf("--lvalue\n");
+				if($<expression>2->type == table_item_e){
+					$<expression>$ = emit_iftableitem($<expression>2,st,yylineno);
+					emit(sub,$<expression>$,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
+					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,curr_quad,yylineno);
+				}
+				else{
+					emit(sub,$<expression>2,new_expr_const_int(1),$<expression>2,curr_quad,yylineno);
+					$<expression>$ = new_expr(arithm_expr_e);
+					$<expression>$->sym = new_temp_var(st,yylineno);
+					emit(assign,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+				}
+				temp_expr = $<expression>$;
+			}
+		}
 		| primary {$<expression>$ = $<expression>1;}
 		;
 
@@ -163,7 +238,7 @@ const:
 		REAL {$<expression>$=new_expr_const_num(yylval.fltval);temp_expr = $<expression>$;}
 		| INTEGER {$<expression>$=new_expr_const_int(yylval.intval);temp_expr = $<expression>$;}
 		| STRING {$<expression>$ = new_expr_const_str(yylval.strval);temp_expr = $<expression>$;}
-		| NIL {$<expression>$ = new_expr(null_e);temp_expr = $<expression>$;}
+		| NIL {$<expression>$ = new_expr(nil_e);temp_expr = $<expression>$;}
 		| TRUE {$<expression>$ = new_expr_const_bool(1);temp_expr = $<expression>$;}
 		| FALSE {$<expression>$ = new_expr_const_bool(0);temp_expr = $<expression>$;}
 		;
@@ -544,7 +619,7 @@ returnstmt:
 %%
 
 int yyerror (const char * yaccProvideMessage){
-	fprintf(stderr,"Error at line %d: %s\n",yylineno,yaccProvideMessage);
+	fprintf(stderr,"Syntax error at line %d: %s\n",yylineno,yaccProvideMessage);
 }
 
 int main(int argc,char ** argv)

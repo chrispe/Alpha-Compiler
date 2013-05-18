@@ -1,2 +1,9 @@
-x = (function g(a,b){print(a);b=3;});
+//x = (function g(a,b){print(a);b=3;});
 //function(a,b){print(a,b);}
+//a = not b;
+//a = x++;
+//a = t.x++;
+//a = x--;
+//++x;
+//a = ++t.x;
+a = --t.x.y;
