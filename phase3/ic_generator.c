@@ -78,7 +78,7 @@ void write_quads(void){
 			fprintf(quads_output,"%d:\tFUNCEND %s\n",i,quads[i].result->sym->name);
 		}
 		else if(quads[i].op==param){
-			fprintf(quads_output,"%d:\tPARAM %s \n",i,quads[i].result->sym->name);
+			fprintf(quads_output,"%d:\tPARAM %s \n",i,expr_to_str(quads[i].result));
 		}
 		else if(quads[i].op==get_ret_val){
 			fprintf(quads_output,"%d:\tGETRETVAL %s \n",i,quads[i].result->sym->name);
@@ -99,8 +99,7 @@ void write_quads(void){
        		printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
      	else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
        		printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].arg1->sym->name,opcode_to_str(quads[i].op));
-     	else
-       		printf("Quad  (line %d)  (label:%d) (name:unknown symbol) (type:%s) \n",quads[i].line,quads[i].label,opcode_to_str(quads[i].op));
+      
 	}
  
 	fclose(quads_output);  
@@ -226,8 +225,8 @@ expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line
 
 	// We use params as a stack for the elist
 	params = elist;
-	elist = elist->next;
-	params->next = NULL;
+	if(elist!=NULL)elist = elist->next;
+	if(params!=NULL)params->next = NULL;
 	 
 	// We create the stack 
 	while(elist){
@@ -264,4 +263,12 @@ void check_uminus(expr * e,unsigned int line){
 
 void comp_error(char * error,unsigned int line){
 	printf("Compile error at line %d : %s\n",line,error);
+}
+
+unsigned int name_is_temp(char * n){
+	return (*n == '$');
+}
+
+unsigned int expr_is_temp(expr * e){
+	return (e->sym && e->sym->type == var_e && name_is_temp(e->sym->name));
 }

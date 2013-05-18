@@ -26,6 +26,9 @@
  	// A stack for pushing a useful variable when entering a function
  	expr * expr_stack = NULL;
 
+ 	// An expression list used for the format (function(){})()
+ 	expr * func_expr_list = NULL;
+
 %}
 %error-verbose
 %start program
@@ -121,12 +124,12 @@ expr:
 		;
 
 term:
-		PAREN_L expr PAREN_R	{printf("(expr)\n");}
+		PAREN_L expr PAREN_R	{printf("(expr)\n");$<expression>$ = $<expression>2; temp_expr=$<expression>$;}
 		| MINUS expr %prec UMINUS {
 			printf("-<expr>\n");
 			check_uminus($<expression>2,yylineno);
 			$<expression>$ = new_expr(arithm_expr_e);
-			$<expression>$->sym = new_temp_var(st,yylineno);
+			$<expression>$->sym =  new_temp_var(st,yylineno);
 			temp_expr = $<expression>$;
 			emit(uminus,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
 		}
@@ -212,7 +215,7 @@ term:
 				temp_expr = $<expression>$;
 			}
 		}
-		| primary {$<expression>$ = $<expression>1;}
+		| primary {$<expression>$ = $<expression>1; }
 		;
 
 primary:
@@ -258,12 +261,7 @@ assignexpr:
 				$<expression>$->type=assign_expr_e;
 			}
 			else{
-				//if(assign_func)
-				//	emit(assign,$<expression>1,NULL,$<expression>1,curr_quad,yylineno);
-				//else
 				emit(assign,temp_expr,NULL,$<expression>1,curr_quad,yylineno);
-
-				//assign_func = 0;
 				$<expression>$ = new_expr(assign_expr_e);
 
 
@@ -307,7 +305,7 @@ member:
 		lvalue DOT IDENTIFIER {
 			printf("lvalue.id\n");
 			$<expression>$ = new_member_item_expr($1,$3,st,yylineno);
-			printf("lvalue.id %s\n",$<expression>$->index->str_value);
+			//printf("lvalue.id %s\n",$<expression>$->index->str_value);
 			 
 		}
 		| lvalue BRACKET_L expr BRACKET_R {
@@ -329,26 +327,30 @@ call:
 			m_param.elist = NULL;
 		}
 		| lvalue callsuffix {
+
 			if(m_param.method){
 				expr * self = $1;
 				$1 = emit_iftableitem(new_member_item_expr(self,m_param.name,st,yylineno),st,yylineno);
 				self->next = m_param.elist;
 				m_param.elist = self;
+
 			}
 			$<expression>$ = make_call($1,m_param.elist,(symbol_table **)st,yylineno);
 			m_param.elist = NULL;
 		}
 		| PAREN_L funcdef PAREN_R PAREN_L elist PAREN_R {
+ 
 			expr * func = new_expr(program_func_e);
-			func->sym = (st_entry *)$<symbol>2;
-			$<expression>$ = make_call(func,m_param.elist,(symbol_table **)st,yylineno);
-			m_param.elist = NULL;
+			func->sym =  	(*(symbol_table **)st)->last_symbol;
+
+			$<expression>$ = make_call(func,func_expr_list,(symbol_table **)st,yylineno);
+	 
 		}
 		;
 
 callsuffix:
 		normcall {
-			printf("funcall %s()\n",$$);
+			//printf("funcall %s()\n",$$);
 			$$ = $1;
 		}
 		| methodcall {
@@ -433,17 +435,15 @@ elist:	expr con_elist{
 			$<expression>$->next = $<expression>2;
 			m_param.elist = $<expression>$;
 		} 
-		|
-		{
-			$<expression>$ = NULL;		
-		}
+		| {$<expression>$ = NULL; m_param.elist = NULL;}
 		;
 
 con_elist: COMMA expr con_elist	{
 			$<expression>$ = $<expression>2;
 			$<expression>$->next = $<expression>3;
+			m_param.elist = $<expression>$;
 		} 
-		|	{$<expression>$ = NULL;}
+		|	{$<expression>$ = NULL; m_param.elist = NULL;}
 		;
  
 func_temp:
@@ -528,6 +528,8 @@ funcdef:
 			// We set the new scope offset and loop scope to zero
 			reset_curr_scope_offset();
 			scope_loop=0;
+
+
 		} 
 		func_temp {
 			// Function definition ended
@@ -554,6 +556,11 @@ idlist:
 			// Every required checking is included in the following method.
  			add_function_argument((symbol_table **)st,$1,yylineno,0);
  			increase_curr_scope_offset();
+
+ 			// Adding to expression list
+ 			expr * e = new_expr_const_str($1);
+ 			e->next = func_expr_list;
+ 			func_expr_list = e; 
 		}
 		| idlist COMMA IDENTIFIER {
 
@@ -561,6 +568,11 @@ idlist:
 			// Every required checking is included in the following method.
 			add_function_argument((symbol_table **)st,$3,yylineno,1);
 			increase_curr_scope_offset();
+
+			// Adding to expression list
+ 			expr * e = new_expr_const_str($3);
+ 			e->next = func_expr_list;
+ 			func_expr_list = e; 
 		}
 		| {}
 		;

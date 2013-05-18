@@ -129,3 +129,9 @@ void check_uminus(expr *,unsigned int);
 
 /* Prints a compile error message */
 void comp_error(char * error,unsigned int line);
+
+/* Returns if the name represents a temp variable */
+unsigned int name_is_temp(char *);
+
+/* Returns if the expression represents a temp symbol */
+unsigned int expr_is_temp(expr *);

@@ -110,7 +110,7 @@ double modulo(double a, double b){
 }
 
 void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
-	 			int i;
+	 		int i;
  			st_entry * se = NULL;
 
  			// Lookup symbol table starting at the current 
@@ -284,6 +284,7 @@ void add_function_argument(symbol_table ** st, char * argument,unsigned int yyli
  			args_insert(&(se->value_type.funVal->arguments),argument);
  		}
  	}
+ 	(*st)->last_symbol = se;
 }
 
 char * generate_func_name(unsigned int id){
