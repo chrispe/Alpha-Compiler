@@ -69,6 +69,7 @@ extern unsigned int curr_quad;
 
 /* An expression list for the index items */
 extern expr * index_expr;
+ 
 
 /* Some useful defined keywords for the
    reallocation of the quads array.	 */
@@ -135,3 +136,18 @@ unsigned int name_is_temp(char *);
 
 /* Returns if the expression represents a temp symbol */
 unsigned int expr_is_temp(expr *);
+
+/* Returns if an expression is valid for arithmetic operation */
+unsigned int arithm_expr_valid(expr *);
+
+/* Returns if the expression represents a number (either double or int). */
+unsigned int is_num_expr(expr *,unsigned int *);
+
+/* Returns the value of an number expression */
+double get_expr_num_value(expr * e);
+
+/* Emits an arithmetic expression */
+expr * emit_arithm(symbol_table ** st,opcode,expr *,expr *, expr *, unsigned int,unsigned int);
+
+/* Applies the arithmetic operation based on the op argument. */
+double apply_arithm_op(opcode,double,double,unsigned int);

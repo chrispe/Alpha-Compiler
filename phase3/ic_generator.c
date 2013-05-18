@@ -272,3 +272,72 @@ unsigned int name_is_temp(char * n){
 unsigned int expr_is_temp(expr * e){
 	return (e->sym && e->sym->type == var_e && name_is_temp(e->sym->name));
 }
+ 
+unsigned int arithm_expr_valid(expr * e){
+	return( e->type == var_e
+		|| e->type == arithm_expr_e
+		|| e->type == const_num_e
+		|| e->type == const_int_e
+		|| e->type == table_item_e);
+}
+
+unsigned int is_num_expr(expr * e,unsigned int * is_float){
+	if(e->type==const_num_e){
+		*is_float = 1;
+		return 1;
+	}
+	else if(e->type==const_int_e)return 1;
+	return 0;
+}
+
+double get_expr_num_value(expr * e){
+	if(e->type==const_num_e)return(e->num_value);
+	else if(e->type==const_int_e)return((double)e->int_value);
+	else assert(0);
+}
+
+expr * emit_arithm(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,unsigned int line){
+	expr * e;
+	unsigned int is_float = 0;
+	double a_result;
+
+	if(arithm_expr_valid(arg1) && arithm_expr_valid(arg2)){
+		if(is_num_expr(arg1,&is_float) && is_num_expr(arg2,&is_float)){
+			double a_result = apply_arithm_op(op,get_expr_num_value(arg1),get_expr_num_value(arg2),line);
+			if(is_float)
+				result = new_expr_const_num(a_result);
+			else
+				result = new_expr_const_int((int)a_result);
+		}
+		else {
+				result = new_expr(arithm_expr_e);
+				result->sym = new_temp_var(st,line);
+				emit(add,arg1,arg2,result,label,line);
+		}
+	}
+	else comp_error("Invalid expression type for arithmetic operation.",line);
+	return result;
+}
+
+double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
+	double result;
+	switch(op){
+		case add: result = arg1 + arg2; break;
+		case sub: result = arg1 - arg2;	break;
+		case mod: {
+			if(arg2!=0)result = modulo(arg1,arg2);
+			else result = arg1;
+			comp_error("Cannot divide by zero.",line);
+			break;
+		}
+		case op_div: {
+			if(arg2!=0)result = arg1/arg2; 
+			else result = arg1;
+			comp_error("Cannot divide by zero.",line);
+			break;
+		}
+		case mul: result = arg1 * arg2; break;
+		default: assert(0);
+	}
+	return result;
+}

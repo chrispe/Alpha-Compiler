@@ -29,6 +29,7 @@
  	// An expression list used for the format (function(){})()
  	expr * func_expr_list = NULL;
 
+
 %}
 %error-verbose
 %start program
@@ -100,17 +101,27 @@ stmt:
 
 expr:
 		assignexpr {$<expression>$ = $<expression>1;}
-		|	expr PLUS expr 	{printf("<expr> + <expr>\n",$1,$3);}
-		|	expr MINUS expr	{printf("<expr> - <expr>\n",$1,$3);}
-		|	expr MULTI expr {printf("<expr> * <expr>\n",$1,$3);}
+		|	expr PLUS expr 	{
+			$<expression>$ = emit_arithm((symbol_table **)st,add,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+			temp_expr = $<expression>$;
+		}
+		|	expr MINUS expr	{printf("<expr> - <expr>\n",$1,$3);
+			$<expression>$ = emit_arithm((symbol_table **)st,sub,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+			temp_expr = $<expression>$;
+		}
+		|	expr MULTI expr {printf("<expr> * <expr>\n",$1,$3);
+			$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+			temp_expr = $<expression>$;
+		}
 		|	expr SLASH expr {
-					printf("<expr> / <expr>\n",$1,$3);
-					if($3==0)yyerror("Cannot divide by zero.");
+				printf("<expr> / <expr>\n",$1,$3);
+				$<expression>$ = emit_arithm((symbol_table **)st,op_div,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
 			}
 		|	expr PERCENT expr {
-
-					printf("<expr> %% <expr>\n",$1,$3);
-					if($3==0)yyerror("Cannot divide by zero.");
+				printf("<expr> %% <expr>\n",$1,$3);
+				$<expression>$ = emit_arithm((symbol_table **)st,mod,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
 			}
 		|	expr GREATER expr {printf("<expr> > <expr>\n",$1,$3);}
 		|	expr EQ_GREATER expr {printf("<expr> >= <expr>\n",$1,$3);}
@@ -155,7 +166,7 @@ term:
 				}
 				else{
 					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
-					emit(add,$<expression>1,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
+					emit(add,$<expression>1,new_expr_const_int(1),$<expression>1,curr_quad,yylineno);
 				}
 				temp_expr = $<expression>$;
 			}
@@ -192,7 +203,7 @@ term:
 				}
 				else{
 					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
-					emit(sub,$<expression>1,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
+					emit(sub,$<expression>1,new_expr_const_int(1),$<expression>1,curr_quad,yylineno);
 				}
 			}
 			temp_expr = $<expression>$;

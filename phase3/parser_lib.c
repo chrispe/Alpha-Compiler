@@ -343,11 +343,12 @@ st_entry * new_temp_var(symbol_table ** st, unsigned int line){
 	/* if the symbol using that name already exists then we
 	   use this symbol else we create a new one.         */
 	st_entry * symbol = st_lookup_scope(*st,var_name,get_current_scope());
+	var_signed++;
 	if(symbol==NULL){
 		increase_curr_scope_offset();
 		symbol = create_symbol(var_name,1,scope_main,line,TEMP_VAR,get_current_scope_offset(),get_current_scope_space());
 		st_insert(st,&symbol);
-		var_signed++;
+		
 	}
 	else{
 		(*st)->last_symbol = symbol;
