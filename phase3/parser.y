@@ -28,6 +28,10 @@
 
  	// An expression list used for the format (function(){})()
  	expr * func_expr_list = NULL;
+
+ 	// Some variables used for the for statement
+ 	unsigned int for_test = 0;
+ 	unsigned int for_enter = 0;
 %}
 %error-verbose
 %start program
@@ -51,8 +55,8 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall term index_temp if_prefix else_prefix
-%type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp
+%type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall term index_temp if_prefix else_prefix forprefix M N
+%type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp whilesecond whilestart
 %type <expression> expr lvalue con_elist
  
  
@@ -640,15 +644,55 @@ if_prefix:
 		;
 
 whilestmt:
-		WHILE {scope_loop++;} PAREN_L expr PAREN_R stmt {scope_loop--;} {
-			printf("while (<expr>) <stmt>\n");
+		whilestart whilesecond
+		stmt {
+			scope_loop--;
+			emit(jump,NULL,NULL,new_expr_const_int($<intval>1),-1,yylineno);
+			patch_label($<intval>2,curr_quad);
+
+		} 
+		;
+
+whilestart:
+		WHILE{
+			scope_loop++;
+			$<intval>$ = curr_quad;
+		}
+
+whilesecond:
+		PAREN_L expr PAREN_R {
+			emit(if_eq,$<expression>2,new_expr_const_bool(1),new_expr_const_int(curr_quad+2),-1,yylineno);
+			$<intval>$ = curr_quad;
+			emit(jump,NULL,NULL,NULL,curr_quad,yylineno);
+		}
+		;
+
+
+N: {
+	$<intval>$ = curr_quad;
+	emit(jump,NULL,NULL,NULL,-1,yylineno);
+}
+
+M: {
+	$<intval>$ = curr_quad;
+}
+
+forprefix:
+		FOR PAREN_L elist SEMICOLON M expr SEMICOLON{
+			for_test = $<intval>5;
+			for_enter = curr_quad;
+			emit(if_eq,$<expression>6,new_expr_const_bool(1),NULL,curr_quad,yylineno);
 		}
 		;
 
 forstmt:
-		FOR {scope_loop++;} PAREN_L elist SEMICOLON expr SEMICOLON elist PAREN_R stmt {
+		forprefix N elist PAREN_R N stmt N {
 			printf("for (<elist>;<expr>;<elist>) <stmt>\n ");
 			scope_loop--;
+			patch_label(for_enter,$<intval>5+1);
+			patch_label($<intval>2,curr_quad);
+			patch_label($<intval>5,for_test);
+			patch_label($<intval>7,$<intval>2+1);
 		}
 		;
 
