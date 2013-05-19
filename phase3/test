@@ -1,10 +1,12 @@
-x = f();
-while(x){
-	function g(){
-		break;
-		while(true){
-			continue;
-		}
-	}
-	break;
+for(i=0;i<10;i++)
+{
+	while(i==2){continue;break;}
+	print("cmon");
+	if(i==5){	
+		break;}
+	if(i==6){
+		continue;}
+	while(1){break;}
+	for(j=0;j<5;j++){while(1){break;}continue;}	
+	print("ds");
 }

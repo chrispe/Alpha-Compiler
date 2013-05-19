@@ -63,6 +63,11 @@ typedef struct ListNode{
 	struct ListNode * next;
 }list_node;
 
+typedef struct StackNode{
+	list_node * head;
+	struct StackNode * next;
+}stack_node;
+
 /* The array of the quads. */
 extern quad * quads;
 
@@ -177,3 +182,8 @@ list_node * list_insert(list_node *,int);
 
 /* Merges two lists */
 list_node * merge_lists(list_node *, list_node *);
+
+ 
+stack_node * pop_node(stack_node *top);
+stack_node * push_node(stack_node * top, list_node * head);
+list_node * stack_top(stack_node * top);

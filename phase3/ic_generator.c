@@ -73,7 +73,7 @@ void write_quads(void){
 
 			fprintf(quads_output,"%d:\t%s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].result));
 		}
-		else if(quads[i].op==or || quads[i].op==and){
+		else if(quads[i].op==or || quads[i].op==and || (quads[i].op>=add && quads[i].op<=mod)){
 			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].arg2),expr_to_str(quads[i].result));
 		}
 		else if(quads[i].op==call){
@@ -319,7 +319,7 @@ expr * emit_arithm(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * 
 		else {
 				result = new_expr(arithm_expr_e);
 				result->sym = new_temp_var(st,line);
-				emit(add,arg1,arg2,result,label,line);
+				emit(op,arg1,arg2,result,label,line);
 		}
 	}
 	else 
@@ -421,4 +421,22 @@ list_node * merge_lists(list_node * list1, list_node * list2){
 	temp->next = list2;
 
 	return list1;
+}
+
+
+stack_node * pop_node(stack_node *top){
+	top = top->next;
+	return top;
+}
+
+stack_node * push_node(stack_node * top, list_node * head){
+	stack_node * newNode = malloc(sizeof(stack_node));
+	newNode->head = head;
+	newNode->next = top;
+	return newNode;
+}
+
+list_node * stack_top(stack_node * top){
+	if(top!=NULL)return (top->head);
+	return NULL;
 }

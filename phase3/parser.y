@@ -29,9 +29,17 @@
  	// An expression list used for the format (function(){})()
  	expr * func_expr_list = NULL;
 
- 	// Some variables used for the for statement
+ 	// Some variables used for the (for) statement
  	unsigned int for_test = 0;
  	unsigned int for_enter = 0;
+
+ 	// The lists in which we save the labels for patching.
+ 	list_node * break_list = NULL;
+ 	list_node * con_list = NULL;
+
+ 	stack_node * break_stack = NULL;
+ 	stack_node * con_stack = NULL;
+
 %}
 %error-verbose
 %start program
@@ -85,10 +93,23 @@ stmt:
 		| BREAK SEMICOLON {
 			if(scope_loop<=0)
 				yyerror("Cannot use break; outside of a loop.");
+			else{
+				break_list = stack_top(break_stack);
+				break_list = list_insert(break_list,curr_quad);
+				break_stack->head = break_list;
+				emit(jump,NULL,NULL,NULL,-1,yylineno);
+			}
 		}
 		| CONTINUE SEMICOLON {
 			if(scope_loop<=0)
 				yyerror("Cannot use continue; outside of a loop.");
+			else{
+							
+				con_list = stack_top(con_stack);
+				con_list = list_insert(con_list,curr_quad);
+				con_stack->head = con_list;
+				emit(jump,NULL,NULL,NULL,-1,yylineno);
+			}
 		}
 		| forstmt {}
 		| whilestmt {}
@@ -650,6 +671,23 @@ whilestmt:
 			emit(jump,NULL,NULL,new_expr_const_int($<intval>1),-1,yylineno);
 			patch_label($<intval>2,curr_quad);
 
+			break_list = stack_top(break_stack);
+			con_list = stack_top(con_stack);
+
+			while(break_list){
+				patch_label(break_list->value,curr_quad);
+				break_list = break_list->next;
+			}
+
+			while(con_list){
+				patch_label(con_list->value,$<intval>1);
+				con_list = con_list->next;
+			}
+			
+			break_stack = pop_node(break_stack);
+			con_stack = pop_node(con_stack);
+ 
+
 		} 
 		;
 
@@ -657,6 +695,9 @@ whilestart:
 		WHILE{
 			scope_loop++;
 			$<intval>$ = curr_quad;
+ 			break_stack = push_node(break_stack,NULL);
+			con_stack = push_node(con_stack,NULL);
+ 
 		}
 
 whilesecond:
@@ -679,20 +720,43 @@ M: {
 
 forprefix:
 		FOR PAREN_L elist SEMICOLON M expr SEMICOLON{
+			scope_loop++;
 			for_test = $<intval>5;
 			for_enter = curr_quad;
 			emit(if_eq,$<expression>6,new_expr_const_bool(1),NULL,curr_quad,yylineno);
+			break_stack = push_node(break_stack,NULL);
+			con_stack = push_node(con_stack,NULL);
+ 
 		}
 		;
 
 forstmt:
 		forprefix N elist PAREN_R N stmt N {
+
 			printf("for (<elist>;<expr>;<elist>) <stmt>\n ");
 			scope_loop--;
 			patch_label(for_enter,$<intval>5+1);
 			patch_label($<intval>2,curr_quad);
 			patch_label($<intval>5,for_test);
 			patch_label($<intval>7,$<intval>2+1);
+
+			break_list = stack_top(break_stack);
+			con_list = stack_top(con_stack);
+
+			while(break_list){
+				patch_label(break_list->value,curr_quad);
+				break_list = break_list->next;
+			}
+
+			while(con_list){
+				patch_label(con_list->value,$<intval>2+1);
+				con_list = con_list->next;
+			}
+
+			break_stack = pop_node(break_stack);
+			con_stack = pop_node(con_stack);
+ 
+
 		}
 		;
 
