@@ -130,10 +130,8 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 					if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
 						strcmp(se->value_type.varVal->used_in_func,top(func_names))!=0))
 						printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,variable);
-					else 
-						printf("Variable '%s' was detected and used.\n", variable);
 				}
-				else if(expr_started==0){fun_rec = 1;printf("Function recognized as lvalue\n");}
+				else if(expr_started==0){fun_rec = 1;}
 				(*st)->last_symbol = se;
 			}
 			else {
@@ -141,7 +139,6 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 				se = create_symbol(variable,1,scope_main,yylineno,VAR,get_current_scope_offset(),get_current_scope_space());
 				st_insert((symbol_table **)st,&se);
 				increase_curr_scope_offset();
-				printf("Added variable '%s' in the symbol table.\n",variable);
 			}
 }
 
@@ -157,8 +154,6 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 		// else we make a reference to that variable.
 		if(se->type==LIBFUNC && scope_main!=0)
 			printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,variable);
-		else 
-			printf("Local variable '%s' was detected and used.\n",variable);
 		(*st)->last_symbol = se;
 	}
 	else{
@@ -175,7 +170,6 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 			// the symbol table on the current scope.
 			if(scope_main==0){
 				se = create_symbol(variable,1,0,yylineno,GLOBAL_VAR,get_current_scope_offset(),get_current_scope_space());
-				printf("Added global variable '%s' in the symbol table.\n",variable);
 			}
 			else{
 				// If we are under a function then it is ok to set local 
@@ -183,11 +177,9 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 				if(in_func){
 					se = create_symbol(variable,1,scope_main,yylineno,LCAL,get_current_scope_offset(),get_current_scope_space());
 					se = set_var_func(se,top(func_names));
-					printf("Added local variable '%s' in the symbol table.\n",variable);
 				}
 				else{
 					se = create_symbol(variable,1,scope_main,yylineno,VAR,get_current_scope_offset(),get_current_scope_space());
-					printf("Added variable '%s' in the symbol table.\n",variable);
 				}
 			}
 			st_insert((symbol_table **)st,&se);
@@ -203,8 +195,6 @@ void check_global_variable(symbol_table ** st, char * variable,unsigned int yyli
 
 	if(se==NULL)
 		printf("Error at line %d: Global variable '%s' could not be detected.\n",yylineno,variable);
-	else
-		printf("Global variable '%s' was detected and used.\n",variable); 
 	(*st)->last_symbol = se;
 }
 
@@ -262,7 +252,6 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 }
 
 void add_function_argument(symbol_table ** st, char * argument,unsigned int yylineno,const char comma){
-	printf("fun par:%s\n",argument);
 
  	st_entry * se = NULL;
 

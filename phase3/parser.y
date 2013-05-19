@@ -28,8 +28,6 @@
 
  	// An expression list used for the format (function(){})()
  	expr * func_expr_list = NULL;
-
-
 %}
 %error-verbose
 %start program
@@ -53,7 +51,7 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall   term   index_temp
+%type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall term index_temp if_prefix else_prefix
 %type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp
 %type <expression> expr lvalue con_elist
  
@@ -75,20 +73,18 @@
 
 program:
 		program stmt 
-		| {printf("\n <--[Parsing Started]-->\n\n");}
+		| {printf("\nCompiling...\n\n");}
 		;
 
 stmt:
 		expr SEMICOLON { fun_rec=0; reset_tmp_var_counter(); }
 		| BREAK SEMICOLON {
-			if(scope_loop>0)
-				printf("break;\n");
-			else
+			if(scope_loop<=0)
 				yyerror("Cannot use break; outside of a loop.");
 		}
 		| CONTINUE SEMICOLON {
-			if(scope_loop>0)printf("continue;\n");
-			else yyerror("Cannot use continue; outside of a loop.");
+			if(scope_loop<=0)
+				yyerror("Cannot use continue; outside of a loop.");
 		}
 		| forstmt {}
 		| whilestmt {}
@@ -145,18 +141,26 @@ expr:
 				$<expression>$ = emit_relop((symbol_table **)st,if_neq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
 				temp_expr = $<expression>$;
 		}
-		|	expr AND expr {printf("<expr> and <expr>\n",$1,$3);}
-		|	expr OR expr {printf("<expr> or <expr>\n",$1,$3);}
+		|	expr AND expr {
+				$<expression>$ = new_expr(bool_expr_e);
+				$<expression>$->sym = new_temp_var(st,yylineno);
+				emit(and,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
+		}
+		|	expr OR expr {
+				$<expression>$ = new_expr(bool_expr_e);
+				$<expression>$->sym = new_temp_var(st,yylineno);
+				emit(or,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				temp_expr = $<expression>$;
+		}
 		| 	term {$<expression>$ = $<expression>1;}
 		;
 
 term:
-		PAREN_L expr PAREN_R	{printf("(expr)\n");$<expression>$ = $<expression>2; temp_expr=$<expression>$;}
+		PAREN_L expr PAREN_R	{$<expression>$ = $<expression>2; temp_expr=$<expression>$;}
 		| MINUS expr %prec UMINUS {
-			printf("-<expr>\n");
 			check_uminus($<expression>2,yylineno);
-			unsigned int is_float = 0;
-			if(is_num_expr($<expression>2,&is_float)){
+			if(is_num_expr($<expression>2)){
 				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>2,new_expr_const_int(-1),$<expression>$,curr_quad,yylineno);
 			}
 			else{
@@ -167,17 +171,14 @@ term:
 			temp_expr = $<expression>$;
 		}
 		| NOT expr {
-			printf("!<expr>\n");
 			$<expression>$ = new_expr(bool_expr_e);
 			$<expression>$->sym = new_temp_var(st,yylineno);
 			temp_expr = $<expression>$;
 			emit(not,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
-
 		}
 		| lvalue DPLUS {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
 			else{
-				printf("lvalue++\n");
 				$<expression>$ = new_expr(var_e);
 				$<expression>$->sym = new_temp_var(st,yylineno);
 				if($<expression>1->type==table_item_e){
@@ -196,7 +197,6 @@ term:
 		| DPLUS lvalue {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
 			else {
-				printf("++lvalue\n");
 				if($<expression>2->type == table_item_e){
 					$<expression>$ = emit_iftableitem($<expression>2,st,yylineno);
 					emit(add,$<expression>$,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
@@ -214,7 +214,6 @@ term:
 		| lvalue DMINUS {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
 			else{
-				printf("lvalue--\n");
 				$<expression>$ = new_expr(var_e);
 				$<expression>$->sym = new_temp_var(st,yylineno);
 				if($<expression>1->type==table_item_e){
@@ -233,7 +232,6 @@ term:
 		| DMINUS lvalue {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
 			else {
-				printf("--lvalue\n");
 				if($<expression>2->type == table_item_e){
 					$<expression>$ = emit_iftableitem($<expression>2,st,yylineno);
 					emit(sub,$<expression>$,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
@@ -280,7 +278,7 @@ const:
 		;
 
 assignexpr:
-		lvalue EQUAL{expr_started=1;printf("Expr started\n");} 
+		lvalue EQUAL{expr_started=1;} 
 		expr { 
 			expr_started=0; 
 			if(fun_rec)
@@ -336,18 +334,13 @@ lvalue:
 
 member:
 		lvalue DOT IDENTIFIER {
-			printf("lvalue.id\n");
 			$<expression>$ = new_member_item_expr($1,$3,st,yylineno);
-			//printf("lvalue.id %s\n",$<expression>$->index->str_value);
-			 
 		}
 		| lvalue BRACKET_L expr BRACKET_R {
-			printf("lvalue[expr]\n");
 			$1 = emit_iftableitem($1,st,yylineno);
 			$<expression>$ = new_expr(table_item_e);
 			($<expression>$)->sym = ($1)->sym;
 			($<expression>$)->index = $3;
-	 		
 		}
 		| call DOT IDENTIFIER {}
 		| call BRACKET_L expr BRACKET_R {}
@@ -355,35 +348,28 @@ member:
 
 call:
 		call PAREN_L elist PAREN_R {
-			printf("funccall(<elist>)\n");
 			$<expression>$ = make_call($<expression>1,m_param.elist,(symbol_table **)st,yylineno);
 			m_param.elist = NULL;
 		}
 		| lvalue callsuffix {
-
 			if(m_param.method){
 				expr * self = $1;
 				$1 = emit_iftableitem(new_member_item_expr(self,m_param.name,st,yylineno),st,yylineno);
 				self->next = m_param.elist;
 				m_param.elist = self;
-
 			}
 			$<expression>$ = make_call($1,m_param.elist,(symbol_table **)st,yylineno);
 			m_param.elist = NULL;
 		}
 		| PAREN_L funcdef PAREN_R PAREN_L elist PAREN_R {
- 
 			expr * func = new_expr(program_func_e);
 			func->sym =  	(*(symbol_table **)st)->last_symbol;
-
 			$<expression>$ = make_call(func,func_expr_list,(symbol_table **)st,yylineno);
-	 
 		}
 		;
 
 callsuffix:
 		normcall {
-			//printf("funcall %s()\n",$$);
 			$$ = $1;
 		}
 		| methodcall {
@@ -394,18 +380,15 @@ callsuffix:
 normcall:
 		PAREN_L elist PAREN_R {
 			m_param.method = 0;
-		 
 		}
 		;
 
 methodcall:
 		DDOT IDENTIFIER PAREN_L elist PAREN_R {
-			printf("..id(elist)\n");
 			m_param.elist = $<expression>4;
 			m_param.method = 1;
 			m_param.name = malloc(strlen($2)+1);
 			strcpy(m_param.name,$2);
-
 		}
 		;
 
@@ -514,7 +497,6 @@ func_temp:
 			pop(&func_names);
 			temp_expr = expr_stack;
 			expr_stack = expr_stack->next;
-			printf("Func <id> (<parameters>) \n");
 
 		}
 		| PAREN_L{
@@ -545,14 +527,14 @@ func_temp:
 			pop(&func_names);
 			temp_expr = expr_stack;
 			expr_stack = expr_stack->next;
-			printf("Func (<parameters>) \n");
+
 		}
 		; 
 
 funcdef:
 		FUNCTION{
 			// Starting function
-			func_var=1;printf("FUNCTION\n");
+			func_var=1;
 
 			// We push the loop scope and the offset to a stack
 			push_value(&loop_stack,scope_loop);
@@ -633,8 +615,28 @@ block_in:
 		;
 
 ifstmt:
-		IF PAREN_L expr PAREN_R stmt %prec IF_TERM { printf("if (<expr>) <stmt>\n"); }
-		| IF PAREN_L expr PAREN_R stmt ELSE stmt { printf("if (<expr>) <stmt> else <stmt>\n"); }
+		if_prefix stmt %prec IF_TERM { 
+			patch_label($<intval>1,curr_quad);
+		}
+		| if_prefix stmt else_prefix stmt { 
+			patch_label($<intval>1,$<intval>3+1);
+			patch_label($<intval>3,curr_quad);
+		}
+		;
+
+else_prefix:
+		ELSE {
+			$<intval>$ = curr_quad;
+			emit(jump,NULL,NULL,NULL,-1,yylineno);
+		}
+		;
+
+if_prefix:
+		IF PAREN_L expr PAREN_R{
+			emit(if_eq,$<expression>3,new_expr_const_bool(1),new_expr_const_int(curr_quad+2),curr_quad,yylineno);
+			$<intval>$ = curr_quad;
+			emit(jump,NULL,NULL,NULL,-1,yylineno);
+		}
 		;
 
 whilestmt:
@@ -686,10 +688,8 @@ int main(int argc,char ** argv)
 
 	write_quads();
 
-	printf("\n <--[Parsing Completed]-->\n");
-	printf("Press [Enter] to continue with the symbol table.\n");
-	getchar();
-	print_st(st);
+	printf("\nComplation has finished.\n");
+	//print_st(st);
  
 	return 0;	
 }

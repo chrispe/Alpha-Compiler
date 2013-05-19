@@ -58,6 +58,11 @@ typedef struct MethodCallParam{
 	char * name;
 }method_call_param;
 
+typedef struct ListNode{
+	unsigned int value;
+	struct ListNode * next;
+}list_node;
+
 /* The array of the quads. */
 extern quad * quads;
 
@@ -70,6 +75,9 @@ extern unsigned int curr_quad;
 /* An expression list for the index items */
 extern expr * index_expr;
  
+/* The true and false list for the short circuit evaluation */
+extern list_node * true_list;
+extern list_node * false_list;
 
 /* Some useful defined keywords for the
    reallocation of the quads array.	 */
@@ -141,10 +149,13 @@ unsigned int expr_is_temp(expr *);
 unsigned int arithm_expr_valid(expr *);
 
 /* Returns if the expression represents a number (either double or int). */
-unsigned int is_num_expr(expr *,unsigned int *);
+unsigned int is_num_expr(expr *);
 
 /* Returns the value of an number expression */
 double get_expr_num_value(expr * e);
+
+/* Returns if the expression represents a double value. */
+unsigned int is_num_double(expr *);
 
 /* Emits an arithmetic expression */
 expr * emit_arithm(symbol_table ** st,opcode,expr *,expr *, expr *, unsigned int,unsigned int);
@@ -154,3 +165,15 @@ double apply_arithm_op(opcode,double,double,unsigned int);
 
 /* Emits the relop expressions */
 expr * emit_relop(symbol_table ** st,opcode,expr *,expr *, expr *, unsigned int,unsigned int);
+
+/* Applies a boolean operation on two expressions and returns the result */
+unsigned int apply_boolean_op(opcode,expr *, expr *);
+
+/* Returns the boolean value of an expression */
+unsigned expr_to_boolean(expr *);
+
+/* Inserts a new node to the false/true list. */
+list_node * list_insert(list_node *,int);
+
+/* Merges two lists */
+list_node * merge_lists(list_node *, list_node *);

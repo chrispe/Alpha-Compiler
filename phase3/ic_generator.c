@@ -13,6 +13,10 @@ unsigned int curr_quad = 0;
 /* An expression list for the index items */
 expr * index_expr = NULL;
 
+/* The true and false list for the short circuit evaluation */
+list_node * true_list = NULL;
+list_node * false_list = NULL;
+
 void expand(void){
 	assert(quads_total==curr_quad);
 	
@@ -45,6 +49,7 @@ void emit(opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,u
  
 void patch_label(unsigned int quad_id, unsigned int label){
 	assert(quad_id<curr_quad);
+	quads[quad_id].result = new_expr_const_int(label);
 	quads[quad_id].label = label;
 }
 
@@ -68,7 +73,10 @@ void write_quads(void){
 
 			fprintf(quads_output,"%d:\t%s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].result));
 		}
-		if(quads[i].op==call){
+		else if(quads[i].op==or || quads[i].op==and){
+			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].arg2),expr_to_str(quads[i].result));
+		}
+		else if(quads[i].op==call){
 			fprintf(quads_output,"%d:\tCALL %s\n",i,quads[i].result->sym->name);
 		}
 		else if(quads[i].op==func_start){
@@ -120,8 +128,6 @@ char * opcode_to_str(opcode op){
 	return(ops[op-assign]);
 }
  
-
-
 expr *lvalue_expr(st_entry * sym){   
    
 	// Initialization of an expression.
@@ -279,14 +285,13 @@ unsigned int arithm_expr_valid(expr * e){
 		|| e->type == table_item_e);
 }
 
-unsigned int is_num_expr(expr * e,unsigned int * is_float){
-	if(e->type==const_num_e){
-		*is_float = 1;
-		return 1;
-	}
-	else if(e->type==const_int_e)
-		return 1;
-	return 0;
+unsigned int is_num_expr(expr * e){
+	return (e->type==const_int_e || e->type==const_num_e);
+}
+
+unsigned int is_num_double(expr * e){
+	if(e->type==const_num_e)return 1;
+	else return 0;
 }
 
 double get_expr_num_value(expr * e){
@@ -303,7 +308,8 @@ expr * emit_arithm(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * 
 	double a_result;
 
 	if(arithm_expr_valid(arg1) && arithm_expr_valid(arg2)){
-		if(is_num_expr(arg1,&is_float) && is_num_expr(arg2,&is_float)){
+		if(is_num_expr(arg1) && is_num_expr(arg2)){
+			is_float = is_num_double(arg1) || is_num_double(arg2);
 			double a_result = apply_arithm_op(op,get_expr_num_value(arg1),get_expr_num_value(arg2),line);
 			if(is_float)
 				result = new_expr_const_num(a_result);
@@ -346,7 +352,13 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 
 expr * emit_relop(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,unsigned int line){
 	expr * e = new_expr(bool_expr_e);
-	e->sym = new_temp_var(st,line);
+ 	e->sym = new_temp_var(st,line);
+
+ 	if(is_num_expr(arg1) && is_num_expr(arg2)){
+ 		emit(assign,new_expr_const_bool(apply_boolean_op(op,arg1,arg2)),NULL,e,curr_quad,line);
+ 		return e;
+ 	}
+
 	emit(op,arg1,arg2,new_expr_const_int(curr_quad+3),curr_quad,line);
 	emit(assign,new_expr_const_bool(0),NULL,e,curr_quad,line);
 	emit(jump,NULL,NULL,new_expr_const_int(curr_quad+2),curr_quad,line);
@@ -354,3 +366,59 @@ expr * emit_relop(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * r
 	return e;
 }
  
+unsigned int apply_boolean_op(opcode op,expr * arg1, expr *arg2){
+	switch(op){
+		case if_eq: return (get_expr_num_value(arg1) == get_expr_num_value(arg2));
+		case if_neq: return (get_expr_num_value(arg1) != get_expr_num_value(arg2));
+		case if_leq: return (get_expr_num_value(arg1) <= get_expr_num_value(arg2));
+		case if_less: return (get_expr_num_value(arg1) < get_expr_num_value(arg2));
+		case if_greq: return (get_expr_num_value(arg1) >= get_expr_num_value(arg2));
+		case if_greater: return (get_expr_num_value(arg1) > get_expr_num_value(arg2));
+		default: assert(0);
+	}
+} 
+
+unsigned expr_to_boolean(expr * e){
+	switch(e->type){
+		case const_num_e: return(e->num_value!=0);
+		case const_int_e: return(e->int_value!=0);
+		case program_func_e: return 1;
+		case library_func_e: return 1;
+		case table_item_e: return 1;
+		case nil_e: return 0;
+		case const_str_e: return(e->str_value!="");
+		case bool_expr_e: return(e->bool_value);
+		default: assert(0);
+	}
+}
+
+list_node * list_insert(list_node * head,int value){
+	list_node * temp = head;
+
+	list_node * new_node = malloc(sizeof(list_node));
+	new_node->value = value;
+	new_node->next = NULL;
+
+	while(temp!=NULL && temp->next!=NULL)
+		temp = temp->next;
+
+	if(temp!=NULL)
+		temp->next = new_node;
+	else
+		head = new_node;
+
+	return head;
+}
+
+list_node * merge_lists(list_node * list1, list_node * list2){
+	list_node * temp = list1;
+
+	if(list1==NULL)return list2;
+	else if(list2==NULL)return list1;
+
+	while(temp!=NULL && temp->next!=NULL)
+		temp = temp->next;
+	temp->next = list2;
+
+	return list1;
+}
