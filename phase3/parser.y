@@ -763,11 +763,14 @@ forstmt:
 returnstmt:
 		RETURN SEMICOLON {
 			if(func_scope==0)yyerror("Cannot use return; when not in a function.");
-			else printf("return ;\n");
+			else emit(ret,NULL,NULL,NULL,curr_quad,yylineno);
+			
+		
 		}
 		| RETURN expr SEMICOLON {
 			if(func_scope==0)yyerror("Cannot use return; when not in a function.");
-			else printf("return <expr>;\n");
+			else emit(ret,NULL,NULL,$<expression>2,curr_quad,yylineno);
+			
 		}
 		;
 

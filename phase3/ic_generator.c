@@ -79,6 +79,9 @@ void write_quads(void){
 		else if(quads[i].op==call){
 			fprintf(quads_output,"%d:\tCALL %s\n",i,quads[i].result->sym->name);
 		}
+		else if(quads[i].op==ret){
+			fprintf(quads_output,"%d:\tRETURN %s\n",i,expr_to_str(quads[i].result));
+		}
 		else if(quads[i].op==func_start){
 			fprintf(quads_output,"%d:\tFUNCSTART %s\n",i,quads[i].result->sym->name);
 		}
@@ -91,11 +94,20 @@ void write_quads(void){
 		else if(quads[i].op==get_ret_val){
 			fprintf(quads_output,"%d:\tGETRETVAL %s \n",i,quads[i].result->sym->name);
 		}
-		else if(quads[i].op==table_get_elem || quads[i].op==add || quads[i].op==sub){
+		else if(quads[i].op==add || quads[i].op==sub){
 			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
+		else if(quads[i].op==table_get_elem){
+			if(quads[i].arg2->type==const_str_e)
+				fprintf(quads_output,"%d:\t%s %s '%s' %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
+			else
+				fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1),expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
+		}
 		else if(quads[i].op==table_set_elem){
-			fprintf(quads_output,"%d:\tTABLESETELEM %s %s %s\n",i,expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
+			if(quads[i].arg2->type==const_str_e)
+				fprintf(quads_output,"%d:\tTABLESETELEM %s '%s' %s\n",i,expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
+			else
+				fprintf(quads_output,"%d:\tTABLESETELEM %s %s %s\n",i,expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
 		else if(quads[i].op==assign){
 			fprintf(quads_output,"%d:\tASSIGN %s %s\n",i,expr_to_str(quads[i].arg1),expr_to_str(quads[i].result));
@@ -208,8 +220,10 @@ char * expr_to_str(expr * e){
 	switch(e->type){
 		case const_int_e: sprintf(temp, "%d", e->int_value); break;
 		case const_num_e: sprintf(temp, "%lf", e->num_value);break;
-		case const_str_e: return e->str_value;
-		case nil_e: return "";
+		case const_str_e:{
+			return e->str_value;
+		}
+		case nil_e: return "NIL";
 		case const_bool_e:{
 			if(e->bool_value==1)
 				return("TRUE");
@@ -440,3 +454,4 @@ list_node * stack_top(stack_node * top){
 	if(top!=NULL)return (top->head);
 	return NULL;
 }
+ 

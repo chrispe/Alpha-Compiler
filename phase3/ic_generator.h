@@ -30,6 +30,13 @@ typedef enum expression_type{
 	nil_e
 }expr_t;
 
+typedef enum instruction_format{
+	one_arg,
+	two_arg,
+	three_arg,
+	none_arg
+}instr_format;
+
 /* This is the structure of a stored expression. */
 typedef struct expr_s {
 	expr_t type;
@@ -80,9 +87,11 @@ extern unsigned int curr_quad;
 /* An expression list for the index items */
 extern expr * index_expr;
  
-/* The true and false list for the short circuit evaluation */
-extern list_node * true_list;
-extern list_node * false_list;
+/* The true and false lists for the short circuit evaluation */
+extern list_node * true_list_e1;
+extern list_node * false_list_e1;
+extern list_node * true_list_e2;
+extern list_node * false_list_e2;
 
 /* Some useful defined keywords for the
    reallocation of the quads array.	 */
@@ -187,3 +196,4 @@ list_node * merge_lists(list_node *, list_node *);
 stack_node * pop_node(stack_node *top);
 stack_node * push_node(stack_node * top, list_node * head);
 list_node * stack_top(stack_node * top);
+instr_format get_instr_format(opcode op);
