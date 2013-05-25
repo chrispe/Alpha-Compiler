@@ -1,17 +1,19 @@
 #include "ic_generator.h"
 
-// The defined values for expanding the constants arrays.
+// The defined values for expanding the constants arrays and the instruction table.
 #define DOUBLE_ARR_SIZE total_double_consts*sizeof(double)
 #define INTEGER_ARR_SIZE total_integer_consts*sizeof(int)
 #define STRING_ARR_SIZE total_str_consts*sizeof(char *)
 #define USER_FUNC_ARR_SIZE total_user_funcs*sizeof(userfunc_s)
 #define LIB_FUNC_ARR_SIZE total_named_lib_funcs*sizeof(char *)
+#define INSTR_ARR_SIZE total_instructions*sizeof(instr_s)
  
 #define DOUBLE_ARR_NEW_SIZE EXPAND_SIZE*sizeof(double) + DOUBLE_ARR_SIZE
 #define INTGER_ARR_NEW_SIZE EXPAND_SIZE*sizeof(int) + INTEGER_ARR_SIZE
 #define	STRING_ARR_NEW_SIZE EXPAND_SIZE*sizeof(char *) + STRING_ARR_SIZE
 #define	USER_FUNC_ARR_NEW_SIZE EXPAND_SIZE*sizeof(userfunc_s) + USER_FUNC_ARR_SIZE
 #define	LIB_FUNC_ARR_NEW_SIZE EXPAND_SIZE*sizeof(char *) + LIB_FUNC_ARR_SIZE
+#define INSTR_ARR_NEW_SIZE EXPAND_SIZE*sizeof(instr_s) + INSTR_ARR_SIZE
 
 /* The types of a VM opcode */
 typedef enum vmopcode{
@@ -69,32 +71,54 @@ typedef enum const_type{
 	lib_func_c
 }const_t;
 
+/* The struct of an incomplete jump
+   which we will complete after the
+   target code has been generated. */
+typedef struct incompletejump{
+	unsigned int instr_id;
+	unsigned int iaddress;
+	struct incompletejump * next;
+}incomplete_jump;
+
 /* The expandable arrays for the constants of the code */
 
 // For the double number constants 
 extern double * double_consts;
-extern unsigned int current_double_const;
+extern unsigned int current_double_index;
 extern unsigned int total_double_consts;
 
 // For the integer number constants
 extern int * integer_consts;
-extern unsigned int current_int_const;
+extern unsigned int current_int_index;
 extern unsigned int total_integer_consts;
 
 // For the strings
 extern char ** str_consts;
-extern unsigned int current_str_const;
+extern unsigned int current_str_index;
 extern unsigned int total_str_consts;
 
 // For the library functions
 extern char ** named_lib_funcs;
-extern unsigned int current_lib_func_const;
+extern unsigned int current_lib_func_index;
 extern unsigned int total_named_lib_funcs;
 
 // For the user functions
 extern userfunc_s * user_funcs;
-extern unsigned int current_user_func_const;
+extern unsigned int current_user_func_index;
 extern unsigned int total_user_funcs;
+
+/* The list for the incomplete jumps */
+extern incomplete_jump * i_jumps;
+extern unsigned int i_jumps_total;
+
+/* The array that will include the final
+   target instructions. */
+extern instr_s * instructions;
+extern unsigned int current_instr_index;
+extern unsigned int total_instructions;
+
+/* Adds an incomplete jump to the i_jump list */
+void add_incomplete_jump(unsigned int, unsigned int);
 
 /* For addding a new constant to the right array, returns the index to it.*/
 unsigned int add_const_to_array(void *,const_t);
@@ -124,4 +148,11 @@ void make_boolean_operand(vmarg_s *,unsigned int *);
 /* Creates a vmarg based on a return value */
 void make_retval_operand(vmarg_s *);
 
-void printvalues();
+/* Emits an instruction to the instructions array */
+void emit_instruction(vmopcode_e op,vmarg_s * arg1,vmarg_s *arg2, vmarg_s * result,unsigned int line);
+
+/* Expands the instruction array in case it is full */
+void expand_instr_array(void);
+
+/* Patches the incompleted jump instructions */
+void patch_incomplete_jumps(void);

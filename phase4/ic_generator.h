@@ -50,6 +50,7 @@ typedef struct Quad {
 	expr * arg2;
 	unsigned int label;
 	unsigned int line;
+	unsigned int taddress;
 }quad;
 
 typedef struct MethodCallParam{

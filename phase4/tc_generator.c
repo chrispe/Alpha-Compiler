@@ -27,6 +27,16 @@ userfunc_s * user_funcs = NULL;
 unsigned int current_user_func_index = 0;
 unsigned int total_user_funcs = 0;
 
+/* The list for the incomplete jumps */
+incomplete_jump * i_jumps = NULL;
+unsigned int i_jumps_total = 0;
+
+/* The array that will include the final
+   target instructions. */
+instr_s * instructions = NULL;
+unsigned int current_instr_index = 0;
+unsigned int total_instructions = 0;
+
 unsigned int add_const_to_array(void * constant,const_t type){
 	unsigned int value_index;
 	value_index = value_exists_in_arr(constant,type);
@@ -212,10 +222,6 @@ void make_operand(expr * e, vmarg_s * arg){
 		case program_func_e:{
 			arg->type = userfunc_a;
 			arg->value = e->sym->taddress;
-
-			/*or we do this 
-			arg->value = add_const_to_array(...);*/
-
 			break;
 		}
 		case library_func_e:{
@@ -246,10 +252,44 @@ void make_retval_operand(vmarg_s * arg){
 	arg->type = retval_a;
 }
 
-void printvalues(){
-	int i;
-	for(i=0;i<current_lib_func_index;i++){
-		printf("%s \n",named_lib_funcs[i]);
+void add_incomplete_jump(unsigned int instr_id, unsigned int iaddress){
+	incomplete_jump * new_jump = malloc(sizeof(incomplete_jump));
+	new_jump->instr_id = instr_id;
+	new_jump->iaddress = iaddress;
+	new_jump->next = i_jumps;
+	i_jumps = new_jump;
+}
+
+void emit_instruction(vmopcode_e op,vmarg_s * arg1,vmarg_s *arg2, vmarg_s * result,unsigned int line){
+	instr_s * new_instr = malloc(sizeof(instr_s));
+	if(memerror(new_instr,"new instr"))exit(0);
+
+	if(current_instr_index == total_instructions)
+		expand_instr_array();
+
+	new_instr = instructions + current_instr_index++;
+	new_instr->opcode = op;
+	new_instr->arg1 = arg1;
+	new_instr->arg2 = arg2;
+	new_instr->result = result;
+	new_instr->line = line;	
+}
+
+void expand_instr_array(void){
+	instr_s * new_instr_arr = (instr_s *)malloc(INSTR_ARR_NEW_SIZE);
+	if(memerror(new_instr_arr,"new instruction array"))exit(0);
+	memcpy(new_instr_arr,instructions,INSTR_ARR_SIZE);
+	instructions = new_instr_arr;
+	total_instructions += EXPAND_SIZE;
+}
+
+void patch_incomplete_jumps(void){
+	incomplete_jump * temp = i_jumps;
+	while(temp){
+		if(temp->iaddress == curr_quad)
+			instructions[temp->instr_id].result->value = current_instr_index;
+		else
+			instructions[temp->instr_id].result->value = quads[temp->iaddress].taddress;
+		temp = temp->next;
 	}
-	printf("_____\n");
 }

@@ -812,38 +812,7 @@ int main(int argc,char ** argv)
 	add_const_to_array(c,lib_func_c);
 	add_const_to_array(d,lib_func_c);
 	add_const_to_array(e,lib_func_c);
-		add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
- 	add_const_to_array(a,lib_func_c);
-	add_const_to_array(b,lib_func_c);
-	add_const_to_array(c,lib_func_c);
-	add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-		add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-		add_const_to_array(a,lib_func_c);
-	add_const_to_array(b,lib_func_c);
-	add_const_to_array(c,lib_func_c);
-	add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-		add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-		add_const_to_array(a,lib_func_c);
-	add_const_to_array(b,lib_func_c);
-	add_const_to_array(c,lib_func_c);
-	add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-		add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-		add_const_to_array(a,lib_func_c);
-	add_const_to_array(b,lib_func_c);
-	add_const_to_array(c,lib_func_c);
-	add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-		add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-
-
+  
 	printf("\nComplation has finished.\n");
 
 	return 0;	
