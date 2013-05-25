@@ -3,7 +3,7 @@
 	#include <stdlib.h>
 	#include <string.h>
  
- 	#include "ic_generator.h"
+ 	#include "tc_generator.h"
 	#define YYPARSE_PARAM st
 	
 	int yyerror (const char * yaccProvideMessage);
@@ -728,7 +728,6 @@ forprefix:
 			emit(if_eq,$<expression>6,new_expr_const_bool(1),NULL,curr_quad,yylineno);
 			break_stack = push_node(break_stack,NULL);
 			con_stack = push_node(con_stack,NULL);
- 
 		}
 		;
 
