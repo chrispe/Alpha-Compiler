@@ -42,6 +42,7 @@ typedef struct SymbolTableEntry{
 	unsigned int scope;
 	unsigned int line;
 	unsigned int offset;
+	unsigned int taddress;
 	scopespace_t space;
 	st_entry_type type;
 	union{

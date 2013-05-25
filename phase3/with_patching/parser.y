@@ -844,6 +844,7 @@ forstmt:
 			backpatch_jumps($<intval>2,$<intval>6-1,$<intval>13+1);
 			backpatch_if($<intval>2,$<intval>6-1,$<intval>10,3);
 			patch_label($<intval>4-2,$<intval>10+1);
+			patch_label($<intval>4-1,$<intval>13+1);
 			break_list = stack_top(break_stack);
 			con_list = stack_top(con_stack);
 

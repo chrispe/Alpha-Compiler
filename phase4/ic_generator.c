@@ -450,4 +450,3 @@ list_node * stack_top(stack_node * top){
 	if(top!=NULL)return (top->head);
 	return NULL;
 }
- 

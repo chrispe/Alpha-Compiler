@@ -122,7 +122,7 @@ void write_quads(void){
 			fprintf(quads_output,"%d:\tJUMP %d\n",i,quads[i].result->int_value);
 		}
 		else if(quads[i].op>=if_eq && quads[i].op<=if_greater){
-			fprintf(quads_output,"%d:\t%s %s %s %s type:%s whole:%s vathos:%d\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result),print_if_type(quads[i].type),print_if_type(quads[i].next_if_type),quads[i].if_level);
+			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
  		if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
        		printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
