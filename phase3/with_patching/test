@@ -1,0 +1,22 @@
+return;
+return x;
+return x+y;
+
+for(i=0;i<10;i++)
+{
+	while(i==2){continue;break;}
+	print("cmon");
+	if(i==5){	
+		break;}
+	if(i==6){
+		continue;}
+	while(1){break;}
+	for(j=0;j<5;j++){while(1){break;}continue;}	
+	print("ds");
+}
+
+[];
+[1,2,3];
+[false,true,[]];
+["one","two","three"];
+t.a.b.c.d;
