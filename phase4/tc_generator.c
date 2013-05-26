@@ -37,6 +37,44 @@ instr_s * instructions = NULL;
 unsigned int current_instr_index = 0;
 unsigned int total_instructions = 0;
 
+/* The stack used to save functions
+   during the target code generation. */
+str_stack_node * funcstack = NULL;
+
+/* The list used to save return 
+   address for patches */
+list_node * return_list = NULL;
+ 
+
+generator_func_t generators[] = {
+	generate_ASSIGN,
+	generate_ADD,
+	generate_SUB,
+	generate_MUL,
+	generate_DIV,
+	generate_MOD,
+	generate_UMINUS,
+	generate_AND,
+	generate_OR,
+	generate_NOT,
+	generate_IF_EQ,
+	generate_IF_NOTEQ,
+	generate_IF_LESSEQ,
+	generate_IF_GREATEREQ,
+	generate_IF_LESS,
+	generate_IF_GREATER,
+	generate_CALL,
+	generate_PARAM,
+	generate_FUNCSTART,
+	generate_FUNCEND,
+	generate_JUMP,
+	generate_NEWTABLE,
+	generate_TABLEGETELEM,
+	generate_TABLESETELEM,
+	generate_NOP,
+	generate_RETURN
+};
+
 unsigned int add_const_to_array(void * constant,const_t type){
 	unsigned int value_index;
 	value_index = value_exists_in_arr(constant,type);
@@ -188,8 +226,10 @@ instr_s * create_instr(void){
 }
 
 void make_operand(expr * e, vmarg_s * arg){
+	 
 	switch(e->type){
 		case var_e:
+		case assign_expr_e:
 		case table_item_e:
 		case arithm_expr_e:
 		case bool_expr_e:
@@ -392,7 +432,7 @@ void generate_ASSIGN(quad * q){
 	generate(assign_v,q);
 }
 
-void generate_NOP(void){
+void generate_NOP(quad * q){
 	instr_s * instr = create_instr();
 	instr->opcode = nop_v;
 	emit_instruction_s(instr);
@@ -446,11 +486,11 @@ void generate_IF_GREATEREQ(quad * q){
 	generate_relational(jge_v,q);
 }
 
-void generate_LESS(quad * q){
+void generate_IF_LESS(quad * q){
 	generate_relational(jlt_v,q);
 }
 
-void generate_LESSEQ(quad * q){
+void generate_IF_LESSEQ(quad * q){
 	generate_relational(jle_v,q);
 }
 
@@ -588,7 +628,12 @@ void generate_CALL(quad * q){
 	instr_s * instr = create_instr();
 	instr->opcode = call_v;
 	instr->arg1 = create_vmarg();
-	make_operand(q->arg1,instr->arg1);
+ 
+	if(q->result->sym->type==LIBFUNC){
+		printf("%s is a library function\n",q->result->sym->name);
+	}
+	else printf("%s is a user function\n",q->result->sym->name);
+	make_operand(q->result,instr->arg1);
 	emit_instruction_s(instr);
 	destory_instr(instr);
 }
@@ -605,6 +650,50 @@ void generate_GETRETVAL(quad * q){
 	destory_instr(instr);
 }
 
+void generate_FUNCSTART(quad * q){
+	st_entry * symbol = q->result->sym;
+	symbol->taddress = next_instr_label();
+	q->taddress = next_instr_label();
+	
+	userfunc_s * func = malloc(sizeof(userfunc_s));
+	func->address = symbol->taddress;
+	func->local_size = count_func_args(symbol);
+ 	func->name  = malloc(sizeof(strlen(symbol->name)+1));
+ 	strcpy(func->name,symbol->name);
+	add_const_to_array(func,user_func_c);
+	push_symbol(&funcstack,symbol);
+
+	instr_s * instr = create_instr();
+	instr->result = create_vmarg();
+	instr->opcode = funcenter_v;
+	make_operand(q->result,instr->result);
+	emit_instruction_s(instr);
+}
+
+
+// TO BE DONE
+void generate_RETURN(quad * q){
+	q->taddress = next_instr_label();
+	instr_s * instr = create_instr();
+	instr->opcode = assign_v;
+	instr->result = create_vmarg();
+	instr->arg1 = create_vmarg();
+
+	if(q->result){
+		make_retval_operand(instr->result);
+		make_operand(q->arg1,instr->arg1);
+		emit_instruction_s(instr);
+	}
+
+	st_entry * s = top_symbol(funcstack);
+	//return_list = list_insert(return_list,)
+}
+
+// TO BE DONE
+void generate_FUNCEND(quad * q){
+
+}
+
 void reset_operand(vmarg_s * arg){
 	free(arg);
 	arg = NULL;
@@ -617,3 +706,29 @@ void destory_instr(instr_s * instr){
 	free(instr);
 }
 
+void generate_instructions(void){
+	unsigned int i;
+	for(i=0;i<quads_total;i++){
+		(*generators[quads[i].op])(quads+i);
+	}
+}
+
+print_expr(expr * e){
+	switch(e->type)
+	{
+		case var_e: {printf("var_e\n");break;}
+		case table_item_e:{printf("table_item_e\n");break;}
+		case program_func_e:{printf("programfunc\n");break;}
+		case library_func_e:{printf("libraryfunc\n");break;}
+		case arithm_expr_e:{printf("arithm_expr_e\n");break;}
+		case bool_expr_e:{printf("bool_expr_e\n");break;}
+		case assign_expr_e:{printf("assign_expr_e\n");break;}
+		case new_table_e:{printf("new_table_e\n");break;}
+		case const_int_e:{printf("const_int_e\n");break;}
+		case const_num_e:{printf("const_num_e\n");break;}
+		case const_bool_e:{printf("const_bool_e\n");break;}
+		case const_str_e:{printf("const_str_e\n");break;}
+		case nil_e:{printf("nil_e\n");break;}
+		default: assert(0);
+	}
+}

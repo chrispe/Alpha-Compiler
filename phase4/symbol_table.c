@@ -274,3 +274,12 @@ void scope_set_active(symbol_table ** st,unsigned int scope,char active){
 	}
 }
  
+unsigned int count_func_args(st_entry * s){
+	arg_node * arg = s->value_type.funVal->arguments;
+	unsigned int total_arguments = 0;
+	while(arg!=NULL){
+		total_arguments++;
+		arg = arg->next;
+	}
+	return(total_arguments);
+}

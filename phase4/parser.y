@@ -801,18 +801,7 @@ int main(int argc,char ** argv)
 	yyparse(&st);
 
 	write_quads();
-	char * a = "Hello";
-	char * b = "World";
-	char * c = "How";
-	char * d = "Are";
-	char * e = "You";
-
-	add_const_to_array(a,lib_func_c);
-	add_const_to_array(b,lib_func_c);
-	add_const_to_array(c,lib_func_c);
-	add_const_to_array(d,lib_func_c);
-	add_const_to_array(e,lib_func_c);
-  
+	generate_instructions();
 	printf("\nComplation has finished.\n");
 
 	return 0;	

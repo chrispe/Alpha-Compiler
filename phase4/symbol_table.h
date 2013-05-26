@@ -112,3 +112,6 @@ st_entry * set_var_func(st_entry * symbol,const char * func_name);
 
 // Creates a symbol with the given parameters (name,active,scope,line,type)
 st_entry * create_symbol(const char *, unsigned int, unsigned int,unsigned int,st_entry_type,unsigned int offset, scopespace_t space);
+
+// Counts the arguments of a function symbol.
+unsigned int count_func_args(st_entry *);

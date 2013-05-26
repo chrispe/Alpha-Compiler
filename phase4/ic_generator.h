@@ -61,6 +61,7 @@ typedef struct MethodCallParam{
 
 typedef struct ListNode{
 	unsigned int value;
+	unsigned int next_value;
 	struct ListNode * next;
 }list_node;
 
@@ -175,7 +176,8 @@ unsigned int apply_boolean_op(opcode,expr *, expr *);
 unsigned expr_to_boolean(expr *);
 
 /* Inserts a new node to the false/true list. */
-list_node * list_insert(list_node *,int);
+list_node * list_insert(list_node *,unsigned int);
+list_node * list_insert_two(list_node *,unsigned int,unsigned int);
 
 /* Merges two lists */
 list_node * merge_lists(list_node *, list_node *);

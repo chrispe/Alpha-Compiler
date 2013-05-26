@@ -15,13 +15,15 @@
 #define	LIB_FUNC_ARR_NEW_SIZE EXPAND_SIZE*sizeof(char *) + LIB_FUNC_ARR_SIZE
 #define INSTR_ARR_NEW_SIZE EXPAND_SIZE*sizeof(instr_s) + INSTR_ARR_SIZE
 
+typedef void (* generator_func_t)(quad *);
+
 /* The types of a VM opcode */
 typedef enum vmopcode{
 	assign_v=0, add_v=1, sub_v=2, mul_v=3, div_v=4, mod_v=5,
 	uminus_v=6, and_v=7, or_v=8, not_v=9, jeq_v=10, jne_v=11,
 	jle_v=12, jge_v=13, jlt_v=14, jgt_v=15, call_v=16, pusharg_v=17,
 	funcenter_v=18, funcexit_v=19, jump_v=20, newtable_v=21, 
-	tablegetelem_v=22, tablesetelem_v=23, nop_v=24
+	tablegetelem_v=22, tablesetelem_v=23, nop_v=24, ret_v=25
 }vmopcode_e;
 
 /* The types of a VM argument */
@@ -117,6 +119,14 @@ extern instr_s * instructions;
 extern unsigned int current_instr_index;
 extern unsigned int total_instructions;
 
+/* The stack used to save functions
+   during the target code generation. */
+extern str_stack_node * funcstack;
+
+/* The list used to save return 
+   address for patches */
+extern list_node * return_list;
+
 /* Adds an incomplete jump to the i_jump list */
 void add_incomplete_jump(unsigned int, unsigned int);
 
@@ -173,25 +183,37 @@ void generate(vmopcode_e, quad *);
 /* Returns the next instruction label */
 unsigned int next_instr_label(void);
 
-/* The generator for each opcode */ 
-void generate_ADD(quad *);
-void generate_SUB(quad *);
-void generate_MUL(quad *);
-void generate_DIV(quad *);
-void generate_MOD(quad *);
-void generate_UMINUS(quad *);
-void generate_NEWTABLE(quad *); 
-void generate_TABLEGETELEM(quad *); 
-void generate_TABLESETELEM(quad *); 
-void generate_ASSIGN(quad *);
-void generate_NOP(void);
-void generate_NOT(quad *);
+/* Generates the instructions */
+void generate_instructions(void);
 
-void generate_relational(vmopcode_e, quad *);
-void generate_JUMP(quad *);
-void generate_IF_EQ(quad *);
-void generate_IF_NOTEQ(quad *);
-void generate_IF_GREATER(quad *);
-void generate_IF_GREATEREQ(quad *);
-void generate_LESS(quad *);
-void generate_LESSEQ(quad *);
+/* The generator for each opcode */ 
+extern void generate_ADD(quad *);
+extern void generate_SUB(quad *);
+extern void generate_MUL(quad *);
+extern void generate_DIV(quad *);
+extern void generate_MOD(quad *);
+extern void generate_UMINUS(quad *);
+extern void generate_NEWTABLE(quad *); 
+extern void generate_TABLEGETELEM(quad *); 
+extern void generate_TABLESETELEM(quad *); 
+extern void generate_ASSIGN(quad *);
+extern void generate_NOP(quad *);
+extern void generate_NOT(quad *);
+
+extern void generate_relational(vmopcode_e, quad *);
+extern void generate_JUMP(quad *);
+extern void generate_IF_EQ(quad *);
+extern void generate_IF_NOTEQ(quad *);
+extern void generate_IF_GREATER(quad *);
+extern void generate_IF_GREATEREQ(quad *);
+extern void generate_IF_LESS(quad *);
+extern void generate_IF_LESSEQ(quad *);
+
+extern void generate_AND(quad *);
+extern void generate_OR(quad *);
+extern void generate_PARAM(quad *);
+extern void generate_CALL(quad *);
+extern void generate_GETRETVAL(quad *);
+extern void generate_FUNCSTART(quad *);
+extern void generate_FUNCEND(quad *);
+extern void generate_RETURN(quad *);

@@ -17,3 +17,11 @@ for(i=0;i<10;i++)
 [false,true,[]];
 ["one","two","three"];
 t.a.b.c.d;
+
+function g(a,b,c){
+	return a;
+	if(a==5){return b;}
+	return;
+}
+
+g(a,3,4);

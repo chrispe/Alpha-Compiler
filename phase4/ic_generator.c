@@ -152,7 +152,6 @@ expr *lvalue_expr(st_entry * sym){
    		case USERFUNC : sym_expr->type = program_func_e; break;
    		default : break;
    	}
-
    	return sym_expr;
 }
 
@@ -402,11 +401,30 @@ unsigned expr_to_boolean(expr * e){
 	}
 }
 
-list_node * list_insert(list_node * head,int value){
+list_node * list_insert(list_node * head,unsigned int value){
 	list_node * temp = head;
 
 	list_node * new_node = malloc(sizeof(list_node));
 	new_node->value = value;
+	new_node->next = NULL;
+
+	while(temp!=NULL && temp->next!=NULL)
+		temp = temp->next;
+
+	if(temp!=NULL)
+		temp->next = new_node;
+	else
+		head = new_node;
+
+	return head;
+}
+
+list_node * list_insert_two(list_node * head,unsigned int v1,unsigned int v2){
+	list_node * temp = head;
+
+	list_node * new_node = malloc(sizeof(list_node));
+	new_node->value = v1;
+	new_node->next_value = v2;
 	new_node->next = NULL;
 
 	while(temp!=NULL && temp->next!=NULL)
