@@ -803,6 +803,7 @@ int main(int argc,char ** argv)
 	write_quads();
 	generate_instructions();
 	printf("\nComplation has finished.\n");
-
+  print_string();
+print_instructions();
 	return 0;	
 }

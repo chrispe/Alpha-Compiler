@@ -54,7 +54,7 @@ void write_quads(void){
 	int i;
 	FILE * quads_output; 
 
-	char * ops[] = {"ASSIGN","ADD","SUB","MUL","DIV","MODE","UMINUS","AND","OR","NOT"
+	char * ops[] = {"ASSIGN","ADD","SUB","MUL","DIV","MOD","UMINUS","AND","OR","NOT"
 					"IF_EQ","IF_NOTEQ","IF_LESSEQ","IF_GREATEREQ","IF_LESS","IF_GREATER"
 					"CALL","PARAM","RET","GETRETVAL","FUNCSTART","FUNCEND"
 					"JUMP","TABLE_CREATE","TABLEGETELEM","TABLESETITEM" };
@@ -131,7 +131,7 @@ void write_quads(void){
 char * opcode_to_str(opcode op){
 	char * ops[] = {"ASSIGN","ADD","SUB","MUL","DIV","MOD","UMINUS","AND","OR","NOT",
 					"IF_EQ","IF_NOTEQ","IF_LESSEQ","IF_GREATEREQ","IF_LESS","IF_GREATER",
-					"CALL","PARAM","RET","GETRETVAL","FUNCSTART","FUNCEND"
+					"CALL","PARAM","RET","GETRETVAL","FUNCSTART","FUNCEND",
 					"JUMP","TABLE_CREATE","TABLEGETELEM","TABLESETITEM" };
 	return(ops[op-assign]);
 }

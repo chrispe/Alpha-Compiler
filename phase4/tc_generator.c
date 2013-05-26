@@ -39,13 +39,8 @@ unsigned int total_instructions = 0;
 
 /* The stack used to save functions
    during the target code generation. */
-str_stack_node * funcstack = NULL;
-
-/* The list used to save return 
-   address for patches */
-list_node * return_list = NULL;
+func_stack * funcs = NULL;
  
-
 generator_func_t generators[] = {
 	generate_ASSIGN,
 	generate_ADD,
@@ -65,16 +60,17 @@ generator_func_t generators[] = {
 	generate_IF_GREATER,
 	generate_CALL,
 	generate_PARAM,
+	generate_RETURN,
+	generate_GETRETVAL,
 	generate_FUNCSTART,
 	generate_FUNCEND,
 	generate_JUMP,
 	generate_NEWTABLE,
 	generate_TABLEGETELEM,
 	generate_TABLESETELEM,
-	generate_NOP,
-	generate_RETURN
+	generate_NOP
 };
-
+ 
 unsigned int add_const_to_array(void * constant,const_t type){
 	unsigned int value_index;
 	value_index = value_exists_in_arr(constant,type);
@@ -87,14 +83,14 @@ unsigned int add_const_to_array(void * constant,const_t type){
 				expand_const_array(type);
 			double * current_double = double_consts + current_double_index++;
 			*current_double = *((double *)(constant));
-			break;
+			return(current_double_index-1);
 		}
 		case int_c:{
 			if(current_int_index == total_integer_consts)
 				expand_const_array(type);
 			int * current_int = integer_consts + current_int_index++;
 			*current_int = *((int *)(constant));
-			break;
+			return(current_int_index-1);
 		}
 		case str_c:{
 			if(current_str_index == total_str_consts)
@@ -102,7 +98,7 @@ unsigned int add_const_to_array(void * constant,const_t type){
 			char *  current_str = malloc(strlen((char*)constant)+1);
 			strcpy(current_str,(char*)constant);
 			str_consts[current_str_index++] = current_str;
-			break;
+			return(current_str_index-1);
 		}
 		case user_func_c:{
 			if(current_user_func_index == total_user_funcs)
@@ -112,7 +108,7 @@ unsigned int add_const_to_array(void * constant,const_t type){
 			current_user_func->local_size = ((userfunc_s *)constant)->local_size;
 			current_user_func->name = malloc(strlen(((userfunc_s *)constant)->name)+1);
 			strcpy(current_user_func->name,((userfunc_s *)constant)->name);
-			break;
+			return(current_user_func_index-1);
 		}
 		case lib_func_c:{
 			if(current_lib_func_index == total_named_lib_funcs)
@@ -120,7 +116,7 @@ unsigned int add_const_to_array(void * constant,const_t type){
 			char * current_lib_func = malloc(strlen((char *)constant)+1);
 			strcpy(current_lib_func,(char *)constant);
 			named_lib_funcs[current_lib_func_index++] = current_lib_func;
-			break;
+			return(current_lib_func_index-1);
 		}
 		default: assert(0);
 	}
@@ -225,7 +221,7 @@ instr_s * create_instr(void){
 	return(new_instr);
 }
 
-void make_operand(expr * e, vmarg_s * arg){
+vmarg_s * make_operand(expr * e, vmarg_s * arg){
 	 
 	switch(e->type){
 		case var_e:
@@ -280,6 +276,7 @@ void make_operand(expr * e, vmarg_s * arg){
 		}
 		default: assert(0);
 	}
+	return arg;
 }
 
 void make_double_operand(vmarg_s * arg,double * value){
@@ -362,28 +359,33 @@ void emit_instruction_s(instr_s * instr){
 
 void generate(vmopcode_e op, quad * q){
 	instr_s * instr = create_instr();
-	instr->arg1  = create_vmarg();
-	instr->arg2  = create_vmarg();
-	instr->result = create_vmarg();
+	instr->opcode = op;
 
-	if(q->arg1)
-		make_operand(q->arg1,instr->arg1);
-	if(q->arg2)
-		make_operand(q->arg2,instr->arg2);
-	if(q->result)
-		make_operand(q->result,instr->result);
-
+	if(q->arg1!=NULL){
+		instr->arg1  = create_vmarg();
+		instr->arg1 = make_operand(q->arg1,instr->arg1);
+	}
+	if(q->arg2!=NULL){
+		instr->arg2  = create_vmarg();
+		instr->arg2 = make_operand(q->arg2,instr->arg2);
+	}
+	if(q->result!=NULL){
+		instr->result = create_vmarg();
+		instr->result = make_operand(q->result,instr->result);
+	}
+ 
 	instr->line = q->line;
 	q->taddress = next_instr_label();
 	emit_instruction_s(instr);
-	destory_instr(instr);
 }
 
 void generate_ADD(quad * q){
+	printf("GENERATE ADD");
 	generate(add_v,q);
 }
 
 void generate_SUB(quad * q){
+	printf("GENERATE SUB");
 	generate(sub_v,q);
 }
 
@@ -429,6 +431,7 @@ void generate_TABLESETELEM(quad * q){
 }
 
 void generate_ASSIGN(quad * q){
+ 		printf("GENERATE ASSIGN");
 	generate(assign_v,q);
 }
 
@@ -467,6 +470,7 @@ void generate_relational(vmopcode_e op, quad * q){
 }
 
 void generate_JUMP(quad * q){
+	printf("GENERATOR JUMP\n");
 	generate_relational(jump_v,q);
 }
 
@@ -532,6 +536,7 @@ void generate_NOT(quad * q){
 }
 
 void generate_OR(quad * q){
+	printf("GENERATOR OR\n");
 	q->taddress = next_instr_label();
 	instr_s * instr = create_instr();
 	instr->arg1 = create_vmarg();
@@ -572,6 +577,7 @@ void generate_OR(quad * q){
 }
 
 void generate_AND(quad * q){
+	printf("GENERATOR AND\n");
 	instr_s * instr = create_instr();
 	q->taddress = next_instr_label();
 
@@ -614,31 +620,42 @@ void generate_AND(quad * q){
 }
 
 void generate_PARAM(quad * q){
+	printf("GENERATOR PARAM\n");
 	q->taddress = next_instr_label();
 	instr_s * instr = create_instr();
+	instr->line = q->line;
 	instr->opcode = pusharg_v;
-	instr->arg1 = create_vmarg();
-	make_operand(q->arg1,instr->arg1);
+	instr->result = create_vmarg();
+	make_operand(q->result,instr->result);
 	emit_instruction_s(instr);
 	destory_instr(instr);
 }
 
 void generate_CALL(quad * q){
+	printf("GENERATOR CALL\n");
 	q->taddress = next_instr_label();
 	instr_s * instr = create_instr();
 	instr->opcode = call_v;
-	instr->arg1 = create_vmarg();
- 
+	instr->result = create_vmarg();
+	instr->line = q->line;
+	make_operand(q->result,instr->result);
+
 	if(q->result->sym->type==LIBFUNC){
-		printf("%s is a library function\n",q->result->sym->name);
+		instr->result->value = value_exists_in_arr(q->result->sym->name,lib_func_c);
+		if(instr->result->value==-1)printf("library fun %s does not exist\n",q->result->sym->name);
+
 	}
-	else printf("%s is a user function\n",q->result->sym->name);
-	make_operand(q->result,instr->arg1);
+	else{
+		instr->result->value = value_exists_in_arr(q->result->sym->name,user_func_c);
+		if(instr->result->value==-1)printf("user fun %s does not exist\n",q->result->sym->name);
+	}
+ 
 	emit_instruction_s(instr);
 	destory_instr(instr);
 }
 
 void generate_GETRETVAL(quad * q){
+	printf("GENERATOR GETREVAL\n");
 	q->taddress = next_instr_label();
 	instr_s * instr = create_instr();
 	instr->opcode = assign_v;
@@ -651,6 +668,7 @@ void generate_GETRETVAL(quad * q){
 }
 
 void generate_FUNCSTART(quad * q){
+	printf("GENERATOR FUNCSTART\n");
 	st_entry * symbol = q->result->sym;
 	symbol->taddress = next_instr_label();
 	q->taddress = next_instr_label();
@@ -661,7 +679,9 @@ void generate_FUNCSTART(quad * q){
  	func->name  = malloc(sizeof(strlen(symbol->name)+1));
  	strcpy(func->name,symbol->name);
 	add_const_to_array(func,user_func_c);
-	push_symbol(&funcstack,symbol);
+
+	push_func(&funcs,symbol,q->line);
+
 
 	instr_s * instr = create_instr();
 	instr->result = create_vmarg();
@@ -669,29 +689,51 @@ void generate_FUNCSTART(quad * q){
 	make_operand(q->result,instr->result);
 	emit_instruction_s(instr);
 }
-
-
-// TO BE DONE
+ 
+//WARNING HERE 
 void generate_RETURN(quad * q){
+	printf("GENERATOR RETURN\n");
 	q->taddress = next_instr_label();
 	instr_s * instr = create_instr();
 	instr->opcode = assign_v;
 	instr->result = create_vmarg();
 	instr->arg1 = create_vmarg();
+	instr->line = q->line;
 
 	if(q->result){
 		make_retval_operand(instr->result);
-		make_operand(q->arg1,instr->arg1);
+		make_operand(q->result,instr->arg1);
 		emit_instruction_s(instr);
 	}
 
-	st_entry * s = top_symbol(funcstack);
-	//return_list = list_insert(return_list,)
+	(top_func(funcs))->ret_list = list_insert((top_func(funcs))->ret_list,next_instr_label()-1);
+
+	instr->opcode = jump_v;
+	reset_operand(instr->arg1);
+	reset_operand(instr->arg2);
+	instr->result = create_vmarg();
+	make_retval_operand(instr->result);
+	emit_instruction_s(instr);
+ 
 }
 
-// TO BE DONE
 void generate_FUNCEND(quad * q){
-
+	printf("GENERATOR FUNCEND\n");
+	list_node * return_list = (top_func(funcs))->ret_list;
+	while(return_list){
+		printf("The value is %d \n",return_list->value);
+		//(instructions[return_list->value].result) = create_vmarg();
+		(instructions[return_list->value].result)->value = next_instr_label();
+		return_list = return_list->next;
+	}
+	pop_func(&funcs);
+	q->taddress = next_instr_label();
+	instr_s * instr = create_instr();
+	instr->opcode = funcexit_v;
+	instr->result = create_vmarg();
+	make_operand(q->result,instr->result);
+	emit_instruction_s(instr);
+	destory_instr(instr);
 }
 
 void reset_operand(vmarg_s * arg){
@@ -708,7 +750,7 @@ void destory_instr(instr_s * instr){
 
 void generate_instructions(void){
 	unsigned int i;
-	for(i=0;i<quads_total;i++){
+	for(i=0;i<curr_quad;i++){
 		(*generators[quads[i].op])(quads+i);
 	}
 }
@@ -732,3 +774,74 @@ print_expr(expr * e){
 		default: assert(0);
 	}
 }
+
+void print_string(){
+	int i;
+	for(i=0;i<current_str_index;i++){
+		printf("String : %s\n",str_consts[i]);
+	}
+}
+
+void push_func(func_stack ** top,st_entry * sym, unsigned int line){
+	func_stack * newNode = malloc(sizeof(func_stack));
+	if(memerror(newNode,"new func stack node"))exit(0);
+	newNode->sym = create_symbol(sym->name,sym->active,sym->scope,sym->line,sym->type,sym->offset,sym->space);
+	newNode->ret_list = NULL;
+	newNode->line = line;
+	newNode->next = *top;
+	*top = newNode;
+}
+
+func_stack * top_func(func_stack * top){
+	if(top!=NULL)return top;
+	return NULL;
+}
+
+void pop_func(func_stack ** top){
+	func_stack * temp;
+	temp = *top;
+	if(*top!=NULL){
+		*top = (*top)->next;
+		free(temp);
+	}
+}
+
+void print_instructions()
+{
+	int i;
+	FILE * quads_output; 
+
+	char * ops[] = {"ASSIGN","ADD","SUB","MUL","DIV","MOD","UMINUS","AND","OR","NOT"
+					"IF_EQ","IF_NOTEQ","IF_LESSEQ","IF_GREATEREQ","IF_LESS","IF_GREATER"
+					"CALL","PARAM","RET","GETRETVAL","FUNCSTART","FUNCEND"
+					"JUMP","TABLE_CREATE","TABLEGETELEM","TABLESETITEM","" };
+
+	quads_output = fopen("instructions.txt","w"); 
+	if(quads_output==NULL)
+		quads_output = stderr;  
+
+	for(i=0;i<next_instr_label();i++){
+			fprintf(quads_output,"%d:\t%s",i,vm_opcode_to_str(instructions[i].opcode));
+			if(instructions[i].arg1){
+				fprintf(quads_output," %d",instructions[i].arg1->value);
+			}
+			if(instructions[i].arg2){
+				fprintf(quads_output," %d",instructions[i].arg2->value);
+			}
+			if(instructions[i].result){
+				fprintf(quads_output," %d",instructions[i].result->value);
+			}
+			fprintf(quads_output,"\n");
+	}
+	fclose(quads_output);
+}
+ 
+char * vm_opcode_to_str(vmopcode_e op){
+	char * ops[] = {"ASSIGN","ADD","SUB","MUL","DIV","MOD","UMINUS","AND","OR","NOT",
+					"JEQ","JNE","JLE","JGE","JLT","JGT",
+					"CALLFUNC","PUSHARG","RET","GETRETVAL","ENTERFUNC","EXITFUNC",
+					"JUMP","NEWTABLE","TABLEGETELEM","TABLESETITEM","NOP" };
+	return(ops[op-assign_v]);
+}
+
+ 

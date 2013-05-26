@@ -22,8 +22,9 @@ typedef enum vmopcode{
 	assign_v=0, add_v=1, sub_v=2, mul_v=3, div_v=4, mod_v=5,
 	uminus_v=6, and_v=7, or_v=8, not_v=9, jeq_v=10, jne_v=11,
 	jle_v=12, jge_v=13, jlt_v=14, jgt_v=15, call_v=16, pusharg_v=17,
-	funcenter_v=18, funcexit_v=19, jump_v=20, newtable_v=21, 
-	tablegetelem_v=22, tablesetelem_v=23, nop_v=24, ret_v=25
+	ret_v=18, getretval_v=19, funcenter_v=20, funcexit_v=21,
+	jump_v=22, newtable_v=23, tablegetelem_v=24, tablesetelem_v=25,
+	nop_v = 26
 }vmopcode_e;
 
 /* The types of a VM argument */
@@ -73,6 +74,14 @@ typedef enum const_type{
 	lib_func_c
 }const_t;
 
+typedef struct funcstack{
+	st_entry * sym;
+	list_node * ret_list;
+	unsigned int line;
+	struct funcstack * next;
+}func_stack;
+
+
 /* The struct of an incomplete jump
    which we will complete after the
    target code has been generated. */
@@ -121,11 +130,7 @@ extern unsigned int total_instructions;
 
 /* The stack used to save functions
    during the target code generation. */
-extern str_stack_node * funcstack;
-
-/* The list used to save return 
-   address for patches */
-extern list_node * return_list;
+extern func_stack  * funcs;
 
 /* Adds an incomplete jump to the i_jump list */
 void add_incomplete_jump(unsigned int, unsigned int);
@@ -153,7 +158,7 @@ instr_s * create_instr(void);
 void destory_instr(instr_s *);
 
 /* Creates an operand based on the expression */
-void make_operand(expr * e, vmarg_s *);
+vmarg_s * make_operand(expr * e, vmarg_s *);
 
 /* Creates a vmarg based on a double */
 void make_double_operand(vmarg_s *,double *);
@@ -217,3 +222,13 @@ extern void generate_GETRETVAL(quad *);
 extern void generate_FUNCSTART(quad *);
 extern void generate_FUNCEND(quad *);
 extern void generate_RETURN(quad *);
+
+void print_string();
+void push_func(func_stack ** top,st_entry * sym, unsigned int line);
+func_stack * top_func(func_stack * top);
+void pop_func(func_stack ** top);
+char * vm_opcode_to_str(vmopcode_e op);
+
+void printFun();
+
+void vmType(vmarg_s *arg,FILE *fp);

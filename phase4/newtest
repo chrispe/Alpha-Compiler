@@ -1,7 +1,10 @@
+a = "lol";
 a = 4*(3+4) + b;
 if(a==5){print();hello();}
 else{}
 while(i<4){
 	for(i=0;i<5;i++){print();}
 	print();
+	b="fuck you";
 }
+c="fuck you";
