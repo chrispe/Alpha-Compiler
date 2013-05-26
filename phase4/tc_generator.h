@@ -133,6 +133,15 @@ unsigned int value_exists_in_arr(void *, const_t);
 /* Creating a new vm_arg */
 vmarg_s * create_vmarg(void);
 
+/* Resets the operand (aka vmarg) */
+void reset_operand(vmarg_s *);
+
+/* Creating a new instr_s */
+instr_s * create_instr(void);
+
+/* The instruction memory destoyer */
+void destory_instr(instr_s *);
+
 /* Creates an operand based on the expression */
 void make_operand(expr * e, vmarg_s *);
 
@@ -140,19 +149,49 @@ void make_operand(expr * e, vmarg_s *);
 void make_double_operand(vmarg_s *,double *);
 
 /* Creates a vmarg based on an integer */
-void make_integer_operand(vmarg_s *,int *);
+void make_integer_operand(vmarg_s *,int);
 
 /* Creates a vmarg based on a boolean */
-void make_boolean_operand(vmarg_s *,unsigned int *);
+void make_boolean_operand(vmarg_s *,unsigned int);
 
 /* Creates a vmarg based on a return value */
 void make_retval_operand(vmarg_s *);
 
 /* Emits an instruction to the instructions array */
 void emit_instruction(vmopcode_e op,vmarg_s * arg1,vmarg_s *arg2, vmarg_s * result,unsigned int line);
+void emit_instruction_s(instr_s *);
 
 /* Expands the instruction array in case it is full */
 void expand_instr_array(void);
 
 /* Patches the incompleted jump instructions */
 void patch_incomplete_jumps(void);
+
+/* Generates the instruction based on the opcode and a quad */
+void generate(vmopcode_e, quad *);
+
+/* Returns the next instruction label */
+unsigned int next_instr_label(void);
+
+/* The generator for each opcode */ 
+void generate_ADD(quad *);
+void generate_SUB(quad *);
+void generate_MUL(quad *);
+void generate_DIV(quad *);
+void generate_MOD(quad *);
+void generate_UMINUS(quad *);
+void generate_NEWTABLE(quad *); 
+void generate_TABLEGETELEM(quad *); 
+void generate_TABLESETELEM(quad *); 
+void generate_ASSIGN(quad *);
+void generate_NOP(void);
+void generate_NOT(quad *);
+
+void generate_relational(vmopcode_e, quad *);
+void generate_JUMP(quad *);
+void generate_IF_EQ(quad *);
+void generate_IF_NOTEQ(quad *);
+void generate_IF_GREATER(quad *);
+void generate_IF_GREATEREQ(quad *);
+void generate_LESS(quad *);
+void generate_LESSEQ(quad *);
