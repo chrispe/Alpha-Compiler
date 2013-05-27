@@ -804,7 +804,7 @@ int main(int argc,char ** argv)
 
 	yyparse(&st);
 	//print_st(st);
-	//write_quads();
+	write_quads();
 	generate_instructions();
 	printf("\nComplation has finished.\n");
   	//print_string();

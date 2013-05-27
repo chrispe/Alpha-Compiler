@@ -119,7 +119,7 @@ void write_quads(void){
 			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
  		//if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
-       		printf("Quad  (line %d)  (label:%d) \n",quads[i].line,quads[i].result->int_value);
+ 
      	//else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
        	//	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].arg1->sym->name,opcode_to_str(quads[i].op));
       
