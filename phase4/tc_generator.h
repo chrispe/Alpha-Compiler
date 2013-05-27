@@ -232,3 +232,5 @@ char * vm_opcode_to_str(vmopcode_e op);
 void printFun();
 
 void vmType(vmarg_s *arg,FILE *fp);
+
+char * value_type_to_str(vmarg_t);

@@ -1,9 +1,9 @@
 a = "lol";
 a = 4*(3+4) + b;
-if(a==5){print();hello();}
+if(a==5){print();input();}
 else{}
 while(i<4){
-	for(i=0;i<5;i++){print();}
+	for(i=0;i<5;i++){input();}
 	print();
 	b="fuck you";
 }

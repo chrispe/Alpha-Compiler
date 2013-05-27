@@ -123,59 +123,59 @@ stmt:
 expr:
 		assignexpr {$<expression>$ = $<expression>1;}
 		|	expr PLUS expr 	{
-				$<expression>$ = emit_arithm((symbol_table **)st,add,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_arithm((symbol_table **)st,add,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr MINUS expr	{
-				$<expression>$ = emit_arithm((symbol_table **)st,sub,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_arithm((symbol_table **)st,sub,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr MULTI expr {
-				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr SLASH expr {
-				$<expression>$ = emit_arithm((symbol_table **)st,op_div,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_arithm((symbol_table **)st,op_div,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 			}
 		|	expr PERCENT expr {
-				$<expression>$ = emit_arithm((symbol_table **)st,mod,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_arithm((symbol_table **)st,mod,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 			}
 		|	expr GREATER expr {
-				$<expression>$ = emit_relop((symbol_table **)st,if_greater,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_relop((symbol_table **)st,if_greater,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr EQ_GREATER expr {
-				$<expression>$ = emit_relop((symbol_table **)st,if_greq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_relop((symbol_table **)st,if_greq,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr LESS expr {
-				$<expression>$ = emit_relop((symbol_table **)st,if_less,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_relop((symbol_table **)st,if_less,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|   expr EQ_LESS expr {
-				$<expression>$ = emit_relop((symbol_table **)st,if_leq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_relop((symbol_table **)st,if_leq,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr DEQUAL expr {
-				$<expression>$ = emit_relop((symbol_table **)st,if_eq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_relop((symbol_table **)st,if_eq,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr NEQUAL expr {
-				$<expression>$ = emit_relop((symbol_table **)st,if_neq,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_relop((symbol_table **)st,if_neq,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr AND expr {
 				$<expression>$ = new_expr(bool_expr_e);
 				$<expression>$->sym = new_temp_var(st,yylineno);
-				emit(and,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				emit(and,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		|	expr OR expr {
 				$<expression>$ = new_expr(bool_expr_e);
 				$<expression>$->sym = new_temp_var(st,yylineno);
-				emit(or,$<expression>1,$<expression>3,$<expression>$,curr_quad,yylineno);
+				emit(or,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
 				temp_expr = $<expression>$;
 		}
 		| 	term {$<expression>$ = $<expression>1;}
@@ -186,12 +186,12 @@ term:
 		| MINUS expr %prec UMINUS {
 			check_uminus($<expression>2,yylineno);
 			if(is_num_expr($<expression>2)){
-				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>2,new_expr_const_int(-1),$<expression>$,curr_quad,yylineno);
+				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>2,new_expr_const_int(-1),$<expression>$,-1,yylineno);
 			}
 			else{
 				$<expression>$ = new_expr(arithm_expr_e);
 				$<expression>$->sym =  new_temp_var(st,yylineno);
-				emit(uminus,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+				emit(uminus,$<expression>2,NULL,$<expression>$,-1,yylineno);
 			}
 			temp_expr = $<expression>$;
 		}
@@ -199,7 +199,7 @@ term:
 			$<expression>$ = new_expr(bool_expr_e);
 			$<expression>$->sym = new_temp_var(st,yylineno);
 			temp_expr = $<expression>$;
-			emit(not,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+			emit(not,$<expression>2,NULL,$<expression>$,-1,yylineno);
 		}
 		| lvalue DPLUS {
 			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
@@ -208,13 +208,13 @@ term:
 				$<expression>$->sym = new_temp_var(st,yylineno);
 				if($<expression>1->type==table_item_e){
 					expr * value = emit_iftableitem($<expression>1,st,yylineno);
-					emit(assign,value,NULL,$<expression>$,curr_quad,yylineno);
-					emit(add,value,new_expr_const_int(1),value,curr_quad,yylineno);
-					emit(table_set_elem,$<expression>1,$<expression>1->index,value,curr_quad,yylineno);
+					emit(assign,value,NULL,$<expression>$,-1,yylineno);
+					emit(add,value,new_expr_const_int(1),value,-1,yylineno);
+					emit(table_set_elem,$<expression>1,$<expression>1->index,value,-1,yylineno);
 				}
 				else{
-					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
-					emit(add,$<expression>1,new_expr_const_int(1),$<expression>1,curr_quad,yylineno);
+					emit(assign,$<expression>1,NULL,$<expression>$,-1,yylineno);
+					emit(add,$<expression>1,new_expr_const_int(1),$<expression>1,-1,yylineno);
 				}
 				temp_expr = $<expression>$;
 			}
@@ -224,14 +224,14 @@ term:
 			else {
 				if($<expression>2->type == table_item_e){
 					$<expression>$ = emit_iftableitem($<expression>2,st,yylineno);
-					emit(add,$<expression>$,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
-					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,curr_quad,yylineno);
+					emit(add,$<expression>$,new_expr_const_int(1),$<expression>$,-1,yylineno);
+					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,-1,yylineno);
 				}
 				else{
-					emit(add,$<expression>2,new_expr_const_int(1),$<expression>2,curr_quad,yylineno);
+					emit(add,$<expression>2,new_expr_const_int(1),$<expression>2,-1,yylineno);
 					$<expression>$ = new_expr(arithm_expr_e);
 					$<expression>$->sym = new_temp_var(st,yylineno);
-					emit(assign,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+					emit(assign,$<expression>2,NULL,$<expression>$,-1,yylineno);
 				}
 				temp_expr = $<expression>$;
 			}
@@ -243,13 +243,13 @@ term:
 				$<expression>$->sym = new_temp_var(st,yylineno);
 				if($<expression>1->type==table_item_e){
 					expr * value = emit_iftableitem($<expression>1,st,yylineno);
-					emit(assign,value,NULL,$<expression>$,curr_quad,yylineno);
-					emit(sub,value,new_expr_const_int(1),value,curr_quad,yylineno);
-					emit(table_set_elem,$<expression>1,$<expression>1->index,value,curr_quad,yylineno);
+					emit(assign,value,NULL,$<expression>$,-1,yylineno);
+					emit(sub,value,new_expr_const_int(1),value,-1,yylineno);
+					emit(table_set_elem,$<expression>1,$<expression>1->index,value,-1,yylineno);
 				}
 				else{
-					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
-					emit(sub,$<expression>1,new_expr_const_int(1),$<expression>1,curr_quad,yylineno);
+					emit(assign,$<expression>1,NULL,$<expression>$,-1,yylineno);
+					emit(sub,$<expression>1,new_expr_const_int(1),$<expression>1,-1,yylineno);
 				}
 			}
 			temp_expr = $<expression>$;
@@ -259,14 +259,14 @@ term:
 			else {
 				if($<expression>2->type == table_item_e){
 					$<expression>$ = emit_iftableitem($<expression>2,st,yylineno);
-					emit(sub,$<expression>$,new_expr_const_int(1),$<expression>$,curr_quad,yylineno);
-					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,curr_quad,yylineno);
+					emit(sub,$<expression>$,new_expr_const_int(1),$<expression>$,-1,yylineno);
+					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,-1,yylineno);
 				}
 				else{
-					emit(sub,$<expression>2,new_expr_const_int(1),$<expression>2,curr_quad,yylineno);
+					emit(sub,$<expression>2,new_expr_const_int(1),$<expression>2,-1,yylineno);
 					$<expression>$ = new_expr(arithm_expr_e);
 					$<expression>$->sym = new_temp_var(st,yylineno);
-					emit(assign,$<expression>2,NULL,$<expression>$,curr_quad,yylineno);
+					emit(assign,$<expression>2,NULL,$<expression>$,-1,yylineno);
 				}
 				temp_expr = $<expression>$;
 			}
@@ -314,18 +314,18 @@ assignexpr:
 
 			// Careful with the labels
 			if(($1)->type==table_item_e){
-				emit(table_set_elem,$<expression>1,$<expression>1->index,temp_expr,curr_quad,yylineno);
+				emit(table_set_elem,$<expression>1,$<expression>1->index,temp_expr,-1,yylineno);
 				$<expression>$ = emit_iftableitem($<expression>1,st,yylineno);
 				$<expression>$->type=assign_expr_e;
 			}
 			else{
-				emit(assign,temp_expr,NULL,$<expression>1,curr_quad,yylineno);
+				emit(assign,temp_expr,NULL,$<expression>1,-1,yylineno);
 				$<expression>$ = new_expr(assign_expr_e);
 
 
 				if($<expression>1->sym->type!=TEMP_VAR){
 					($<expression>$)->sym = new_temp_var(st,yylineno);
-					emit(assign,$<expression>1,NULL,$<expression>$,curr_quad,yylineno);
+					emit(assign,$<expression>1,NULL,$<expression>$,-1,yylineno);
 				}
 				else $<expression>$->sym = $<expression>1->sym;
 				
@@ -428,7 +428,7 @@ objectdef:
 
 			expr * temp = m_param.elist;
 			while(temp){
-				emit(table_set_elem,table,new_expr_const_int(i),temp,0,yylineno);
+				emit(table_set_elem,table,new_expr_const_int(i),temp,-1,yylineno);
 				temp = temp->next;
 				i++;
 			}
@@ -439,10 +439,10 @@ objectdef:
 			expr * temp = index_expr;
 
 			table->sym = new_temp_var(st,yylineno);
-			emit(table_create,NULL,NULL,table,curr_quad,yylineno);
+			emit(table_create,NULL,NULL,table,-1,yylineno);
 
 			while(temp){
-				emit(table_set_elem,table,temp,temp->index,0,yylineno);
+				emit(table_set_elem,table,temp,temp->index,-1,yylineno);
 				temp = temp->next;
 			}
 			$<expression>$ = table;
@@ -644,6 +644,8 @@ block_in:
 ifstmt:
 		if_prefix stmt %prec IF_TERM { 
 			patch_label($<intval>1,curr_quad);
+
+
 		}
 		| if_prefix stmt else_prefix stmt { 
 			patch_label($<intval>1,$<intval>3+1);
@@ -660,7 +662,8 @@ else_prefix:
 
 if_prefix:
 		IF PAREN_L expr PAREN_R{
-			emit(if_eq,$<expression>3,new_expr_const_bool(1),new_expr_const_int(curr_quad+2),curr_quad,yylineno);
+			emit(if_eq,$<expression>3,new_expr_const_bool(1),new_expr_const_int(curr_quad+2),curr_quad+2,yylineno);
+
 			$<intval>$ = curr_quad;
 			emit(jump,NULL,NULL,NULL,-1,yylineno);
 		}
@@ -670,7 +673,8 @@ whilestmt:
 		whilestart whilesecond
 		stmt {
 			scope_loop--;
-			emit(jump,NULL,NULL,new_expr_const_int($<intval>1),-1,yylineno);
+			//prosoxh edw
+			emit(jump,NULL,NULL,new_expr_const_int($<intval>1),$<intval>1,yylineno);
 			patch_label($<intval>2,curr_quad);
 
 			break_list = stack_top(break_stack);
@@ -787,7 +791,7 @@ int main(int argc,char ** argv)
 	m_param.elist = NULL;
  	symbol_table * st = NULL;
  	st = create_symbol_table();
- 	 
+ 	int i;
 
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
@@ -799,11 +803,12 @@ int main(int argc,char ** argv)
         yyin = stdin;
 
 	yyparse(&st);
-	print_st(st);
-	write_quads();
+	//print_st(st);
+	//write_quads();
 	generate_instructions();
 	printf("\nComplation has finished.\n");
   	//print_string();
 	print_instructions();
+	 
 	return 0;	
 }

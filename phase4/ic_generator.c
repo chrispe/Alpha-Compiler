@@ -41,6 +41,7 @@ void emit(opcode op,expr * arg1,expr * arg2, expr * result, unsigned int label,u
 	current_quad->result = result;
 	current_quad->label = label;
 	current_quad->line = line;
+ 
 }
  
 void patch_label(unsigned int quad_id, unsigned int label){
@@ -117,10 +118,10 @@ void write_quads(void){
 		else if(quads[i].op>=if_eq && quads[i].op<=if_greater){
 			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
- 		if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
-       		printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].result->sym->name,opcode_to_str(quads[i].op));
-     	else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
-       		printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].arg1->sym->name,opcode_to_str(quads[i].op));
+ 		//if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
+       		printf("Quad  (line %d)  (label:%d) \n",quads[i].line,quads[i].result->int_value);
+     	//else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
+       	//	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].arg1->sym->name,opcode_to_str(quads[i].op));
       
 	}
  
@@ -172,7 +173,7 @@ expr * emit_iftableitem(expr *e,symbol_table ** st,unsigned int line){
 		return e;
 	expr * result = new_expr(var_e);
 	result->sym = new_temp_var(st,line);
-	emit(table_get_elem,e,e->index,result,curr_quad,line);
+	emit(table_get_elem,e,e->index,result,-1,line);
 	return result;
 }
 

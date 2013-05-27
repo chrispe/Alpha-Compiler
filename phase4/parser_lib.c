@@ -337,12 +337,10 @@ st_entry * new_temp_var(symbol_table ** st, unsigned int line){
 		 
 		symbol = create_symbol(var_name,1,scope_main,line,TEMP_VAR,get_current_scope_offset(),get_current_scope_space());
 		st_insert(st,&symbol);
-		// increase_curr_scope_offset();
+	    increase_curr_scope_offset();
 	}
 	else{
 		(*st)->last_symbol = symbol;
-		symbol->offset = get_current_scope_offset();
-		symbol->space = get_current_scope_space();
 	}
 	return symbol;
 }

@@ -41,6 +41,10 @@ unsigned int total_instructions = 0;
    during the target code generation. */
 func_stack * funcs = NULL;
  
+/* The current quad we are processing
+   for the target code generation  */
+unsigned int current_quad;
+
 generator_func_t generators[] = {
 	generate_ASSIGN,
 	generate_ADD,
@@ -299,6 +303,9 @@ void make_retval_operand(vmarg_s * arg){
 	arg->type = retval_a;
 }
 
+
+
+
 void add_incomplete_jump(unsigned int instr_id, unsigned int iaddress){
 	incomplete_jump * new_jump = malloc(sizeof(incomplete_jump));
 	new_jump->instr_id = instr_id;
@@ -327,6 +334,8 @@ void expand_instr_array(void){
 	instructions = new_instr_arr;
 	total_instructions += EXPAND_SIZE;
 }
+
+
 
 void patch_incomplete_jumps(void){
 	incomplete_jump * temp = i_jumps;
@@ -430,7 +439,7 @@ void generate_TABLESETELEM(quad * q){
 }
 
 void generate_ASSIGN(quad * q){
- 		printf("GENERATE ASSIGN");
+ 	printf("GENERATE ASSIGN for %s\n",opcode_to_str(q->op));
 	generate(assign_v,q);
 }
 
@@ -441,29 +450,32 @@ void generate_NOP(quad * q){
 }
 
 void generate_relational(vmopcode_e op, quad * q){
-	vmarg_s * result = create_vmarg();
-	result->type = label_a;
-
+ 
+  	 
 	instr_s * instr = create_instr();
 	instr->opcode = op;
 	instr->line = q->line;
-	instr->result = result;
-	printf("Quad op : %s\n",opcode_to_str(q->op));
+	instr->result = create_vmarg();
+	instr->result->type = label_a;
+	//printf("Quad op : %s\n",opcode_to_str(q->op));
 	if(q->arg1){
 		instr->arg1 = create_vmarg();
-		make_operand(q->arg1,instr->arg1);
+		instr->arg1 = make_operand(q->arg1,instr->arg1);
 	}
 	if(q->arg2){
 		instr->arg2 = create_vmarg();
-		make_operand(q->arg2,instr->arg2);
+		instr->arg2 = make_operand(q->arg2,instr->arg2);
 	}
-
-	if(q->label < curr_quad)
-		result->value = quads[q->label].taddress;
-	else
-		add_incomplete_jump(next_instr_label(),q->label);
+ 	printf("label : %d and %d\n",q->result->int_value ,current_quad) ;
+	if(q->result->int_value < current_quad){
+ 
+		instr->result->value = quads[q->result->int_value].taddress;
+ 
+	}
+	else{
+		add_incomplete_jump(next_instr_label(),q->result->int_value);}
 	
-	q->taddress = next_instr_label();
+ 	q->taddress = next_instr_label();
 	emit_instruction_s(instr);
 	
 }
@@ -474,6 +486,7 @@ void generate_JUMP(quad * q){
 }
 
 void generate_IF_EQ(quad * q){
+	printf("GEN IF_EQ\n");
 	generate_relational(jeq_v,q);
 }
 
@@ -645,21 +658,21 @@ void generate_CALL(quad * q){
 	}
 	else{
 		instr->result->value = value_exists_in_arr(q->result->sym->name,user_func_c);
-		if(instr->result->value==-1)printf("user fun %s does not exist\n",q->result->sym->name);
+		if(instr->result->value==-1){printf("Compile error at line %d : User function %s does not exist\n",q->line,q->result->sym->name);exit(0);}
 	}
  
 	emit_instruction_s(instr);
 }
-
+	 
 void generate_GETRETVAL(quad * q){
 	printf("GENERATOR GETREVAL\n");
 	q->taddress = next_instr_label();
 	instr_s * instr = create_instr();
-	instr->opcode = assign_v;
+	instr->opcode = getretval_v;
 	instr->result = create_vmarg();
 	instr->arg1 = create_vmarg();
 	make_operand(q->result,instr->result);
-	make_retval_operand(instr->arg1);
+	//make_retval_operand(instr->arg1);
 	emit_instruction_s(instr);
 }
 
@@ -744,9 +757,8 @@ void destory_instr(instr_s * instr){
 }
 
 void generate_instructions(void){
-	unsigned int i;
-	for(i=0;i<curr_quad;i++){
-		(*generators[quads[i].op])(quads+i);
+	for(current_quad=0;current_quad<curr_quad;current_quad++){
+		(*generators[quads[current_quad].op])(quads+current_quad);
 	}
 	patch_incomplete_jumps();
 }
@@ -806,26 +818,34 @@ void print_instructions()
 {
 	int i;
 	FILE * quads_output; 
-
-	char * ops[] = {"ASSIGN","ADD","SUB","MUL","DIV","MOD","UMINUS","AND","OR","NOT"
-					"IF_EQ","IF_NOTEQ","IF_LESSEQ","IF_GREATEREQ","IF_LESS","IF_GREATER"
-					"CALL","PARAM","RET","GETRETVAL","FUNCSTART","FUNCEND"
-					"JUMP","TABLE_CREATE","TABLEGETELEM","TABLESETITEM","" };
-
+ 
 	quads_output = fopen("instructions.txt","w"); 
 	if(quads_output==NULL)
 		quads_output = stderr;  
 
+	fprintf(quads_output,"STRINGS : \n");
+	for(i=0;i<current_str_index;i++){
+		fprintf(quads_output,"%d : %s\n",i,str_consts[i]);
+	}
+	fprintf(quads_output,"<end of strings>\n");
+
+	fprintf(quads_output,"INTEGERS : \n");
+	for(i=0;i<current_int_index;i++){
+		fprintf(quads_output,"%d : %d\n",i,integer_consts[i]);
+	}
+	fprintf(quads_output,"<end of integers>\n");
+
+
 	for(i=0;i<next_instr_label();i++){
 			fprintf(quads_output,"%d:\t%s",i,vm_opcode_to_str(instructions[i].opcode));
 			if(instructions[i].arg1){
-				fprintf(quads_output," %d",instructions[i].arg1->value);
+				fprintf(quads_output," %d (%s) ",instructions[i].arg1->value,value_type_to_str(instructions[i].arg1->type));
 			}
 			if(instructions[i].arg2){
-				fprintf(quads_output," %d",instructions[i].arg2->value);
+				fprintf(quads_output," %d (%s) ",instructions[i].arg2->value,value_type_to_str(instructions[i].arg2->type));
 			}
 			if(instructions[i].result){
-				fprintf(quads_output," %d",instructions[i].result->value);
+				fprintf(quads_output," %d (%s) ",instructions[i].result->value,value_type_to_str(instructions[i].result->type));
 			}
 			fprintf(quads_output,"\n");
 	}
@@ -840,4 +860,9 @@ char * vm_opcode_to_str(vmopcode_e op){
 	return(ops[op-assign_v]);
 }
 
- 
+char * value_type_to_str(vmarg_t type){
+	char * value_types[] = {"label_a","global_a","formal_a","local_a",
+							"integer_a" ,"double_a" ,"string_a" ,"bool_a"  ,"nil_a" ,
+							"userfunc_a" ,"libfunc_a" ,"retval_a"};
+	return(value_types[type]);
+} 
