@@ -799,11 +799,11 @@ int main(int argc,char ** argv)
         yyin = stdin;
 
 	yyparse(&st);
-
+	print_st(st);
 	write_quads();
 	generate_instructions();
 	printf("\nComplation has finished.\n");
-  print_string();
-print_instructions();
+  	//print_string();
+	print_instructions();
 	return 0;	
 }

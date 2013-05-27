@@ -415,7 +415,6 @@ void generate_UMINUS(quad * q){
 	make_integer_operand(instr->arg2,-1);
 	make_operand(q->result,instr->result);
 	emit_instruction_s(instr);
-	destory_instr(instr);
 }
 
 void generate_NEWTABLE(quad * q){
@@ -439,7 +438,6 @@ void generate_NOP(quad * q){
 	instr_s * instr = create_instr();
 	instr->opcode = nop_v;
 	emit_instruction_s(instr);
-	destory_instr(instr);
 }
 
 void generate_relational(vmopcode_e op, quad * q){
@@ -447,17 +445,18 @@ void generate_relational(vmopcode_e op, quad * q){
 	result->type = label_a;
 
 	instr_s * instr = create_instr();
-	instr->arg1 = create_vmarg();
-	instr->arg2 = create_vmarg();
 	instr->opcode = op;
 	instr->line = q->line;
 	instr->result = result;
-
-	if(q->arg1)
+	printf("Quad op : %s\n",opcode_to_str(q->op));
+	if(q->arg1){
+		instr->arg1 = create_vmarg();
 		make_operand(q->arg1,instr->arg1);
-	
-	if(q->arg2)
+	}
+	if(q->arg2){
+		instr->arg2 = create_vmarg();
 		make_operand(q->arg2,instr->arg2);
+	}
 
 	if(q->label < curr_quad)
 		result->value = quads[q->label].taddress;
@@ -466,7 +465,7 @@ void generate_relational(vmopcode_e op, quad * q){
 	
 	q->taddress = next_instr_label();
 	emit_instruction_s(instr);
-	destory_instr(instr);
+	
 }
 
 void generate_JUMP(quad * q){
@@ -628,7 +627,6 @@ void generate_PARAM(quad * q){
 	instr->result = create_vmarg();
 	make_operand(q->result,instr->result);
 	emit_instruction_s(instr);
-	destory_instr(instr);
 }
 
 void generate_CALL(quad * q){
@@ -651,7 +649,6 @@ void generate_CALL(quad * q){
 	}
  
 	emit_instruction_s(instr);
-	destory_instr(instr);
 }
 
 void generate_GETRETVAL(quad * q){
@@ -664,7 +661,6 @@ void generate_GETRETVAL(quad * q){
 	make_operand(q->result,instr->result);
 	make_retval_operand(instr->arg1);
 	emit_instruction_s(instr);
-	destory_instr(instr);
 }
 
 void generate_FUNCSTART(quad * q){
@@ -733,7 +729,6 @@ void generate_FUNCEND(quad * q){
 	instr->result = create_vmarg();
 	make_operand(q->result,instr->result);
 	emit_instruction_s(instr);
-	destory_instr(instr);
 }
 
 void reset_operand(vmarg_s * arg){
@@ -753,6 +748,7 @@ void generate_instructions(void){
 	for(i=0;i<curr_quad;i++){
 		(*generators[quads[i].op])(quads+i);
 	}
+	patch_incomplete_jumps();
 }
 
 print_expr(expr * e){

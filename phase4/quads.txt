@@ -1,0 +1,12 @@
+0:	IF_EQ a b 3
+1:	ASSIGN FALSE $t_0
+2:	JUMP 4
+3:	ASSIGN TRUE $t_0
+4:	IF_EQ $t_0 TRUE 6
+5:	JUMP 9
+6:	PARAM mesa 
+7:	CALL print
+8:	GETRETVAL $t_1 
+9:	PARAM exw 
+10:	CALL print
+11:	GETRETVAL $t_0 
