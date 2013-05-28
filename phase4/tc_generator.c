@@ -655,7 +655,6 @@ void generate_CALL(quad * q){
 	if(q->result->sym->type==LIBFUNC){
 		instr->result->value = value_exists_in_arr(q->result->sym->name,lib_func_c);
 		instr->result->type = libfunc_a;
-		// Just for a verification that the library function has been added to the array.
 		if(instr->result->value==-1){
 			printf("Compile error at line %d : Library function %s does not exist.\n",q->line,q->result->sym->name);
 			exit(0);
@@ -680,6 +679,10 @@ void generate_GETRETVAL(quad * q){
 	instr->arg1 = create_vmarg();
 	make_operand(q->result,instr->result);
 	make_retval_operand(instr->arg1);
+
+	// Make sure this is valid.
+	instr->arg1->value = 0;
+	
 	emit_instruction(instr);
 }
 

@@ -203,6 +203,8 @@ extern void generate_TABLESETELEM(quad *);
 extern void generate_ASSIGN(quad *);
 extern void generate_NOP(quad *);
 extern void generate_NOT(quad *);
+extern void generate_AND(quad *);
+extern void generate_OR(quad *);
 
 extern void generate_relational(vmopcode_e, quad *);
 extern void generate_JUMP(quad *);
@@ -213,8 +215,6 @@ extern void generate_IF_GREATEREQ(quad *);
 extern void generate_IF_LESS(quad *);
 extern void generate_IF_LESSEQ(quad *);
 
-extern void generate_AND(quad *);
-extern void generate_OR(quad *);
 extern void generate_PARAM(quad *);
 extern void generate_CALL(quad *);
 extern void generate_GETRETVAL(quad *);
@@ -222,14 +222,19 @@ extern void generate_FUNCSTART(quad *);
 extern void generate_FUNCEND(quad *);
 extern void generate_RETURN(quad *);
 
+/* Prints the string array */
 void print_string();
+
+/* Prints the user functions array */
+void printFun();
+
+/* All the function stack operations */
 void push_func(func_stack ** top,st_entry * sym, unsigned int line);
 func_stack * top_func(func_stack * top);
 void pop_func(func_stack ** top);
+
+/* Returns the opcode of a vmarg as a string */
 char * vm_opcode_to_str(vmopcode_e op);
 
-void printFun();
-
-void vmType(vmarg_s *arg,FILE *fp);
-
+/* Returns the type of a value as a string */
 char * value_type_to_str(vmarg_t);

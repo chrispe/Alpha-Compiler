@@ -663,7 +663,6 @@ else_prefix:
 if_prefix:
 		IF PAREN_L expr PAREN_R{
 			emit(if_eq,$<expression>3,new_expr_const_bool(1),new_expr_const_int(curr_quad+2),curr_quad+2,yylineno);
-
 			$<intval>$ = curr_quad;
 			emit(jump,NULL,NULL,NULL,-1,yylineno);
 		}
@@ -673,7 +672,6 @@ whilestmt:
 		whilestart whilesecond
 		stmt {
 			scope_loop--;
-			//prosoxh edw
 			emit(jump,NULL,NULL,new_expr_const_int($<intval>1),$<intval>1,yylineno);
 			patch_label($<intval>2,curr_quad);
 
@@ -737,8 +735,6 @@ forprefix:
 
 forstmt:
 		forprefix N elist PAREN_R N stmt N {
-
-			printf("for (<elist>;<expr>;<elist>) <stmt>\n ");
 			scope_loop--;
 			patch_label(for_enter,$<intval>5+1);
 			patch_label($<intval>2,curr_quad);
@@ -761,8 +757,6 @@ forstmt:
 
 			break_stack = pop_node(break_stack);
 			con_stack = pop_node(con_stack);
- 
-
 		}
 		;
 

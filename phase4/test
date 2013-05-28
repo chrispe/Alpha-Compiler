@@ -1,3 +1,5 @@
+while(1){a = print();}
+
 
 for(i=0;i<10;i++)
 {
@@ -25,3 +27,4 @@ function g(a,b,c){
 }
 
 g(a,3,4);
+
