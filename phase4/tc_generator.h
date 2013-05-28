@@ -173,8 +173,7 @@ void make_boolean_operand(vmarg_s *,unsigned int);
 void make_retval_operand(vmarg_s *);
 
 /* Emits an instruction to the instructions array */
-void emit_instruction(vmopcode_e op,vmarg_s * arg1,vmarg_s *arg2, vmarg_s * result,unsigned int line);
-void emit_instruction_s(instr_s *);
+void emit_instruction(instr_s *);
 
 /* Expands the instruction array in case it is full */
 void expand_instr_array(void);

@@ -1,5 +1,0 @@
-function asap(){
-	a="dsa";
-	function abap(){b="fd";}
-}
-print();

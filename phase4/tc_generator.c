@@ -201,7 +201,7 @@ void expand_const_array(const_t array_type){
 		case lib_func_c:{
 			char ** new_lib_func_arr = (char **)malloc(LIB_FUNC_ARR_NEW_SIZE);
 			if(memerror(new_lib_func_arr,"new lib func array"))exit(0);
-			memcpy(new_lib_func_arr,named_lib_funcs,USER_FUNC_ARR_SIZE);
+			memcpy(new_lib_func_arr,named_lib_funcs,LIB_FUNC_ARR_SIZE);
 			named_lib_funcs = new_lib_func_arr;
 			total_named_lib_funcs += EXPAND_SIZE;
 			break;
@@ -311,19 +311,6 @@ void add_incomplete_jump(unsigned int instr_id, unsigned int iaddress){
 	i_jumps = new_jump;
 }
 
-void emit_instruction(vmopcode_e op,vmarg_s * arg1,vmarg_s *arg2, vmarg_s * result,unsigned int line){
-	instr_s * new_instr = create_instr();
-	if(current_instr_index == total_instructions)
-		expand_instr_array();
-
-	new_instr = instructions + current_instr_index++;
-	new_instr->opcode = op;
-	new_instr->arg1 = arg1;
-	new_instr->arg2 = arg2;
-	new_instr->result = result;
-	new_instr->line = line;	
-}
-
 void expand_instr_array(void){
 	instr_s * new_instr_arr = (instr_s *)malloc(INSTR_ARR_NEW_SIZE);
 	if(memerror(new_instr_arr,"new instruction array"))exit(0);
@@ -347,7 +334,7 @@ unsigned int next_instr_label(void){
 	return(current_instr_index);
 }
 
-void emit_instruction_s(instr_s * instr){
+void emit_instruction(instr_s * instr){
 	instr_s * new_instr = create_instr();
 
 	if(current_instr_index == total_instructions)
@@ -380,7 +367,7 @@ void generate(vmopcode_e op, quad * q){
  
 	instr->line = q->line;
 	q->taddress = next_instr_label();
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void generate_ADD(quad * q){
@@ -416,7 +403,7 @@ void generate_UMINUS(quad * q){
 	make_operand(q->arg1,instr->arg1);
 	make_integer_operand(instr->arg2,-1);
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void generate_NEWTABLE(quad * q){
@@ -438,7 +425,7 @@ void generate_ASSIGN(quad * q){
 void generate_NOP(quad * q){
 	instr_s * instr = create_instr();
 	instr->opcode = nop_v;
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void generate_relational(vmopcode_e op, quad * q){
@@ -463,7 +450,7 @@ void generate_relational(vmopcode_e op, quad * q){
 		add_incomplete_jump(next_instr_label(),q->result->int_value);
 	
  	q->taddress = next_instr_label();
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void generate_JUMP(quad * q){
@@ -496,10 +483,11 @@ void generate_IF_LESSEQ(quad * q){
 
 void generate_NOT(quad * q){
 	q->taddress = next_instr_label();
+	instr_s * instr;
 
-	instr_s * instr = create_instr();
+	instr = create_instr();
 	instr->opcode = jeq_v;
-
+	instr->line = q->line;
 	instr->arg1 = create_vmarg();
 	instr->arg2 = create_vmarg();
 	instr->result = create_vmarg();
@@ -507,68 +495,88 @@ void generate_NOT(quad * q){
 	make_boolean_operand(instr->arg2,0);
 	instr->result->type = label_a;
 	instr->result->value = next_instr_label() + 3;
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 
+	instr = create_instr();
 	instr->opcode = assign_v;
+	instr->line = q->line;
+	instr->arg1 = create_vmarg();
+	instr->result = create_vmarg();
 	make_boolean_operand(instr->arg1,0);
-	reset_operand(instr->arg2);
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 
+	instr = create_instr();
 	instr->opcode = jump_v;
-	reset_operand(instr->arg1);
-	reset_operand(instr->arg2);
+	instr->line = q->line;
+	instr->result = create_vmarg();
 	instr->result->type = label_a;
 	instr->result->value = next_instr_label() + 2;
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 
+	instr = create_instr();
 	instr->opcode = assign_v;
+	instr->line = q->line;
 	instr->arg1 = create_vmarg();
+	instr->result = create_vmarg();
 	make_boolean_operand(instr->arg1,1);
-	reset_operand(instr->arg2);
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
-	destory_instr(instr);
+	emit_instruction(instr);
 }
-
+	 
 void generate_OR(quad * q){
 	q->taddress = next_instr_label();
-	instr_s * instr = create_instr();
+	instr_s * instr;
+
+	instr = create_instr();  
+	instr->opcode = jeq_v;
+	instr->line = q->line;
 	instr->arg1 = create_vmarg();
 	instr->arg2 = create_vmarg();
 	instr->result = create_vmarg();
-
-	instr->opcode = jeq_v;
 	make_operand(q->arg1,instr->arg1);
 	make_boolean_operand(instr->arg2,1);
 	instr->result->type = label_a;
 	instr->result->value = next_instr_label() + 4;
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 
-	make_operand(q->arg2,instr->arg1);
-	instr->result->value = next_instr_label() + 3;
-	emit_instruction_s(instr);
-
-	instr->opcode = assign_v;
-	make_boolean_operand(instr->arg1,0);
-	reset_operand(instr->arg2);
-	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
-
-	instr->opcode = jump_v;
-	reset_operand(instr->arg1);
-	reset_operand(instr->arg2);
-	instr->result->type = label_a;
-	instr->result->value = next_instr_label() + 2;
-	emit_instruction_s(instr);
-
-	instr->opcode = assign_v;
+	instr = create_instr();  
+	instr->opcode = jeq_v;
+	instr->line = q->line;
 	instr->arg1 = create_vmarg();
 	instr->arg2 = create_vmarg();
-	make_boolean_operand(instr->arg1,1);
-	reset_operand(instr->arg2);
+	instr->result = create_vmarg();
+	make_operand(q->arg2,instr->arg1);
+	make_boolean_operand(instr->arg2,1);
+	instr->result->type = label_a;
+	instr->result->value = next_instr_label() + 3;
+	emit_instruction(instr);
+
+	instr = create_instr();  
+	instr->opcode = assign_v;
+	instr->line = q->line;
+	instr->arg1 = create_vmarg();
+	instr->result = create_vmarg();
+	make_boolean_operand(instr->arg1,0);
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
+
+	instr = create_instr();  
+	instr->opcode = jump_v;
+	instr->line = q->line;
+	instr->result = create_vmarg();
+	instr->result->type = label_a;
+	instr->result->value = next_instr_label() + 2;
+	emit_instruction(instr);
+
+	instr = create_instr();  
+	instr->opcode = assign_v;
+	instr->line = q->line;
+	instr->arg1 = create_vmarg();
+	instr->result = create_vmarg();
+	make_boolean_operand(instr->arg1,1);
+	make_operand(q->result,instr->result);
+	emit_instruction(instr);
 }
  
 void generate_AND(quad * q){
@@ -585,7 +593,7 @@ void generate_AND(quad * q){
 	make_boolean_operand(instr->arg2,0);
 	instr->result->type = label_a;
 	instr->result->value = next_instr_label() + 4;
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 
 	instr = create_instr();
 	instr->opcode = jeq_v;
@@ -597,7 +605,7 @@ void generate_AND(quad * q){
 	make_boolean_operand(instr->arg2,0);
 	instr->result->type = label_a;
 	instr->result->value = next_instr_label() + 3;
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 
 	instr = create_instr();
 	instr->opcode = assign_v;
@@ -606,7 +614,7 @@ void generate_AND(quad * q){
 	instr->result = create_vmarg();
 	make_boolean_operand(instr->arg1,1);
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 
 	instr = create_instr();
 	instr->opcode = jump_v;
@@ -614,7 +622,7 @@ void generate_AND(quad * q){
 	instr->result = create_vmarg();
 	instr->result->type = label_a;
 	instr->result->value = next_instr_label() + 2;
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 
 	instr = create_instr();
 	instr->opcode = assign_v;
@@ -623,7 +631,7 @@ void generate_AND(quad * q){
 	instr->result = create_vmarg();
 	make_boolean_operand(instr->arg1,0);
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void generate_PARAM(quad * q){
@@ -633,20 +641,20 @@ void generate_PARAM(quad * q){
 	instr->opcode = pusharg_v;
 	instr->result = create_vmarg();
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void generate_CALL(quad * q){
 	q->taddress = next_instr_label();
 	instr_s * instr = create_instr();
 	instr->opcode = call_v;
-	instr->result = create_vmarg();
 	instr->line = q->line;
+	instr->result = create_vmarg();
 	make_operand(q->result,instr->result);
 
 	if(q->result->sym->type==LIBFUNC){
 		instr->result->value = value_exists_in_arr(q->result->sym->name,lib_func_c);
-
+		instr->result->type = libfunc_a;
 		// Just for a verification that the library function has been added to the array.
 		if(instr->result->value==-1){
 			printf("Compile error at line %d : Library function %s does not exist.\n",q->line,q->result->sym->name);
@@ -655,12 +663,13 @@ void generate_CALL(quad * q){
 	}
 	else{
 		instr->result->value = value_exists_in_arr(q->result->sym->name,user_func_c);
+		instr->result->type = userfunc_a;
 		if(instr->result->value==-1){
 			printf("Compile error at line %d : User function %s does not exist.\n",q->line,q->result->sym->name);
 			exit(0);
 		}
 	}
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 	 
 void generate_GETRETVAL(quad * q){
@@ -671,7 +680,7 @@ void generate_GETRETVAL(quad * q){
 	instr->arg1 = create_vmarg();
 	make_operand(q->result,instr->result);
 	make_retval_operand(instr->arg1);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void generate_FUNCSTART(quad * q){
@@ -692,37 +701,37 @@ void generate_FUNCSTART(quad * q){
 	instr->result = create_vmarg();
 	instr->opcode = funcenter_v;
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
  
 void generate_RETURN(quad * q){
 	q->taddress = next_instr_label();
 	instr_s * instr = create_instr();
 	instr->opcode = assign_v;
+	instr->line = q->line;
 	instr->result = create_vmarg();
 	instr->arg1 = create_vmarg();
-	instr->line = q->line;
-
+ 
 	if(q->result){
 		make_retval_operand(instr->result);
 		make_operand(q->result,instr->arg1);
-		emit_instruction_s(instr);
+		emit_instruction(instr);
 	}
 
-	(top_func(funcs))->ret_list = list_insert((top_func(funcs))->ret_list,next_instr_label()-1);
+	(top_func(funcs))->ret_list = list_insert((top_func(funcs))->ret_list,next_instr_label());
 
+	instr = create_instr();
 	instr->opcode = jump_v;
-	reset_operand(instr->arg1);
-	reset_operand(instr->arg2);
+	instr->line = q->line;
 	instr->result = create_vmarg();
 	make_retval_operand(instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void generate_FUNCEND(quad * q){
 	list_node * return_list = (top_func(funcs))->ret_list;
 	while(return_list){
-		//(instructions[return_list->value].result) = create_vmarg();
+		instructions[return_list->value].result = create_vmarg();
 		(instructions[return_list->value].result)->value = next_instr_label();
 		return_list = return_list->next;
 	}
@@ -732,7 +741,7 @@ void generate_FUNCEND(quad * q){
 	instr->opcode = funcexit_v;
 	instr->result = create_vmarg();
 	make_operand(q->result,instr->result);
-	emit_instruction_s(instr);
+	emit_instruction(instr);
 }
 
 void reset_operand(vmarg_s * arg){

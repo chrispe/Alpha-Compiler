@@ -1,9 +1,0 @@
-function go(){}
-function went(){}
-a = (function (){});
-b = (function(){});
-function new(){}
-
-a=2;
-a = went();
-new();
