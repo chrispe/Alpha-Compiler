@@ -177,7 +177,6 @@ unsigned expr_to_boolean(expr *);
 
 /* Inserts a new node to the false/true list. */
 list_node * list_insert(list_node *,unsigned int);
-list_node * list_insert_two(list_node *,unsigned int,unsigned int);
 
 /* Merges two lists */
 list_node * merge_lists(list_node *, list_node *);
@@ -190,4 +189,3 @@ stack_node * push_node(stack_node * top, list_node * head);
 
 /* Gets the top node of the stack */
 list_node * stack_top(stack_node * top);
- 

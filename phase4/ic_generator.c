@@ -277,6 +277,7 @@ void check_uminus(expr * e,unsigned int line){
 
 void comp_error(char * error,unsigned int line){
 	printf("Compile error at line %d : %s\n",line,error);
+	exit(0);
 }
 
 unsigned int name_is_temp(char * n){
@@ -344,14 +345,18 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 		case sub: result = arg1 - arg2;	break;
 		case mod: {
 			if(arg2!=0)result = modulo(arg1,arg2);
-			else result = arg1;
-			comp_error("Cannot divide by zero.",line);
+			else{
+				result = arg1;
+				comp_error("Cannot divide by zero.",line);
+			}
 			break;
 		}
 		case op_div: {
 			if(arg2!=0)result = arg1/arg2; 
-			else result = arg1;
-			comp_error("Cannot divide by zero.",line);
+			else{
+				result = arg1;
+				comp_error("Cannot divide by zero.",line);
+			}
 			break;
 		}
 		case mul: result = arg1 * arg2; break;
