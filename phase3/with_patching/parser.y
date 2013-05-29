@@ -53,9 +53,6 @@
 	char * strval;
 	struct st_entry * symbol;
 	struct expr_s * expression;
-	struct ListNode * true_list;
-	struct ListNode * false_list;
-	struct ListNode * next_list;
 }
 
 %token <intval> INTEGER;
@@ -147,11 +144,6 @@ expr:
 				temp_expr = $<expression>$;
 			}
 		|	expr GREATER expr {
-				$<true_list>$ = NULL;
-				$<false_list>$ = NULL;
-				$<next_list>$ = NULL;
-				$<true_list>$ = list_insert($<true_list>$,curr_quad);
-				$<false_list>$ = list_insert($<false_list>$,curr_quad+1);
 				emmited_quads_temp = list_insert(emmited_quads_temp,curr_quad);
 				curr_emmited_quads_temp = list_insert(curr_emmited_quads_temp,curr_quad);
 				emit(if_greater,$<expression>1,$<expression>3,NULL,curr_quad,yylineno);
@@ -161,11 +153,6 @@ expr:
 				new_s++;
 		}
 		|	expr EQ_GREATER expr {
-				$<true_list>$ = NULL;
-				$<false_list>$ = NULL;
-				$<next_list>$ = NULL;
-				$<true_list>$ = list_insert($<true_list>$,curr_quad);
-				$<false_list>$ = list_insert($<false_list>$,curr_quad+1);
 				emmited_quads_temp = list_insert(emmited_quads_temp,curr_quad);
 				curr_emmited_quads_temp = list_insert(curr_emmited_quads_temp,curr_quad);
 				emit(if_greq,$<expression>1,$<expression>3,NULL,curr_quad,yylineno);
@@ -175,11 +162,6 @@ expr:
 				new_s++;
 		}
 		|	expr LESS expr {
-				$<true_list>$ = NULL;
-				$<false_list>$ = NULL;
-				$<next_list>$ = NULL;
-				$<true_list>$ = list_insert($<true_list>$,curr_quad);
-				$<false_list>$ = list_insert($<false_list>$,curr_quad+1);
 				emmited_quads_temp = list_insert(emmited_quads_temp,curr_quad);
 				curr_emmited_quads_temp = list_insert(curr_emmited_quads_temp,curr_quad);
 				emit(if_less,$<expression>1,$<expression>3,NULL,curr_quad,yylineno);
@@ -189,11 +171,6 @@ expr:
 				new_s++;
 		}
 		|   expr EQ_LESS expr {
-				$<true_list>$ = NULL;
-				$<false_list>$ = NULL;
-				$<next_list>$ = NULL;
-				$<true_list>$ = list_insert($<true_list>$,curr_quad);
-				$<false_list>$ = list_insert($<false_list>$,curr_quad+1);
 				emmited_quads_temp = list_insert(emmited_quads_temp,curr_quad);
 				curr_emmited_quads_temp = list_insert(curr_emmited_quads_temp,curr_quad);
 				emit(if_leq,$<expression>1,$<expression>3,NULL,curr_quad,yylineno);
@@ -203,12 +180,6 @@ expr:
 				new_s++;
 		}
 		|	expr DEQUAL expr {
-			
-				$<true_list>$ = NULL;
-				$<false_list>$ = NULL;
-				$<next_list>$ = NULL;
-				$<true_list>$ = list_insert($<true_list>$,curr_quad);
-				$<false_list>$ = list_insert($<false_list>$,curr_quad+1);
 				emmited_quads_temp = list_insert(emmited_quads_temp,curr_quad);
 				curr_emmited_quads_temp = list_insert(curr_emmited_quads_temp,curr_quad);
 				emit(if_eq,$<expression>1,$<expression>3,NULL,curr_quad,yylineno);
@@ -220,11 +191,6 @@ expr:
 
 		}
 		|	expr NEQUAL expr {
-				$<true_list>$ = NULL;
-				$<false_list>$ = NULL;
-				$<next_list>$ = NULL;
-				$<true_list>$ = list_insert($<true_list>$,curr_quad);
-				$<false_list>$ = list_insert($<false_list>$,curr_quad+1);
 				emmited_quads_temp = list_insert(emmited_quads_temp,curr_quad);
 				curr_emmited_quads_temp = list_insert(curr_emmited_quads_temp,curr_quad);
 				emit(if_neq,$<expression>1,$<expression>3,NULL,curr_quad,yylineno);
@@ -234,11 +200,6 @@ expr:
 				new_s++;
 		}
 		|	expr AND M expr {
-				printf("AND ");
-				backpatch($<true_list>1,$<intval>3);
-				$<false_list>$ = merge_lists($<false_list>1,$<false_list>4);
-				$<true_list>$ = $<true_list>4;
-				printf("Exp: %d\n",new_s);
 				if(new_s==2){
 					setIfType(and_case,curr_quad-2);
 					setIfType(and_case,curr_quad-4);
@@ -253,9 +214,6 @@ expr:
 		}
 		|	expr OR M expr {
 				printf("OR ");
-				backpatch($<false_list>1,$<intval>3);
-				$<true_list>$ = merge_lists($<true_list>1,$<true_list>4);
-				$<false_list>$ = $<false_list>4;
 				if(new_s==2){
 					setIfType(or_case,curr_quad-2);
 					setIfType(or_case,curr_quad-4);
@@ -281,10 +239,6 @@ Z:
 term:
 		PAREN_L Z expr   PAREN_R	{
 				$<expression>$ = $<expression>3; temp_expr=$<expression>$;
-				$<true_list>$ = $<true_list>3;
-				$<false_list>$ = $<false_list>3;
-				$<next_list>$ = $<next_list>3;
-				 
 				while(curr_emmited_quads_temp){
 					quads[curr_emmited_quads_temp->value].if_level = curr_level;
 					curr_emmited_quads_temp = curr_emmited_quads_temp->next;
@@ -305,8 +259,6 @@ term:
 			temp_expr = $<expression>$;
 		}
 		| NOT expr {
-			$<true_list>$ = $<false_list>1;
-			$<false_list>$ = $<true_list>1;
 			emit(if_eq,$<expression>2,new_expr_const_bool(0),NULL,curr_quad,yylineno);
 			emit(jump,NULL,NULL,new_expr_const_int(0),-1,yylineno);
 			$<expression>$ = new_expr(bool_expr_e);
@@ -753,7 +705,6 @@ block_in:
 
 ifstmt:
 		IF PAREN_L M expr M PAREN_R M stmt M %prec IF_TERM { 
-			backpatch($<true_list>4,$<intval>7);
 			backpatch_jumps($<intval>3,$<intval>5-1,$<intval>9);
 			backpatch_if($<intval>3,$<intval>5-1,$<intval>7,0);
 			special_if_backpatch($<intval>3,$<intval>5-1,quads[$<intval>5-2].type);
@@ -761,8 +712,6 @@ ifstmt:
 		 	patch_label($<intval>5-1,$<intval>9);
 		}
 		| IF PAREN_L M expr M PAREN_R M stmt M else_prefix M stmt { 
-			backpatch($<true_list>4,$<intval>7);
-			backpatch($<false_list>4,$<intval>11);
 			backpatch_jumps($<intval>3,$<intval>5-1,$<intval>9);
 			backpatch_if($<intval>3,$<intval>5-1,$<intval>7,0);
 			emmited_quads_temp = NULL;

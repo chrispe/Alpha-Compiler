@@ -279,7 +279,10 @@ primary:
 			$<expression>$ = emit_iftableitem($1,st,yylineno);
 			temp_expr = $<expression>$;
 		}
-		| const { $<expression>$ = $<expression>1;}
+		| const { 
+			$<expression>$ = $<expression>1;
+			temp_expr = $<expression>$;
+		}
 		| call  { 
 			$<expression>$ = $<expression>1; 
 			temp_expr = $<expression>$;}
@@ -292,6 +295,7 @@ primary:
 		| PAREN_L funcdef PAREN_R {
 			$<expression>$ = new_expr(program_func_e);
 			($<expression>$)->sym = (st_entry *)$<expression>2;
+			temp_expr = $<expression>$;
 		}
 		;
 
@@ -313,16 +317,16 @@ assignexpr:
 			fun_rec=0;
 
 			// Careful with the labels
+			// (had tempexpr on exp4)
 			if(($1)->type==table_item_e){
-				emit(table_set_elem,$<expression>1,$<expression>1->index,temp_expr,-1,yylineno);
+				emit(table_set_elem,$<expression>1,$<expression>1->index,$<expression>4,-1,yylineno);
 				$<expression>$ = emit_iftableitem($<expression>1,st,yylineno);
 				$<expression>$->type=assign_expr_e;
 			}
 			else{
-				emit(assign,temp_expr,NULL,$<expression>1,-1,yylineno);
+				emit(assign,$<expression>4,NULL,$<expression>1,-1,yylineno);
 				$<expression>$ = new_expr(assign_expr_e);
-
-
+				 
 				if($<expression>1->sym->type!=TEMP_VAR){
 					($<expression>$)->sym = new_temp_var(st,yylineno);
 					emit(assign,$<expression>1,NULL,$<expression>$,-1,yylineno);
@@ -356,7 +360,7 @@ lvalue:
 			check_global_variable((symbol_table **)st, $2,yylineno);
 			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
 		}
-		| member {}
+		| member {$<expression>$ = $<expression>1;}
 		;
 
 member:
