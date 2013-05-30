@@ -212,8 +212,8 @@ term:
 			emit(not,$<expression>2,NULL,$<expression>$,-1,yylineno);
 		}
 		| lvalue DPLUS {
-			if(fun_rec){
-				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			if($<expression>1->sym->type==USERFUNC || $<expression>1->sym->type==LIBFUNC){
+				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>1->sym->name);
 				compile_errors++;
 			}
 			else{
@@ -233,8 +233,8 @@ term:
 			}
 		}
 		| DPLUS lvalue {
-			if(fun_rec){
-				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			if($<expression>2->sym->type==USERFUNC || $<expression>2->sym->type==LIBFUNC){
+				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>2->sym->name);
 				compile_errors++;
 			}
 			else {
@@ -253,8 +253,8 @@ term:
 			}
 		}
 		| lvalue DMINUS {
-			if(fun_rec){
-				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			if($<expression>1->sym->type==USERFUNC || $<expression>1->sym->type==LIBFUNC){
+				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>1->sym->name);
 				compile_errors++;
 			}
 			else{
@@ -274,8 +274,8 @@ term:
 			temp_expr = $<expression>$;
 		}
 		| DMINUS lvalue {
-			if(fun_rec){
-				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			if($<expression>2->sym->type==USERFUNC || $<expression>2->sym->type==LIBFUNC){
+				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>2->sym->name);
 				compile_errors++;
 			}
 			else {
@@ -300,6 +300,7 @@ primary:
 		lvalue	{
 			$<expression>$ = emit_iftableitem($1,st,yylineno);
 			temp_expr = $<expression>$;
+
 		}
 		| const { 
 			$<expression>$ = $<expression>1;
@@ -336,7 +337,7 @@ assignexpr:
 		lvalue EQUAL{expr_started=1;} 
 		expr { 
 			expr_started=0; 
-			if(fun_rec){
+			if($<expression>1->sym->type==USERFUNC || $<expression>1->sym->type==LIBFUNC){
 				printf("\nError at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$2);
 				compile_errors++;
 			}
@@ -832,7 +833,7 @@ int main(int argc,char ** argv)
     fflush(stdout);
 	yyparse(&st);
 	write_quads();
-
+	 
 	if(compile_errors==0)printf(" (DONE)\n");
 
 

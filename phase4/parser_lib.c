@@ -129,7 +129,7 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 
 				if(se->type!=USERFUNC && se->type!=LIBFUNC){
 					//In case we are in a function and we try to access a non-global variable
-					if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
+					if(in_func && se->scope!=0   && (se->value_type.varVal->used_in_func==NULL ||
 						strcmp(se->value_type.varVal->used_in_func,top(func_names))!=0)){
 							printf("\nError at line %d: Variable '%s' not accessible.\n",yylineno,variable);
 							compile_errors++;
@@ -141,6 +141,10 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 			else {
 				// Else if the symbol could not be found we insert it in the symbol table.
 				se = create_symbol(variable,1,scope_main,yylineno,VAR,get_current_scope_offset(),get_current_scope_space());
+				if(get_current_scope_space()==FUNC_LOCAL){
+					se->value_type.varVal->used_in_func = malloc(strlen(top(func_names))+1);
+					strcpy(se->value_type.varVal->used_in_func,top(func_names));
+				}
 				st_insert((symbol_table **)st,&se);
 				increase_curr_scope_offset();
 			}

@@ -272,7 +272,7 @@ void check_uminus(expr * e,unsigned int line){
 		e->type == program_func_e   ||
 		e->type == library_func_e   ||
 		e->type == bool_expr_e)
-		comp_error("Illegal expression to unary minus.\n",line);
+		comp_error("\nIllegal expression to unary minus.\n",line);
 }
 
 void comp_error(char * error,unsigned int line){
@@ -334,7 +334,7 @@ expr * emit_arithm(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * 
 		}
 	}
 	else 
-		comp_error("Invalid expression type for arithmetic operation.",line);
+		printf("\nWarning at line %d : Invalid expression type for arithmetic operation.\n",line);
 	return result;
 }
 
