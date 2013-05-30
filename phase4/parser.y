@@ -26,9 +26,6 @@
  	// A stack for pushing a useful variable when entering a function
  	expr * expr_stack = NULL;
 
- 	// An symbol used for the format (function(){})()
- 	st_entry * func_sym = NULL;
-
  	// Some variables used for the (for) statement
  	unsigned int for_test = 0;
  	unsigned int for_enter = 0;
@@ -44,6 +41,7 @@
  	unsigned int funcstart_jump;
 
  	st_entry * func_sym_temp = NULL;
+ 	str_stack_node * func_jump_decl_stack = NULL;
 
 %}
 %error-verbose
@@ -302,6 +300,7 @@ primary:
 			$<expression>$ = new_expr(program_func_e);
 			($<expression>$)->sym = $<symbol>2;
 			temp_expr = $<expression>$;
+
 		}
 		;
 
@@ -400,7 +399,7 @@ call:
 		}
 		| PAREN_L funcdef PAREN_R PAREN_L elist PAREN_R {
 			expr * func = new_expr(program_func_e);
-			func->sym = func_sym;
+			func->sym = $<symbol>2;
 			$<expression>$ = make_call(func,m_param.elist,(symbol_table **)st,yylineno);
 		}
 		;
@@ -506,7 +505,7 @@ func_temp:
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,$1,yylineno,1);
 			func_entry = (*((symbol_table **)st))->last_symbol;
-			
+
 			// We add funcstart quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
 			
@@ -515,6 +514,7 @@ func_temp:
 			expr_stack = temp_expr;
 			temp_expr = NULL;
 			funcstart_jump = curr_quad;
+			push_value(&func_jump_decl_stack,funcstart_jump);
 			emit(jump,NULL,NULL,NULL,-1,yylineno);
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			 
@@ -533,7 +533,8 @@ func_temp:
 			// We add funcend quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
-			patch_label(funcstart_jump,curr_quad);
+			patch_label(top_value(func_jump_decl_stack),curr_quad);
+			pop(&func_jump_decl_stack);
 			pop(&func_names);
 			temp_expr = expr_stack;
 			expr_stack = expr_stack->next;
@@ -548,29 +549,32 @@ func_temp:
 			
 			// We add funcstart quad
 			st_entry * se = (*(symbol_table **)(st))->last_symbol;
-			func_sym = se;
+			 
 			temp_expr = lvalue_expr(se);
 			temp_expr->next = expr_stack;
 			expr_stack = temp_expr;
 			temp_expr = NULL;
 			funcstart_jump = curr_quad;
-			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
+			push_value(&func_jump_decl_stack,funcstart_jump);
 			emit(jump,NULL,NULL,NULL,-1,yylineno);
+			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
  		 	enter_scope_space();
- 		 
+ 		  
 
 		} idlist PAREN_R{enter_scope_space();} block {   
 			func_var=0;
 			func_scope--;
 			in_func=0;
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
-			
+			 
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
-			patch_label(funcstart_jump,curr_quad);
+			patch_label(top_value(func_jump_decl_stack),curr_quad);
+			pop(&func_jump_decl_stack);
 			pop(&func_names);
 			temp_expr = expr_stack;
 			expr_stack = expr_stack->next;
-
+			func_sym_temp = se;
+ 
 		}
 		; 
 
@@ -586,8 +590,6 @@ funcdef:
 			// We set the new scope offset and loop scope to zero
 			reset_curr_scope_offset();
 			scope_loop=0;
-	 
-
 		} 
 		func_temp {
 			// Function definition ended
