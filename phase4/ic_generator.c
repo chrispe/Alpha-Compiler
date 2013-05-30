@@ -347,7 +347,7 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 			if(arg2!=0)result = modulo(arg1,arg2);
 			else{
 				result = arg1;
-				comp_error("Cannot divide by zero.",line);
+				printf("\nWarning at line %d : Division by zero.\n",line);
 			}
 			break;
 		}
@@ -355,7 +355,7 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 			if(arg2!=0)result = arg1/arg2; 
 			else{
 				result = arg1;
-				comp_error("Cannot divide by zero.",line);
+				printf("\nWarning at line %d : Division by zero.\n",line);
 			}
 			break;
 		}

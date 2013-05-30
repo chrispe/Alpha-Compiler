@@ -242,3 +242,5 @@ char * value_type_to_str(vmarg_t);
 void write_arrays(FILE * output);
 
 void write_magic_number(FILE * output);
+
+void write_code(FILE * output);

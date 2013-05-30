@@ -836,7 +836,7 @@ void print_instructions()
 	int i;
 	FILE * quads_output; 
  
-	quads_output = fopen("instructions.txt","w"); 
+	quads_output = fopen("target_code.txt","w"); 
 	if(quads_output==NULL)
 		quads_output = stderr;  
 
@@ -903,7 +903,7 @@ char * value_type_to_str(vmarg_t type){
 
 void write_binary_file(){
  
-	FILE * binary_output;
+	FILE * (binary_output);;
 
     if ((binary_output = fopen(DEFAULT_BINARY_NAME, "wb+")) == NULL) {
             fprintf(stderr, "Output error : Cannot open file %s\n", DEFAULT_BINARY_NAME);
@@ -912,22 +912,88 @@ void write_binary_file(){
 
     write_magic_number(binary_output);
     write_arrays(binary_output);
+    write_code(binary_output);
  
+ 	fclose(binary_output);
 }
-
-void write_arrays(FILE * output){
-	int i;
-	unsigned int size;
-	fwrite(&current_str_index,sizeof(unsigned int),1,output);
-	for(i=0;i<current_str_index;i++){
-		size = strlen(str_consts[i]);
-		fwrite(&size,sizeof(unsigned int),1,output);
-		fwrite(str_consts[i],sizeof(char)*size,1,output);
-	}
-}
-
 
 void write_magic_number(FILE * output){
 	unsigned int magic_number = MAGIC_NUMBER;
 	fwrite(&magic_number,sizeof(unsigned int),1,output);
 }
+
+void write_arrays(FILE * output){
+	int i;
+	unsigned int size;
+	char null_terminator = '\0';
+	int integer_value;
+	double double_value;
+
+	// Writing the string array
+	fwrite(&current_str_index,sizeof(unsigned int),1,output);
+	for(i=0;i<current_str_index;i++){
+		size = strlen(str_consts[i]);
+		fwrite(&size,sizeof(unsigned int),1,output);
+		fwrite(str_consts[i],sizeof(char)*size,1,output);
+		fwrite(&null_terminator,1,1,output);
+	}
+
+	// Writing the integer array
+	fwrite(&current_int_index,sizeof(unsigned int),1,output);
+	for(i=0;i<current_int_index;i++){
+		fwrite(&integer_consts[i],sizeof(int),1,output);
+	}
+
+	// Writing the double array
+	fwrite(&current_double_index,sizeof(unsigned int),1,output);
+	for(i=0;i<current_double_index;i++){
+		fwrite(&double_consts[i],sizeof(double),1,output);
+	}
+
+	// Writing the user functions
+	fwrite(&current_user_func_index,sizeof(unsigned int),1,output);
+	for(i=0;i<current_double_index;i++){
+		fwrite(&(user_funcs[i].address),sizeof(unsigned int),1,output);
+		fwrite(&(user_funcs[i].local_size),sizeof(unsigned int),1,output);
+		size = strlen(user_funcs[i].name);
+		fwrite(user_funcs[i].name,sizeof(char)*size,1,output);
+		fwrite(&null_terminator,1,1,output);
+	}
+ 
+ 	// Writing the library functions
+ 	fwrite(&current_lib_func_index,sizeof(unsigned int),1,output);
+	for(i=0;i<current_lib_func_index;i++){
+		size = strlen(named_lib_funcs[i]);
+		fwrite(&size,sizeof(unsigned int),1,output);
+		fwrite(named_lib_funcs[i],sizeof(char)*size,1,output);
+		fwrite(&null_terminator,1,1,output);
+	}
+
+}
+
+void write_code(FILE * output){
+	int i;
+	fwrite(&current_instr_index,sizeof(unsigned int),1,output);
+	for(i=0;i<current_instr_index;i++){
+		fwrite(&(instructions[i].opcode),1,1,output);
+		
+		// Writing the arg1
+		if(instructions[i].arg1){
+			fwrite(&(instructions[i].arg1->type),1,1,output);
+			fwrite(&(instructions[i].arg1->value),sizeof(unsigned int),1,output);
+		}
+
+		// Writing the arg2
+		if(instructions[i].arg2){
+			fwrite(&(instructions[i].arg2->type),1,1,output);
+			fwrite(&(instructions[i].arg2->value),sizeof(unsigned int),1,output);
+		}	
+
+		// Writing the result
+		if(instructions[i].result){
+			fwrite(&(instructions[i].result->type),1,1,output);
+			fwrite(&(instructions[i].result->value),sizeof(unsigned int),1,output);
+		}
+	}
+}
+ 

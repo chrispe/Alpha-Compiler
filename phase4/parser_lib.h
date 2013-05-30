@@ -80,6 +80,9 @@ extern str_stack_node * loop_stack;
 // A stack which keeps the scope offset for each function.
 extern str_stack_node * scope_offset_stack;
 
+// For detecting if any syntax/compile error occured
+extern unsigned compile_errors;
+
 /* ===========================================================
 	The functions for adding variables to the symbol table 
    =========================================================== */

@@ -38,6 +38,8 @@ str_stack_node * func_names = NULL;
 // A stack which keeps the loop scope when entering a function.
 str_stack_node * loop_stack = NULL;
 
+// For detecting if any syntax/compile error occured
+unsigned int compile_errors = 0;
 
 /* A number which indicates how many temporary
    variables we have set by the prefix '$v_(id)' */
@@ -128,8 +130,10 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 				if(se->type!=USERFUNC && se->type!=LIBFUNC){
 					//In case we are in a function and we try to access a non-global variable
 					if(in_func && se->scope!=0 && (se->value_type.varVal->used_in_func==NULL ||
-						strcmp(se->value_type.varVal->used_in_func,top(func_names))!=0))
-						printf("Error at line %d: Variable '%s' not accessible.\n",yylineno,variable);
+						strcmp(se->value_type.varVal->used_in_func,top(func_names))!=0)){
+							printf("\nError at line %d: Variable '%s' not accessible.\n",yylineno,variable);
+							compile_errors++;
+					}
 				}
 				else if(expr_started==0){fun_rec = 1;}
 				(*st)->last_symbol = se;
@@ -152,8 +156,10 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 	if(se!=NULL){
 		// We need to check that there is no collusion with library function.
 		// else we make a reference to that variable.
-		if(se->type==LIBFUNC && scope_main!=0)
-			printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,variable);
+		if(se->type==LIBFUNC && scope_main!=0){
+			printf("\nError at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,variable);
+			compile_errors++;
+		}
 		(*st)->last_symbol = se;
 	}
 	else{
@@ -162,8 +168,10 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 		// So we need to lookup on the global scope.
 		se = st_lookup_scope(*((symbol_table **)st),variable,0);
 
-		if(se!=NULL && se->type==LIBFUNC)
-			printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,variable);
+		if(se!=NULL && se->type==LIBFUNC){
+			printf("\nError at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,variable);
+			compile_errors++;
+		}
 		else{
 
 			// If the symbol could not be detected we insert it to
@@ -194,9 +202,11 @@ void check_global_variable(symbol_table ** st, char * variable,unsigned int yyli
 	// We perform a lookup in the global scope
 	se = st_lookup_scope(*((symbol_table **)st),variable,0);
 
-	if(se==NULL)
-		printf("Error at line %d: Global variable '%s' could not be detected.\n",yylineno,variable);
-	(*st)->last_symbol = se;
+	if(se==NULL){
+		printf("\nError at line %d: Global variable '%s' could not be detected.\n",yylineno,variable);
+		compile_errors++;
+	}
+	else (*st)->last_symbol = se;
 }
 
 void add_function(symbol_table ** st, char * function,unsigned int yylineno,const char has_name){
@@ -210,14 +220,17 @@ void add_function(symbol_table ** st, char * function,unsigned int yylineno,cons
 
 		// If a symbol has been detected we show the error.
 		if(se!=NULL){
-			if(se->type==LIBFUNC)
-				printf("Error at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,function);
+			if(se->type==LIBFUNC){
+				printf("\nError at line %d: '%s' is a library function, must not be shadowed.\n",yylineno,function);
+				compile_errors++;
+			}
 			else {
-				printf("Error at line %d: '%s' has already been declared as a ",yylineno,function);
+				printf("\nError at line %d: '%s' has already been declared as a ",yylineno,function);
 				if(se->type==USERFUNC)
 					printf("function.\n");
 				else
 					printf("variable.\n");
+				compile_errors++;
 			}
 			(*st)->last_symbol = se;
 		}
@@ -258,13 +271,18 @@ void add_function_argument(symbol_table ** st, char * argument,unsigned int yyli
 
  	// We check that there is no other variable using the same name on the same scope.
  	se = st_lookup_scope(*((symbol_table **)st),argument,scope_main);
- 	if(se!=NULL)printf("Error at line %d: '%s' has already be declared.\n",yylineno,argument);
+ 	if(se!=NULL){
+ 		printf("\nError at line %d: '%s' has already be declared.\n",yylineno,argument);
+ 		compile_errors++;
+ 	}
  	else
  	{
  		// We check that there is no library function shadowing.
  		se = st_lookup_scope(*((symbol_table **)st),argument,0);
- 		if(se!=NULL && se->type==LIBFUNC)
- 			printf("Error at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,argument);
+ 		if(se!=NULL && se->type==LIBFUNC){
+ 			printf("\nError at line %d: '%s' is a library function, cannot be shadowed.\n",yylineno,argument);
+ 			compile_errors++;
+ 		}
  		else{
  			se = create_symbol(argument,1,scope_main,yylineno,FORMAL,get_current_scope_offset(),get_current_scope_space());
  			se = set_var_func(se,top(func_names));

@@ -44,6 +44,8 @@
  	st_entry * func_sym_temp = NULL;
  	str_stack_node * func_jump_decl_stack = NULL;
 
+ 	 
+
 %}
 %error-verbose
 %start program
@@ -95,8 +97,10 @@ program:
 stmt:
 		expr SEMICOLON { fun_rec=0; reset_tmp_var_counter(); }
 		| BREAK SEMICOLON {
-			if(scope_loop<=0)
+			if(scope_loop<=0){
 				yyerror("Cannot use break; outside of a loop.");
+				compile_errors++;
+			}
 			else{
 				break_list = stack_top(break_stack);
 				break_list = list_insert(break_list,curr_quad);
@@ -105,8 +109,10 @@ stmt:
 			}
 		}
 		| CONTINUE SEMICOLON {
-			if(scope_loop<=0)
+			if(scope_loop<=0){
 				yyerror("Cannot use continue; outside of a loop.");
+				compile_errors++;
+			}
 			else{
 							
 				con_list = stack_top(con_stack);
@@ -206,7 +212,10 @@ term:
 			emit(not,$<expression>2,NULL,$<expression>$,-1,yylineno);
 		}
 		| lvalue DPLUS {
-			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			if(fun_rec){
+				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+				compile_errors++;
+			}
 			else{
 				$<expression>$ = new_expr(var_e);
 				$<expression>$->sym = new_temp_var(st,yylineno);
@@ -224,7 +233,10 @@ term:
 			}
 		}
 		| DPLUS lvalue {
-			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			if(fun_rec){
+				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+				compile_errors++;
+			}
 			else {
 				if($<expression>2->type == table_item_e){
 					$<expression>$ = emit_iftableitem($<expression>2,st,yylineno);
@@ -241,7 +253,10 @@ term:
 			}
 		}
 		| lvalue DMINUS {
-			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			if(fun_rec){
+				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+				compile_errors++;
+			}
 			else{
 				$<expression>$ = new_expr(var_e);
 				$<expression>$->sym = new_temp_var(st,yylineno);
@@ -259,7 +274,10 @@ term:
 			temp_expr = $<expression>$;
 		}
 		| DMINUS lvalue {
-			if(fun_rec)printf("Error at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+			if(fun_rec){
+				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$$);
+				compile_errors++;
+			}
 			else {
 				if($<expression>2->type == table_item_e){
 					$<expression>$ = emit_iftableitem($<expression>2,st,yylineno);
@@ -318,8 +336,10 @@ assignexpr:
 		lvalue EQUAL{expr_started=1;} 
 		expr { 
 			expr_started=0; 
-			if(fun_rec)
-				printf("Error at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$2);
+			if(fun_rec){
+				printf("\nError at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$2);
+				compile_errors++;
+			}
 			fun_rec=0;
 
 			// Careful with the labels
@@ -787,7 +807,8 @@ returnstmt:
 %%
 
 int yyerror (const char * yaccProvideMessage){
-	fprintf(stderr,"Syntax error at line %d: %s\n",yylineno,yaccProvideMessage);
+	fprintf(stderr,"\nSyntax error at line %d: %s\n",yylineno,yaccProvideMessage);
+	compile_errors++;
 }
 
 int main(int argc,char ** argv)
@@ -806,15 +827,38 @@ int main(int argc,char ** argv)
         yyin = stdin;
 
     printf("Compilation started...\n");
+
     printf("Generating intermediate code...");
+    fflush(stdout);
 	yyparse(&st);
-	printf(" (DONE)\n");
 	write_quads();
+
+	if(compile_errors==0)printf(" (DONE)\n");
+
+
+	fflush(stdout);
 	printf("Generating target code...");
+	fflush(stdout);
 	generate_instructions();
-	printf(" (DONE)\n");
-	printf("Compilation has been completed.\n");
 	print_instructions();
-	 
+
+	if(compile_errors>0)printf(" (FAILED)\n");
+	else printf(" (DONE)\n");
+
+	fflush(stdout);
+	printf("Writing executable binary file...");
+	write_binary_file();
+	fflush(stdout);
+
+	if(compile_errors>0)printf(" (FAILED)\n");
+	else printf(" (DONE)\n");
+
+	fflush(stdout);
+	if(compile_errors>0)
+		printf("Compilation failed. (%d errors)\n",compile_errors);
+	else{
+		printf("Compilation has been completed.\n");
+
+	}
 	return 0;	
 }
