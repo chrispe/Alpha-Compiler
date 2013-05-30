@@ -238,3 +238,7 @@ char * vm_opcode_to_str(vmopcode_e op);
 
 /* Returns the type of a value as a string */
 char * value_type_to_str(vmarg_t);
+
+void write_arrays(FILE * output);
+
+void write_magic_number(FILE * output);

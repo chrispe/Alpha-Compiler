@@ -40,6 +40,7 @@
  	// The index for the jump before a function declaration
  	unsigned int funcstart_jump;
 
+ 	// The stack for patching the jumps before the function declaration
  	st_entry * func_sym_temp = NULL;
  	str_stack_node * func_jump_decl_stack = NULL;
 
@@ -812,7 +813,7 @@ int main(int argc,char ** argv)
 	printf("Generating target code...");
 	generate_instructions();
 	printf(" (DONE)\n");
-	printf("Complation has finished.\n");
+	printf("Compilation has been completed.\n");
 	print_instructions();
 	 
 	return 0;	

@@ -1,5 +1,8 @@
 #include "tc_generator.h"
 
+#define MAGIC_NUMBER 2001993
+#define DEFAULT_BINARY_NAME "out.amc"
+
 /* The expandable arrays for the constants of the code */
 
 // For the number constants 
@@ -77,9 +80,9 @@ generator_func_t generators[] = {
  
 unsigned int add_const_to_array(void * constant,const_t type){
 	unsigned int value_index;
-	//value_index = value_exists_in_arr(constant,type);
-	//if(value_index!=-1)
-	//	return(value_index);
+	value_index = value_exists_in_arr(constant,type);
+	if(value_index!=-1)
+		return(value_index);
 
 	switch(type){
 		case double_c:{
@@ -305,6 +308,7 @@ void make_retval_operand(vmarg_s * arg){
 
 void add_incomplete_jump(unsigned int instr_id, unsigned int iaddress){
 	incomplete_jump * new_jump = malloc(sizeof(incomplete_jump));
+	if(memerror(new_jump,"new incomplete jump"))exit(0);
 	new_jump->instr_id = instr_id;
 	new_jump->iaddress = iaddress;
 	new_jump->next = i_jumps;
@@ -836,25 +840,36 @@ void print_instructions()
 	if(quads_output==NULL)
 		quads_output = stderr;  
 
-	fprintf(quads_output,"user funcs : \n");
+	fprintf(quads_output,"<user functions>: \n");
 	for(i=0;i<current_user_func_index;i++){
 		fprintf(quads_output,"%d : %s\n",i,user_funcs[i].name);
 	}
 	fprintf(quads_output,"<end of funcs>\n");	
 
-	fprintf(quads_output,"STRINGS : \n");
+	fprintf(quads_output,"<lib functions>: \n");
+	for(i=0;i<current_lib_func_index;i++){
+		fprintf(quads_output,"%d : %s\n",i,named_lib_funcs[i]);
+	}
+	fprintf(quads_output,"<end of lib funcs>\n");	
+
+	fprintf(quads_output,"<strings> : \n");
 	for(i=0;i<current_str_index;i++){
 		fprintf(quads_output,"%d : %s\n",i,str_consts[i]);
 	}
 	fprintf(quads_output,"<end of strings>\n");
 
-	fprintf(quads_output,"INTEGERS : \n");
+	fprintf(quads_output,"<integers> : \n");
 	for(i=0;i<current_int_index;i++){
 		fprintf(quads_output,"%d : %d\n",i,integer_consts[i]);
 	}
 	fprintf(quads_output,"<end of integers>\n");
+	fprintf(quads_output,"<doubles> : \n");
+	for(i=0;i<current_double_index;i++){
+		fprintf(quads_output,"%d : %lf\n",i,double_consts[i]);
+	}
+	fprintf(quads_output,"<end of doubles>\n");
 
-
+	fprintf(quads_output,"number of strings %d\n",current_str_index);
 	for(i=0;i<next_instr_label();i++){
 			fprintf(quads_output,"%d:\t%s",i,vm_opcode_to_str(instructions[i].opcode));
 			if(instructions[i].arg1){
@@ -885,3 +900,34 @@ char * value_type_to_str(vmarg_t type){
 							"nil_a" , "userfunc_a" ,"libfunc_a" ,"retval_a"};
 	return(value_types[type]);
 } 
+
+void write_binary_file(){
+ 
+	FILE * binary_output;
+
+    if ((binary_output = fopen(DEFAULT_BINARY_NAME, "wb+")) == NULL) {
+            fprintf(stderr, "Output error : Cannot open file %s\n", DEFAULT_BINARY_NAME);
+            exit(0);
+    }
+
+    write_magic_number(binary_output);
+    write_arrays(binary_output);
+ 
+}
+
+void write_arrays(FILE * output){
+	int i;
+	unsigned int size;
+	fwrite(&current_str_index,sizeof(unsigned int),1,output);
+	for(i=0;i<current_str_index;i++){
+		size = strlen(str_consts[i]);
+		fwrite(&size,sizeof(unsigned int),1,output);
+		fwrite(str_consts[i],sizeof(char)*size,1,output);
+	}
+}
+
+
+void write_magic_number(FILE * output){
+	unsigned int magic_number = MAGIC_NUMBER;
+	fwrite(&magic_number,sizeof(unsigned int),1,output);
+}
