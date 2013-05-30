@@ -182,6 +182,7 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 					se = create_symbol(variable,1,scope_main,yylineno,VAR,get_current_scope_offset(),get_current_scope_space());
 				}
 			}
+			increase_curr_scope_offset();
 			st_insert((symbol_table **)st,&se);
 		}
 	}

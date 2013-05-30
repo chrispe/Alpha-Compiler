@@ -77,9 +77,9 @@ generator_func_t generators[] = {
  
 unsigned int add_const_to_array(void * constant,const_t type){
 	unsigned int value_index;
-	value_index = value_exists_in_arr(constant,type);
-	if(value_index!=-1)
-		return(value_index);
+	//value_index = value_exists_in_arr(constant,type);
+	//if(value_index!=-1)
+	//	return(value_index);
 
 	switch(type){
 		case double_c:{
@@ -660,9 +660,19 @@ void generate_CALL(quad * q){
 			exit(0);
 		}
 	}
-	else{
-		instr->result->value = value_exists_in_arr(q->result->sym->name,user_func_c);
-		instr->result->type = userfunc_a;
+	else{ 
+		if(q->result->sym->type!=USERFUNC){
+			instr->result->value = q->result->sym->offset;
+			switch(q->result->sym->space){
+				case PROGRAM_VAR: instr->result->type = global_a; break;
+				case FUNC_LOCAL:  instr->result->type = formal_a; break;
+				case FORMAL_ARG:  instr->result->type = local_a; break;
+			}
+		}
+		else{
+			instr->result->value = value_exists_in_arr(q->result->sym->name,user_func_c);
+			instr->result->type = userfunc_a;
+		}
 		if(instr->result->value==-1){
 			printf("Compile error at line %d : User function %s does not exist.\n",q->line,q->result->sym->name);
 			exit(0);

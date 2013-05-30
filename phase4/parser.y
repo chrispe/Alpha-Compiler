@@ -26,8 +26,8 @@
  	// A stack for pushing a useful variable when entering a function
  	expr * expr_stack = NULL;
 
- 	// An expression list used for the format (function(){})()
- 	expr * func_expr_list = NULL;
+ 	// An symbol used for the format (function(){})()
+ 	st_entry * func_sym = NULL;
 
  	// Some variables used for the (for) statement
  	unsigned int for_test = 0;
@@ -50,7 +50,7 @@
 	int intval;
 	double fltval;
 	char * strval;
-	struct st_entry * symbol;
+	struct SymbolTableEntry * symbol;
 	struct expr_s * expression;
 }
 
@@ -394,8 +394,8 @@ call:
 		}
 		| PAREN_L funcdef PAREN_R PAREN_L elist PAREN_R {
 			expr * func = new_expr(program_func_e);
-			func->sym =  	(*(symbol_table **)st)->last_symbol;
-			$<expression>$ = make_call(func,func_expr_list,(symbol_table **)st,yylineno);
+			func->sym = func_sym;
+			$<expression>$ = make_call(func,m_param.elist,(symbol_table **)st,yylineno);
 		}
 		;
 
@@ -507,11 +507,12 @@ func_temp:
 			temp_expr->next = expr_stack;
 			expr_stack = temp_expr;
 			temp_expr = NULL;
-
+ 			printf("Sup 1\n");
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			 
 		} 
 		PAREN_L {
+			printf("Sup 2\n");
 			scope_main++;
 			in_func=1;
 			func_started=1;
@@ -519,6 +520,7 @@ func_temp:
 		 	enter_scope_space();
 		} 
 		idlist PAREN_R{enter_scope_space();}  block { 
+			printf("Sup 3\n");
 			func_scope--;
 			in_func=0;
 			
@@ -531,7 +533,7 @@ func_temp:
 
 		}
 		| PAREN_L{
-		 
+		 	printf("Sup 4\n");
  			// Adding the function(without name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,NULL,yylineno,0);
@@ -539,7 +541,7 @@ func_temp:
 			
 			// We add funcstart quad
 			st_entry * se = (*(symbol_table **)(st))->last_symbol;
-
+			func_sym = se;
 			temp_expr = lvalue_expr(se);
 			temp_expr->next = expr_stack;
 			expr_stack = temp_expr;
@@ -550,10 +552,12 @@ func_temp:
  		 
 
 		} idlist PAREN_R{enter_scope_space();} block {   
+			printf("Sup 5\n");
 			func_var=0;
 			func_scope--;
 			in_func=0;
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
+			 
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			pop(&func_names);
 			temp_expr = expr_stack;
@@ -574,12 +578,12 @@ funcdef:
 			// We set the new scope offset and loop scope to zero
 			reset_curr_scope_offset();
 			scope_loop=0;
-
+	 
 
 		} 
 		func_temp {
 			// Function definition ended
-
+			printf("NOR\n");
 			// We set the scope loop to the previous value
 			scope_loop = top_value(loop_stack);
 			 
@@ -592,6 +596,8 @@ funcdef:
 			// We set the scope offset to the previous scope
 			set_curr_scope_offset(top_value(scope_offset_stack));
 			pop(&scope_offset_stack);
+			 
+			$<symbol>$ = $<symbol>1;
 		}
 		;
 
@@ -602,11 +608,6 @@ idlist:
 			// Every required checking is included in the following method.
  			add_function_argument((symbol_table **)st,$1,yylineno,0);
  			increase_curr_scope_offset();
-
- 			// Adding to expression list
- 			expr * e = new_expr_const_str($1);
- 			e->next = func_expr_list;
- 			func_expr_list = e; 
 		}
 		| idlist COMMA IDENTIFIER {
 
@@ -614,11 +615,6 @@ idlist:
 			// Every required checking is included in the following method.
 			add_function_argument((symbol_table **)st,$3,yylineno,1);
 			increase_curr_scope_offset();
-
-			// Adding to expression list
- 			expr * e = new_expr_const_str($3);
- 			e->next = func_expr_list;
- 			func_expr_list = e; 
 		}
 		| {}
 		;
@@ -801,7 +797,7 @@ int main(int argc,char ** argv)
         yyin = stdin;
 
 	yyparse(&st);
-	//print_st(st);
+	print_st(st);
 	write_quads();
 	generate_instructions();
 	printf("\nComplation has finished.\n");
