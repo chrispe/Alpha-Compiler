@@ -40,6 +40,11 @@
  	stack_node * break_stack = NULL;
  	stack_node * con_stack = NULL;
 
+ 	// The index for the jump before a function declaration
+ 	unsigned int funcstart_jump;
+
+ 	st_entry * func_sym_temp = NULL;
+
 %}
 %error-verbose
 %start program
@@ -63,8 +68,8 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall term index_temp if_prefix else_prefix forprefix M N
-%type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp whilesecond whilestart
+%type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall term   if_prefix else_prefix forprefix M N
+%type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp whilesecond whilestart temp_indexed
 %type <expression> expr lvalue con_elist
  
  
@@ -85,7 +90,7 @@
 
 program:
 		program stmt 
-		| {printf("\nCompiling...\n\n");}
+		| {}
 		;
 
 stmt:
@@ -293,8 +298,9 @@ primary:
 			temp_expr = $<expression>$;
 		}
 		| PAREN_L funcdef PAREN_R {
+	 		
 			$<expression>$ = new_expr(program_func_e);
-			($<expression>$)->sym = (st_entry *)$<expression>2;
+			($<expression>$)->sym = $<symbol>2;
 			temp_expr = $<expression>$;
 		}
 		;
@@ -439,9 +445,9 @@ objectdef:
 			$<expression>$ = table;
 		}
 		| BRACKET_L indexed BRACKET_R {
+	 
 			expr * table = new_expr(new_table_e);
-			expr * temp = index_expr;
-
+			expr * temp = $<expression>2;
 			table->sym = new_temp_var(st,yylineno);
 			emit(table_create,NULL,NULL,table,-1,yylineno);
 
@@ -456,26 +462,27 @@ objectdef:
 		;
 
 indexed:
-		indexedelem {$<expression>$=$<expression>1;}
-		|indexed COMMA indexedelem {
+		indexedelem temp_indexed{
 			$<expression>$ = $<expression>1;
-			$<expression>$->next = $<expression>3;
-			index_expr = $<expression>$;
+			$<expression>$->next = $<expression>2;		
 		}
 		;
+
+temp_indexed: 
+			COMMA indexedelem temp_indexed {			
+				$<expression>$ = $<expression>2;
+				$<expression>$->next = $<expression>3; }
+			|	{$<expression>$ = NULL;}
+			;
+
 
 indexedelem:
-		BRACE_L index_temp BRACE_R {
-			$<expression>$ = $<expression>2;
-		}
-		;
-
-index_temp:
-		expr COLON expr {
-			$<expression>$ = $<expression>1;
-			$<expression>$->index = $<expression>3;
-		}
-		;
+			BRACE_L expr COLON expr BRACE_R	{
+		 
+				$<expression>$ = $<expression>2;
+				$<expression>$->index = $<expression>4;
+			}
+			;
 
 elist:	expr con_elist{
 			$<expression>$ = $<expression>1;
@@ -495,24 +502,24 @@ con_elist: COMMA expr con_elist	{
  
 func_temp:
 		IDENTIFIER{
-
 			// Adding the function(with name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,$1,yylineno,1);
 			func_entry = (*((symbol_table **)st))->last_symbol;
-
+			
 			// We add funcstart quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
+			
 			temp_expr = lvalue_expr(se);
 			temp_expr->next = expr_stack;
 			expr_stack = temp_expr;
 			temp_expr = NULL;
- 			printf("Sup 1\n");
+			funcstart_jump = curr_quad;
+			emit(jump,NULL,NULL,NULL,-1,yylineno);
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			 
 		} 
 		PAREN_L {
-			printf("Sup 2\n");
 			scope_main++;
 			in_func=1;
 			func_started=1;
@@ -520,20 +527,20 @@ func_temp:
 		 	enter_scope_space();
 		} 
 		idlist PAREN_R{enter_scope_space();}  block { 
-			printf("Sup 3\n");
 			func_scope--;
 			in_func=0;
 			
 			// We add funcend quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
+			patch_label(funcstart_jump,curr_quad);
 			pop(&func_names);
 			temp_expr = expr_stack;
 			expr_stack = expr_stack->next;
+			func_sym_temp = se;
 
 		}
 		| PAREN_L{
-		 	printf("Sup 4\n");
  			// Adding the function(without name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,NULL,yylineno,0);
@@ -546,19 +553,20 @@ func_temp:
 			temp_expr->next = expr_stack;
 			expr_stack = temp_expr;
 			temp_expr = NULL;
-
+			funcstart_jump = curr_quad;
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
+			emit(jump,NULL,NULL,NULL,-1,yylineno);
  		 	enter_scope_space();
  		 
 
 		} idlist PAREN_R{enter_scope_space();} block {   
-			printf("Sup 5\n");
 			func_var=0;
 			func_scope--;
 			in_func=0;
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
-			 
+			
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
+			patch_label(funcstart_jump,curr_quad);
 			pop(&func_names);
 			temp_expr = expr_stack;
 			expr_stack = expr_stack->next;
@@ -583,7 +591,7 @@ funcdef:
 		} 
 		func_temp {
 			// Function definition ended
-			printf("NOR\n");
+
 			// We set the scope loop to the previous value
 			scope_loop = top_value(loop_stack);
 			 
@@ -596,8 +604,9 @@ funcdef:
 			// We set the scope offset to the previous scope
 			set_curr_scope_offset(top_value(scope_offset_stack));
 			pop(&scope_offset_stack);
-			 
-			$<symbol>$ = $<symbol>1;
+
+			// We set the symbol of this expression (poitning to the function symbol)
+			$<symbol>$ = func_sym_temp;
 		}
 		;
 
@@ -690,8 +699,6 @@ whilestmt:
 			
 			break_stack = pop_node(break_stack);
 			con_stack = pop_node(con_stack);
- 
-
 		} 
 		;
 
@@ -785,8 +792,7 @@ int main(int argc,char ** argv)
 	m_param.elist = NULL;
  	symbol_table * st = NULL;
  	st = create_symbol_table();
- 	int i;
-
+ 
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
             	fprintf(stderr, "Cannot read file %s\n", argv[1]);
@@ -796,12 +802,15 @@ int main(int argc,char ** argv)
     else
         yyin = stdin;
 
+    printf("Compilation started...\n");
+    printf("Generating intermediate code...");
 	yyparse(&st);
-	print_st(st);
+	printf(" (DONE)\n");
 	write_quads();
+	printf("Generating target code...");
 	generate_instructions();
-	printf("\nComplation has finished.\n");
-  	//print_string();
+	printf(" (DONE)\n");
+	printf("Complation has finished.\n");
 	print_instructions();
 	 
 	return 0;	
