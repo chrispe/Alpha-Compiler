@@ -1,5 +1,8 @@
 #include "ic_generator.h"
 
+#define MAGIC_NUMBER 2001993
+#define DEFAULT_BINARY_NAME "out.amc"
+
 // The defined values for expanding the constants arrays and the instruction table.
 #define DOUBLE_ARR_SIZE total_double_consts*sizeof(double)
 #define INTEGER_ARR_SIZE total_integer_consts*sizeof(int)

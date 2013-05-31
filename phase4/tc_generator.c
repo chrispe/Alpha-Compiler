@@ -1,8 +1,5 @@
 #include "tc_generator.h"
 
-#define MAGIC_NUMBER 2001993
-#define DEFAULT_BINARY_NAME "out.amc"
-
 /* The expandable arrays for the constants of the code */
 
 // For the number constants 
@@ -903,7 +900,7 @@ char * value_type_to_str(vmarg_t type){
 
 void write_binary_file(){
  
-	FILE * (binary_output);;
+	FILE * binary_output;
 
     if ((binary_output = fopen(DEFAULT_BINARY_NAME, "wb+")) == NULL) {
             fprintf(stderr, "Output error : Cannot open file %s\n", DEFAULT_BINARY_NAME);
@@ -952,10 +949,11 @@ void write_arrays(FILE * output){
 
 	// Writing the user functions
 	fwrite(&current_user_func_index,sizeof(unsigned int),1,output);
-	for(i=0;i<current_double_index;i++){
+	for(i=0;i<current_user_func_index;i++){
 		fwrite(&(user_funcs[i].address),sizeof(unsigned int),1,output);
 		fwrite(&(user_funcs[i].local_size),sizeof(unsigned int),1,output);
 		size = strlen(user_funcs[i].name);
+		fwrite(&size,sizeof(unsigned int),1,output);
 		fwrite(user_funcs[i].name,sizeof(char)*size,1,output);
 		fwrite(&null_terminator,1,1,output);
 	}

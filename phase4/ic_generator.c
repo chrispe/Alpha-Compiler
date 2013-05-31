@@ -147,12 +147,13 @@ expr *lvalue_expr(st_entry * sym){
    	sym_expr->next = NULL;
    	sym_expr->sym = sym;
 
-   	switch(sym->type){
-   		case GLOBAL_VAR || VAR || LCAL || FORMAL || TEMP_VAR : sym_expr->type = var_e; break;
-   		case LIBFUNC : sym_expr->type = library_func_e; break;
-   		case USERFUNC : sym_expr->type = program_func_e; break;
-   		default : break;
-   	}
+   	if(sym->type==LIBFUNC)
+   		sym_expr->type = library_func_e;
+   	else if(sym->type==USERFUNC)
+   		sym_expr->type = program_func_e;
+   	else
+   		sym_expr->type = var_e;
+ 
    	return sym_expr;
 }
 
