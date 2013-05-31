@@ -4,22 +4,6 @@
 #include <assert.h>
 
 #define MAGIC_NUMBER 2001993
-#define EXPAND_SIZE 1024
-
-// The defined values for expanding the constants arrays and the instruction table.
-#define DOUBLE_ARR_SIZE total_double_consts*sizeof(double)
-#define INTEGER_ARR_SIZE total_integer_consts*sizeof(int)
-#define STRING_ARR_SIZE total_str_consts*sizeof(char *)
-#define USER_FUNC_ARR_SIZE total_user_funcs*sizeof(userfunc_s)
-#define LIB_FUNC_ARR_SIZE total_named_lib_funcs*sizeof(char *)
-#define INSTR_ARR_SIZE total_instructions*sizeof(instr_s)
- 
-#define DOUBLE_ARR_NEW_SIZE EXPAND_SIZE*sizeof(double) + DOUBLE_ARR_SIZE
-#define INTGER_ARR_NEW_SIZE EXPAND_SIZE*sizeof(int) + INTEGER_ARR_SIZE
-#define	STRING_ARR_NEW_SIZE EXPAND_SIZE*sizeof(char *) + STRING_ARR_SIZE
-#define	USER_FUNC_ARR_NEW_SIZE EXPAND_SIZE*sizeof(userfunc_s) + USER_FUNC_ARR_SIZE
-#define	LIB_FUNC_ARR_NEW_SIZE EXPAND_SIZE*sizeof(char *) + LIB_FUNC_ARR_SIZE
-#define INSTR_ARR_NEW_SIZE EXPAND_SIZE*sizeof(instr_s) + INSTR_ARR_SIZE
 
 /* The types of a VM opcode */
 typedef enum vmopcode{
@@ -78,58 +62,54 @@ typedef enum const_type{
 	lib_func_c
 }const_t;
 
-/* The expandable arrays for the constants of the code */
+/* The arrays for the constants of the code */
 
 // For the double number constants 
 extern double * double_consts;
-extern unsigned int current_double_index;
 extern unsigned int total_double_consts;
 
 // For the integer number constants
 extern int * integer_consts;
-extern unsigned int current_int_index;
 extern unsigned int total_integer_consts;
 
 // For the strings
 extern char ** str_consts;
-extern unsigned int current_str_index;
 extern unsigned int total_str_consts;
 
 // For the library functions
 extern char ** named_lib_funcs;
-extern unsigned int current_lib_func_index;
 extern unsigned int total_named_lib_funcs;
 
 // For the user functions
 extern userfunc_s * user_funcs;
-extern unsigned int current_user_func_index;
 extern unsigned int total_user_funcs;
 
 /* The array that will include the final
    target instructions. */
 extern instr_s * instructions;
-extern unsigned int current_instr_index;
 extern unsigned int total_instructions;
 
+/* The functions used to read the binary
+   file and initiliaze the arrays */
 void read_binary_file(char *);
 void read_magic_number(FILE *);
 void read_arrays(FILE *);
-void error_message(char *);
-unsigned int add_const_to_array(void *,const_t);
-void expand_const_array(const_t);
-int memerror(void *, const char *);
 void read_strings(FILE *);
 void read_integers(FILE *);
 void read_doubles(FILE *);
 void read_user_functions(FILE *);
 void read_lib_functions(FILE *);
 void read_instructions(FILE *);
+
+/* Displays an error message and exits */
+void error_message(char *);
+
+/* Detects if any memory allocation failed
+   in case of yes, it displays a message and exits */
+void memerror(void *, const char *);
+ 
+ /* Returns how many arguments an instruction with that op has */
 unsigned int get_instr_arg_num(vmopcode_e op);
 
+/* Creates a new vmarg */
 vmarg_s * create_vmarg(void);
- 
-instr_s * create_instr(void);
-
-char * vm_opcode_to_str(vmopcode_e op);
-void print_instructions();
-char * value_type_to_str(vmarg_t type);
