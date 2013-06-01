@@ -1,3 +1,7 @@
+/* This library implements the file handler
+   for loading the executable binary files
+   on the alpha virtual machine (aka AVM) */ 
+
 #include <stdio.h>
 #include <stdlib.h> 
 #include <string.h>
