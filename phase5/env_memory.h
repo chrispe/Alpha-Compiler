@@ -19,3 +19,13 @@ int consts_getint(unsigned int);
 char * libfuncs_getused(unsigned int);
 char * consts_getstr(unsigned int);
 userfunc_s * userfuncs_getfunc(unsigned int);
+
+/* Returns the memory cell that is 
+   referenced in an instruction */
+avm_memcell * avm_translate_operand(vmarg_s *,avm_memcell *);
+
+/* Displays a warning message */
+void avm_warning(char *,unsigned int);
+
+/* Displays an error message and exits the AVM */
+void avm_error(char *, unsigned int);

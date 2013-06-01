@@ -1,5 +1,4 @@
- 
-#include "env_memory.h"
+#include "instructions.h"
 
 int main(int argc, char * argv[]){
     if (argc <= 1)
@@ -7,7 +6,6 @@ int main(int argc, char * argv[]){
     read_binary_file(argv[1]);
 
     fprintf(stdout,"The executable binary file (%s) has been loaded.\n",argv[1]);
-	userfunc_s * s = userfuncs_getfunc(1);
-	printf("The func : %s\n",s->name);
+
 	return 0;
 }
