@@ -35,6 +35,7 @@ typedef enum vmargtype{
 typedef struct vmarg {
 	vmarg_t type;
 	unsigned int value;
+	char * name;
 }vmarg_s;
 
 /* The structure of a VM instruction */

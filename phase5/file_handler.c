@@ -132,34 +132,73 @@ void read_magic_number(FILE * source){
 void read_instructions(FILE * source){
 	unsigned int i;
 	unsigned int total_args;
+	unsigned int length;
+	char temp;
+
 	fread(&total_instructions,sizeof(unsigned int),1,source);
 	if(total_instructions>0){
 		instructions = (instr_s *)malloc(sizeof(instr_s)*total_instructions);
 		memerror(instructions,"new instructions array");
 		for(i=0;i<total_instructions;i++){
 			fread(&instructions[i].opcode,1,1,source);
+			fread(&instructions[i].line,sizeof(unsigned int),1,source);
 			total_args = get_instr_arg_num(instructions[i].opcode);
 			switch(total_args){
 				case 3:{
 					instructions[i].arg1 = create_vmarg();
 					fread(&instructions[i].arg1->type,1,1,source);
 					fread(&instructions[i].arg1->value,sizeof(unsigned int),1,source);
+					fread(&length,sizeof(unsigned int),1,source);
+					if(length!=0){
+						instructions[i].arg1->name = malloc(length+1);
+						fread((instructions[i].arg1->name),length+1,1,source);
+					}
+					else
+						fread(&temp,1,1,source);
 					instructions[i].arg2 = create_vmarg();
 					fread(&instructions[i].arg2->type,1,1,source);
 					fread(&instructions[i].arg2->value,sizeof(unsigned int),1,source);
+					fread(&length,sizeof(unsigned int),1,source);
+					if(length!=0){
+						instructions[i].arg2->name = malloc(length+1);
+						fread((instructions[i].arg2->name),length+1,1,source);
+					}
+					else
+						fread(&temp,1,1,source);
 					instructions[i].result = create_vmarg();
 					fread(&instructions[i].result->type,1,1,source);
 					fread(&instructions[i].result->value,sizeof(unsigned int),1,source);
+					fread(&length,sizeof(unsigned int),1,source);
+					if(length!=0){
+						instructions[i].result->name = malloc(length+1);
+						fread((instructions[i].result->name),length+1,1,source);
+					}
+					else
+						fread(&temp,1,1,source);
 					break;
 				}
 				case 2:{
 					instructions[i].arg1 = create_vmarg();
 					fread(&instructions[i].arg1->type,1,1,source);
 					fread(&instructions[i].arg1->value,sizeof(unsigned int),1,source);
+					fread(&length,sizeof(unsigned int),1,source);
+					if(length!=0){
+						instructions[i].arg1->name = malloc(length+1);
+						fread((instructions[i].arg1->name),length+1,1,source);
+					}
+					else
+						fread(&temp,1,1,source);
 					instructions[i].arg2 = NULL;
 					instructions[i].result = create_vmarg();
 					fread(&instructions[i].result->type,1,1,source);
 					fread(&instructions[i].result->value,sizeof(unsigned int),1,source);
+					fread(&length,sizeof(unsigned int),1,source);
+					if(length!=0){
+						instructions[i].result->name = malloc(length+1);
+						fread((instructions[i].result->name),length+1,1,source);
+					}
+					else
+						fread(&temp,1,1,source);
 					break;
 				}
 				case 1:{
@@ -168,6 +207,13 @@ void read_instructions(FILE * source){
 					instructions[i].result = create_vmarg();
 					fread(&instructions[i].result->type,1,1,source);
 					fread(&instructions[i].result->value,sizeof(unsigned int),1,source);
+					fread(&length,sizeof(unsigned int),1,source);
+					if(length!=0){
+						instructions[i].result->name = malloc(length+1);
+						fread((instructions[i].result->name),length+1,1,source);
+					}
+					else
+						fread(&temp,1,1,source);
 					break;
 				}
 				case 0:{
@@ -210,6 +256,7 @@ unsigned int get_instr_arg_num(vmopcode_e op){
 
 vmarg_s * create_vmarg(void){
 	vmarg_s * new_vmarg = malloc(sizeof(vmarg_s));
+	new_vmarg->name = NULL;
 	memerror(new_vmarg,"new vmarg");
 	return(new_vmarg);
 }

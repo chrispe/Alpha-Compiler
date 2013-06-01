@@ -212,6 +212,7 @@ void expand_const_array(const_t array_type){
 
 vmarg_s * create_vmarg(void){
 	vmarg_s * new_vmarg = malloc(sizeof(vmarg_s));
+	new_vmarg->name = NULL;
 	if(memerror(new_vmarg,"new vmarg"))exit(0);
 	return(new_vmarg);
 }
@@ -236,6 +237,8 @@ vmarg_s * make_operand(expr * e, vmarg_s * arg){
 		case new_table_e: {
 			assert(e->sym);
 			arg->value = e->sym->offset;
+			arg->name = malloc(strlen(e->sym->name)+1);
+			strcpy(arg->name,e->sym->name);
 			switch(e->sym->space){
 				case PROGRAM_VAR: arg->type = global_a;	break;
 				case FUNC_LOCAL:  arg->type = local_a;	break;
@@ -870,13 +873,25 @@ void print_instructions()
 	for(i=0;i<next_instr_label();i++){
 			fprintf(quads_output,"%d:\t%s",i,vm_opcode_to_str(instructions[i].opcode));
 			if(instructions[i].arg1){
-				fprintf(quads_output," %d (%s) ",instructions[i].arg1->value,value_type_to_str(instructions[i].arg1->type));
+				fprintf(quads_output," %d (%s",instructions[i].arg1->value,value_type_to_str(instructions[i].arg1->type));
+				if(instructions[i].arg1->name!=NULL){
+					fprintf(quads_output,":%s)",instructions[i].arg1->name);
+				}
+				else fprintf(quads_output,")");
 			}
 			if(instructions[i].arg2){
-				fprintf(quads_output," %d (%s) ",instructions[i].arg2->value,value_type_to_str(instructions[i].arg2->type));
+				fprintf(quads_output," %d (%s",instructions[i].arg2->value,value_type_to_str(instructions[i].arg2->type));
+				if(instructions[i].arg2->name!=NULL){
+					fprintf(quads_output,":%s)",instructions[i].arg2->name);
+				}
+				else fprintf(quads_output,")");
 			}
 			if(instructions[i].result){
-				fprintf(quads_output," %d (%s) ",instructions[i].result->value,value_type_to_str(instructions[i].result->type));
+				fprintf(quads_output," %d (%s",instructions[i].result->value,value_type_to_str(instructions[i].result->type));
+				if(instructions[i].result->name!=NULL){
+					fprintf(quads_output,":%s)",instructions[i].result->name);
+				}
+				else fprintf(quads_output,")");
 			}
 			fprintf(quads_output,"\n");
 	}
@@ -971,26 +986,61 @@ void write_arrays(FILE * output){
 
 void write_code(FILE * output){
 	int i;
+	unsigned int len = 0;
+	char null_terminator = '\0';
+
 	fwrite(&current_instr_index,sizeof(unsigned int),1,output);
 	for(i=0;i<current_instr_index;i++){
+
 		fwrite(&(instructions[i].opcode),1,1,output);
-		
+		fwrite(&(instructions[i].line),sizeof(unsigned int),1,output);
+
 		// Writing the arg1
 		if(instructions[i].arg1){
 			fwrite(&(instructions[i].arg1->type),1,1,output);
 			fwrite(&(instructions[i].arg1->value),sizeof(unsigned int),1,output);
+			if(instructions[i].arg1->name==NULL){
+				len = 0;
+				fwrite(&len,sizeof(unsigned int),1,output);
+			}
+			else{
+				len = strlen(instructions[i].arg1->name);
+				fwrite(&len,sizeof(unsigned int),1,output);
+				fwrite((instructions[i].arg1->name),len,1,output);
+			}
+			fwrite(&null_terminator,1,1,output);
 		}
 
 		// Writing the arg2
 		if(instructions[i].arg2){
 			fwrite(&(instructions[i].arg2->type),1,1,output);
 			fwrite(&(instructions[i].arg2->value),sizeof(unsigned int),1,output);
+			if(instructions[i].arg2->name==NULL){
+				len = 0;
+				fwrite(&len,sizeof(unsigned int),1,output);
+			}
+			else{
+				len = strlen(instructions[i].arg2->name);
+				fwrite(&len,sizeof(unsigned int),1,output);
+				fwrite((instructions[i].arg2->name),len,1,output);
+			}
+			fwrite(&null_terminator,1,1,output);
 		}	
 
 		// Writing the result
 		if(instructions[i].result){
 			fwrite(&(instructions[i].result->type),1,1,output);
 			fwrite(&(instructions[i].result->value),sizeof(unsigned int),1,output);
+			if(instructions[i].result->name==NULL){
+				len = 0;
+				fwrite(&len,sizeof(unsigned int),1,output);
+			}
+			else{
+				len = strlen(instructions[i].result->name);
+				fwrite(&len,sizeof(unsigned int),1,output);
+				fwrite((instructions[i].result->name),len,1,output);
+			}
+			fwrite(&null_terminator,1,1,output);
 		}
 	}
 }
