@@ -3,6 +3,8 @@
 
 #include "memory_manager.h"
 
+#define ENV_MEM_LIB
+
 #define AVM_STACK_ENV_SIZE 4
 
 /* The main registers of the AVM */

@@ -4,8 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "file_handler.h"
 
+#ifndef FILE_HANDLER
+#include "file_handler.h"
+#endif
+ 
 #define AVM_STACKSIZE 4096
 #define AVM_WIPEOUT(m) memset(&(m),0,sizeof(avm_memcell))
 #define AVM_TABLE_HASHSIZE 211

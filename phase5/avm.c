@@ -1,3 +1,5 @@
+#include "file_handler.h"
+#include "env_memory.h"
 #include "instructions.h"
 
 int main(int argc, char * argv[]){

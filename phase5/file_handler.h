@@ -9,6 +9,8 @@
 
 #define MAGIC_NUMBER 2001993
 
+#define FILE_HANDLER
+
 /* The types of a VM opcode */
 typedef enum vmopcode{
 	assign_v=0, add_v=1, sub_v=2, mul_v=3, div_v=4, mod_v=5,
