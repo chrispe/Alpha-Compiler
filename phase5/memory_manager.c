@@ -55,6 +55,7 @@ char * nil_tostring(avm_memcell * m){
 }
 
 char * undef_tostring(avm_memcell * m){
+	printf("yeap\n");
 	char * output = create_string(strlen("undefined")+1);
 	strcpy(output,"undefined");
 	return output;

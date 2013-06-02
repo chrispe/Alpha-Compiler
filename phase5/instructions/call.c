@@ -20,8 +20,7 @@ void execute_call(instr_s * instr){
 		default: {
 			char * s = avm_tostring(func);
 			char * error_msg = create_string(strlen(s)+50);
-			sprintf(error_msg,"Call cannot bind %s to function",s);
-			avm_error(error_msg,instr->line);
+			avm_error("Cannot bind ",s," to function",instr->line);
 		}
 	}
 
@@ -114,6 +113,8 @@ unsigned char avm_library_func_exist(char * funcname){
 
 void execute_pusharg(instr_s * instr){
 	avm_memcell * arg = avm_translate_operand(instr->result,&ax);
+	if(arg->type==undefined_m)
+		avm_warning("Undefined variable (",instr->result->name,") has been used as a function argument",instr->line);
 	assert(arg);
 	avm_assign(&stack[top],arg);
 	total_actuals++;

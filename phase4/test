@@ -1,16 +1,19 @@
 a = "lol";
-a = 4*(3+4) + b;
+print(a);
+//a = 4*(3+4) + b;
+print(a);
 if(a==5){print();input();}
 else{}
+print(a);
 while(i<4){
         for(i=0;i<5;i++){input();}
         print();
         b="fuck you";
 }
 c="fuck you";
-
+print("here");
 function haha(){}
-
+print("no way");
 while(1){a = print();}
 
 

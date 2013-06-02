@@ -27,10 +27,10 @@ userfunc_s * userfuncs_getfunc(unsigned int);
 avm_memcell * avm_translate_operand(vmarg_s *,avm_memcell *);
 
 /* Displays a warning message */
-void avm_warning(char *,unsigned int);
+void avm_warning(char *,char *,char *, unsigned int);
 
 /* Displays an error message and exits the AVM */
-void avm_error(char *, unsigned int);
+void avm_error(char *, char *, char *,unsigned int);
 
 /* Displays an error message (without line) and exits the AVM */
-void avm_anonymous_error(char * msg);
+void avm_anonymous_error(char *);

@@ -944,9 +944,16 @@ void write_arrays(FILE * output){
 	// Writing the string array
 	fwrite(&current_str_index,sizeof(unsigned int),1,output);
 	for(i=0;i<current_str_index;i++){
-		size = strlen(str_consts[i]) - 2;
-		fwrite(&size,sizeof(unsigned int),1,output);
-		fwrite(str_consts[i]+1,sizeof(char)*size,1,output);
+		if(str_consts[i][0]=='"'){
+			size = strlen(str_consts[i]) - 2;
+			fwrite(&size,sizeof(unsigned int),1,output);
+			fwrite(str_consts[i]+1,sizeof(char)*size,1,output);
+		}
+		else{
+			size = strlen(str_consts[i]);
+			fwrite(&size,sizeof(unsigned int),1,output);
+			fwrite(str_consts[i],sizeof(char)*size,1,output);
+		}
 		fwrite(&null_terminator,1,1,output);
 	}
 

@@ -6,6 +6,5 @@ void libfunc_print(void){
 	for(i=0;i<n;i++){
 		char * s = avm_tostring(avm_get_actual(i));
 		printf("%s",s);
-		 
 	}
 }

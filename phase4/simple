@@ -1,2 +1,7 @@
+a = nil;
+c = "a fucking string.\n";
 b = 3;
 print("hello world\n","how are you doing?\n",b,"lol\n","dsds");
+b = 10;
+print("\nOk, here : ",b," and ",22, "\n");
+print(a,c);
