@@ -14,8 +14,8 @@ void avm_assign(avm_memcell * lv, avm_memcell * rv,unsigned int line){
 	if(lv->type == table_m && rv->type == table_m && lv->data.table_value == rv->data.table_value)
 		return;
 
-	if(rv->type == undefined_m)
-		printf("Runtime warning at line %d : assigning from undefined value (%s)\n",line,instructions[pc].arg1->name);
+	if(rv->type == undefined_m && instructions[pc].result->name[0]!='$')
+		avm_warning("Assigning from undefined variable (",instructions[pc].result->name,")",instructions[pc].line);
 
 	avm_clear_memcell(lv);
 

@@ -49,15 +49,14 @@ char * libfunc_tostring(avm_memcell * m){
 }
 
 char * nil_tostring(avm_memcell * m){
-	char * output = create_string(strlen("nil")+1);
-	strcpy(output,"nil");
+	char * output = create_string(strlen("(nil)")+1);
+	strcpy(output,"(nil)");
 	return output;
 }
 
 char * undef_tostring(avm_memcell * m){
-	printf("yeap\n");
-	char * output = create_string(strlen("undefined")+1);
-	strcpy(output,"undefined");
+	char * output = create_string(strlen("<undefined>")+1);
+	strcpy(output,"<undefined>");
 	return output;
 }
 

@@ -1,4 +1,6 @@
-a = nil;
+fa ;
+ca = fa;
+a=nil;
 c = "a fucking string.\n";
 b = 3;
 print("hello world\n","how are you doing?\n",b,"lol\n","dsds");
