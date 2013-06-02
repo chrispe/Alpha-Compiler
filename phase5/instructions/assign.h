@@ -2,6 +2,10 @@
 #include "../env_memory.h"
 #endif
 
+#ifndef DISPATCHER
+#include "../dispatcher.h"
+#endif
+
 /* Executes the ASSIGN instruction */
 void execute_assign(instr_s * instr);
 

@@ -31,3 +31,6 @@ void avm_warning(char *,unsigned int);
 
 /* Displays an error message and exits the AVM */
 void avm_error(char *, unsigned int);
+
+/* Displays an error message (without line) and exits the AVM */
+void avm_anonymous_error(char * msg);

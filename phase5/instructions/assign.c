@@ -7,6 +7,7 @@ void execute_assign(instr_s * instr){
 }
 
 void avm_assign(avm_memcell * lv, avm_memcell * rv,unsigned int line){
+
 	if(lv==rv)
 		return;
 
@@ -14,7 +15,7 @@ void avm_assign(avm_memcell * lv, avm_memcell * rv,unsigned int line){
 		return;
 
 	if(rv->type == undefined_m)
-		avm_warning("assigning from undefined value",line);
+		printf("Runtime warning at line %d : assigning from undefined value (%s)\n",line,instructions[pc].arg1->name);
 
 	avm_clear_memcell(lv);
 
@@ -24,4 +25,5 @@ void avm_assign(avm_memcell * lv, avm_memcell * rv,unsigned int line){
 		lv->data.str_value = strdup(rv->data.str_value);
 	else if(lv->type==table_m)
 		avm_table_incr_refcounter(lv->data.table_value);
+
 }

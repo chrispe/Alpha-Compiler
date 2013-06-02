@@ -2,12 +2,86 @@
 
 avm_memcell stack[AVM_STACKSIZE];
 
-static void avm_init_stack(void){
+tostring_func_t to_str_funcs[] = {
+	double_tostring,
+	int_tostring,
+	bool_tostring,
+	table_tostring,
+	userfunc_tostring,
+	libfunc_tostring,
+	nil_tostring,
+	undef_tostring,
+}; 
+
+char * avm_tostring(avm_memcell * m){
+	return (*to_str_funcs[m->type])(m);
+}
+
+char * double_tostring(avm_memcell * m){
+	char * output = create_string(100);
+	sprintf(output,"%lf",m->data.double_value);
+	return output;
+}
+
+char * int_tostring(avm_memcell * m){
+	char * output = create_string(100);
+	sprintf(output,"%d",m->data.int_value);
+	return output;	
+}
+
+char * table_tostring(avm_memcell * m){
+	char * output = create_string(strlen("table")+1);
+	strcpy(output,"table");
+	return output;
+}
+
+char * userfunc_tostring(avm_memcell * m){
+	return(user_funcs[m->data.func_value].name);
+}
+
+char * libfunc_tostring(avm_memcell * m){
+	return(m->data.lib_func_value);
+}
+
+char * nil_tostring(avm_memcell * m){
+	char * output = create_string(strlen("nil")+1);
+	strcpy(output,"nil");
+	return output;
+}
+
+char * undef_tostring(avm_memcell * m){
+	char * output = create_string(strlen("undefined")+1);
+	strcpy(output,"undefined");
+	return output;
+}
+
+char * bool_tostring(avm_memcell * m){
+	char * output;
+	if(m->data.bool_value==1){
+		output = create_string(strlen("true")+1);
+		strcpy(output,"true");
+	}
+	else{
+		output = create_string(strlen("false")+1);
+		strcpy(output,"false");
+	}
+	return output;	
+}
+
+char * create_string(unsigned int len){
+	char * string = malloc(len);
+	memerror(string,"new strng");
+	memset(string,'\0',len);
+	return string;
+}
+
+void avm_init_stack(void){
 	unsigned int i;
 	for(i=0;i<AVM_STACKSIZE;i++){
 		AVM_WIPEOUT(stack[i]);
 		stack[i].type = undefined_m;
 	}
+	memerror(stack,"avm stack");
 }
 
 void avm_table_bucket_init(avm_table_bucket ** bucket){

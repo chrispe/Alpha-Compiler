@@ -54,7 +54,8 @@ void read_strings(FILE * source){
 	fread(&total_str_consts,sizeof(unsigned int),1,source);
 	if(total_str_consts>0){
 		str_consts = (char **)malloc(total_str_consts*sizeof(char *));
-		memerror(str_consts,"new str_consts array");
+		if(total_str_consts!=0)
+			memerror(str_consts,"new str_consts array");
 		for(i=0;i<total_str_consts;i++){
 			fread(&length,sizeof(unsigned int),1,source);
 			str_consts[i] = malloc(length+1);
@@ -69,7 +70,8 @@ void read_integers(FILE * source){
 	fread(&total_integer_consts,sizeof(unsigned int),1,source);
 	if(total_integer_consts>0){
 		integer_consts = (int *)malloc(total_integer_consts*sizeof(int));
-		memerror(integer_consts,"new integer_consts array");
+		if(total_integer_consts!=0)
+			memerror(integer_consts,"new integer_consts array");
 		for(i=0;i<total_integer_consts;i++){
 			fread(&integer_consts[i],sizeof(int),1,source);
 		}
@@ -81,7 +83,8 @@ void read_doubles(FILE * source){
 	fread(&total_double_consts,sizeof(unsigned int),1,source);
 	if(total_double_consts>0){
 		double_consts = (double *)malloc(total_double_consts*sizeof(double));
-		memerror(double_consts,"new double_consts array");
+		if(total_double_consts!=0)
+			memerror(double_consts,"new double_consts array");
 		for(i=0;i<total_double_consts;i++){
 			fread(&double_consts[i],sizeof(double),1,source);
 		}
@@ -94,7 +97,8 @@ void read_user_functions(FILE * source){
 	fread(&total_user_funcs,sizeof(unsigned int),1,source);
 	if(total_user_funcs>0){
 		user_funcs = (userfunc_s *)malloc(total_user_funcs*sizeof(userfunc_s));
-		memerror(user_funcs,"new user_funcs array");
+		if(total_user_funcs!=0)
+			memerror(user_funcs,"new user_funcs array");
 		for(i=0;i<total_user_funcs;i++){
 			fread(&(user_funcs[i].address),sizeof(unsigned int),1,source);
 			fread(&(user_funcs[i].local_size),sizeof(unsigned int),1,source);
@@ -112,7 +116,8 @@ void read_lib_functions(FILE * source){
 	fread(&total_named_lib_funcs,sizeof(unsigned int),1,source);
 	if(total_named_lib_funcs>0){
 		named_lib_funcs = (char **)malloc(total_named_lib_funcs*sizeof(char *));
-		memerror(user_funcs,"new named_lib_funcs array");
+		if(total_named_lib_funcs!=0)
+			memerror(named_lib_funcs,"new named_lib_funcs array");
 		for(i=0;i<total_named_lib_funcs;i++){
 			fread(&length,sizeof(unsigned int),1,source);
 			named_lib_funcs[i] = malloc(length+1);

@@ -5,7 +5,9 @@ avm_memcell ax, bx, cx;
 avm_memcell retval;
 
 /* The stack pointers */
-unsigned int top, topsp;
+// Be careful here
+unsigned int top= AVM_STACKSIZE;
+unsigned int topsp;
 
 double consts_getdouble(unsigned int index){
 	return(double_consts[index]);
@@ -76,6 +78,11 @@ void avm_warning(char * msg,unsigned int line){
 }
 
 void avm_error(char * msg, unsigned int line){
-	fprintf(stdout,"Runtime error : %s (at line %d)",msg,line);
+	fprintf(stdout,"Runtime error : %s (at line %d)\n",msg,line);
+	exit(0);
+}
+
+void avm_anonymous_error(char * msg){
+	fprintf(stdout,"Runtime error : %s \n",msg);
 	exit(0);
 }

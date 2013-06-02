@@ -59,7 +59,7 @@ typedef struct avm_table{
 extern avm_memcell stack[AVM_STACKSIZE];
 
 /* Initialzes all the memory cells to undefined */
-static void avm_init_stack(void);
+void avm_init_stack(void);
 
 /* All the functions that can be used on a table */
 avm_table * avm_newtable(void);
@@ -73,3 +73,21 @@ void avm_table_bucket_destroy(avm_table_bucket **);
 
 /* Erases completely a memory cell */
 void avm_clear_memcell(avm_memcell *);
+
+typedef char * (*tostring_func_t)(avm_memcell *);
+
+char * avm_tostring(avm_memcell *);
+
+extern char * double_tostring (avm_memcell *);
+extern char * int_tostring (avm_memcell *);
+extern char * string_tostring (avm_memcell *);
+extern char * bool_tostring (avm_memcell *);
+extern char * table_tostring (avm_memcell *);
+extern char * userfunc_tostring (avm_memcell *);
+extern char * libfunc_tostring (avm_memcell *);
+extern char * nil_tostring (avm_memcell *);
+extern char * undef_tostring (avm_memcell *);
+
+extern tostring_func_t to_str_funcs[];
+
+char * create_string(unsigned int len);
