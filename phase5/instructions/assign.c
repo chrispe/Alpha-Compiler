@@ -7,7 +7,7 @@ void execute_assign(instr_s * instr){
 }
 
 void avm_assign(avm_memcell * lv, avm_memcell * rv,unsigned int line){
-
+	 
 	if(lv==rv)
 		return;
 
@@ -20,7 +20,7 @@ void avm_assign(avm_memcell * lv, avm_memcell * rv,unsigned int line){
 	avm_clear_memcell(lv);
 
 	memcpy(lv,rv,sizeof(avm_memcell));
-
+ 
 	if(lv->type == string_m)
 		lv->data.str_value = strdup(rv->data.str_value);
 	else if(lv->type==table_m)

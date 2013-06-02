@@ -5,6 +5,7 @@ avm_memcell stack[AVM_STACKSIZE];
 tostring_func_t to_str_funcs[] = {
 	double_tostring,
 	int_tostring,
+	string_tostring,
 	bool_tostring,
 	table_tostring,
 	userfunc_tostring,
@@ -12,6 +13,10 @@ tostring_func_t to_str_funcs[] = {
 	nil_tostring,
 	undef_tostring,
 }; 
+
+char * string_tostring(avm_memcell *m){
+	return(m->data.str_value);
+}
 
 char * avm_tostring(avm_memcell * m){
 	return (*to_str_funcs[m->type])(m);
@@ -122,10 +127,11 @@ void avm_table_decr_refcounter(avm_table * table){
  
 void avm_clear_memcell(avm_memcell * cell){
 	if(cell->type!=undefined_m){
-		if(cell->type==string_m)
+		if(cell->type==string_m && cell->data.str_value!=NULL)
 			free(cell->data.str_value);
 		else if(cell->type==table_m)
 			avm_table_decr_refcounter(cell->data.table_value);
+		cell->type = undefined_m;
 	}
 }
 

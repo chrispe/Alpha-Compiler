@@ -40,3 +40,5 @@ unsigned char avm_library_func_exist(char *);
 void execute_pusharg(instr_s *);
 
 char * avm_tostring(avm_memcell * m);
+
+void printstack();

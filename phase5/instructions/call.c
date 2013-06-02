@@ -3,7 +3,9 @@
 unsigned int total_actuals = 0;
 
 void execute_call(instr_s * instr){
+ 
 	avm_memcell * func = avm_translate_operand(instr->result,&ax);
+ 
 	assert(func);
 	avm_call_save_env();
 	switch(func->type){
@@ -84,7 +86,9 @@ void avm_call_libfunc(char * id){
 	total_actuals = 0;
 	
 	// Add the cases for the libs here...
-
+	if(strcmp(id,"print")==0){
+		libfunc_print();
+	}
 
 	if(!execution_finished)
 		execute_funcexit((instr_s *)NULL);
@@ -114,4 +118,14 @@ void execute_pusharg(instr_s * instr){
 	avm_assign(&stack[top],arg);
 	total_actuals++;
 	avm_dec_top();
+}
+
+void printstack(){
+	unsigned int i;
+	for(i=0;i<AVM_STACKSIZE;i++){
+		if(stack[i].type!=undefined_m){
+			printf("%d: %s\n",i,avm_tostring(&stack[i]));
+		}
+	}
+	printf("\n___\n");
 }

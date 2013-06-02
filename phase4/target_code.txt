@@ -1,0 +1,29 @@
+<user functions>: 
+<end of funcs>
+<lib functions>: 
+0 : print
+<end of lib funcs>
+<strings> : 
+0 : "dsds"
+1 : "lol
+"
+2 : "how are you doing?
+"
+3 : "hello world
+"
+<end of strings>
+<integers> : 
+0 : 3
+<end of integers>
+<doubles> : 
+<end of doubles>
+number of strings 4
+0:	ASSIGN 0 (integer_a) 0 (global_a:b)
+1:	ASSIGN 0 (global_a:b) 1 (global_a:$t_0)
+2:	PUSHARG 0 (string_a)
+3:	PUSHARG 1 (string_a)
+4:	PUSHARG 0 (global_a:b)
+5:	PUSHARG 2 (string_a)
+6:	PUSHARG 3 (string_a)
+7:	CALLFUNC 0 (libfunc_a)
+8:	ASSIGN 0 (retval_a) 1 (global_a:$t_0)

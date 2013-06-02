@@ -1,6 +1,8 @@
-avm: file_handler.o mem_manager.o env_mem.o assign.o table.o call.o dispatcher.o avm.c 
-	gcc -o avm file_handler.o mem_manager.o env_mem.o assign.o dispatcher.o call.o avm.c
+avm: file_handler.o mem_manager.o env_mem.o assign.o table.o call.o dispatcher.o lib.o avm.c 
+	gcc -o avm file_handler.o mem_manager.o env_mem.o assign.o dispatcher.o call.o lib.o avm.c
 	rm *.o
+lib.o: library_funcs.c library_funcs.h
+	gcc -o lib.o -c library_funcs.c
 dispatcher.o: dispatcher.c dispatcher.h	
 	gcc -o dispatcher.o -c dispatcher.c
 call.o: ./instructions/call.c ./instructions/call.h

@@ -1,3 +1,2 @@
-a;
-b = a;
-print("hello world");
+b = 3;
+print("hello world\n","how are you doing?\n",b,"lol\n","dsds");

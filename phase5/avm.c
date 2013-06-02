@@ -20,5 +20,6 @@ int main(int argc, char * argv[]){
     while(!execution_finished)
     	execute_cycle();
 
+    fprintf(stdout,"\nThe program has exited with return code (1: OK).\n");
 	return 0;
 }

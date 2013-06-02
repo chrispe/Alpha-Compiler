@@ -6,7 +6,7 @@ avm_memcell retval;
 
 /* The stack pointers */
 // Be careful here
-unsigned int top= AVM_STACKSIZE;
+unsigned int top= AVM_STACKSIZE-1;
 unsigned int topsp;
 
 double consts_getdouble(unsigned int index){
@@ -29,9 +29,10 @@ userfunc_s * userfuncs_getfunc(unsigned int index){
 	return(&user_funcs[index]);
 }
  
+//proxosxh edw 
 avm_memcell * avm_translate_operand(vmarg_s * arg,avm_memcell * reg){
 	switch(arg->type){
-		case global_a: return &stack[AVM_STACKSIZE-1-arg->value];
+		case global_a: return &stack[arg->value];
 		case local_a:  return &stack[topsp-arg->value];
 		case formal_a: return &stack[topsp+AVM_STACK_ENV_SIZE+1+arg->value];
 		case retval_a: return &retval;
@@ -79,10 +80,12 @@ void avm_warning(char * msg,unsigned int line){
 
 void avm_error(char * msg, unsigned int line){
 	fprintf(stdout,"Runtime error : %s (at line %d)\n",msg,line);
+	fprintf(stdout,"\nThe program has exited with return code (0: BAD CODE).\n");
 	exit(0);
 }
 
 void avm_anonymous_error(char * msg){
 	fprintf(stdout,"Runtime error : %s \n",msg);
+	fprintf(stdout,"\nThe program has exited with return code (0: BAD CODE).\n");
 	exit(0);
 }
