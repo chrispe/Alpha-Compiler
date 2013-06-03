@@ -35,9 +35,9 @@ char * int_tostring(avm_memcell * m){
 }
 
 char * table_tostring(avm_memcell * m){
-	char * output = create_string(strlen("table")+1);
-	strcpy(output,"table");
-	return output;
+	char * output = create_string(100);
+	sprintf(output,"%s",m->data.str_value);
+	return output;	
 }
 
 char * userfunc_tostring(avm_memcell * m){
@@ -78,6 +78,13 @@ char * create_string(unsigned int len){
 	memerror(string,"new strng");
 	memset(string,'\0',len);
 	return string;
+}
+
+avm_memcell * create_memcell(){
+	avm_memcell * new_cell = malloc(sizeof(avm_memcell));
+	new_cell->type = undefined_m;
+	memerror(new_cell,"new avmcell");
+	return new_cell;
 }
 
 void avm_init_stack(void){
@@ -150,7 +157,6 @@ void avm_table_bucket_destroy(avm_table_bucket ** bucket){
 	}
 }
  
-
 char * value_type_to_str(avm_memcell_t type){
 	char * value_types[] = {"double","integer","string","boolean",
 							"table","user function","library function",

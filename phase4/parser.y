@@ -835,7 +835,7 @@ int main(int argc,char ** argv)
     fflush(stdout);
 	yyparse(&st);
 	write_quads();
-	//print_st(st);
+	print_st(st);
 	if(compile_errors==0)printf(" (DONE)\n");
 
 

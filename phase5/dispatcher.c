@@ -24,6 +24,8 @@ void execute_cycle(void){
 	}
 }
 
+ 
+
 void execute_instr(instr_s * instr){
 	switch(instr->opcode){
 		case assign_v: execute_assign(instr); break;
@@ -43,6 +45,9 @@ void execute_instr(instr_s * instr){
 		case jge_v:execute_cmp(instr); break;
 		case jlt_v:execute_cmp(instr); break;
 		case jle_v:execute_cmp(instr); break;
+		case newtable_v: execute_newtable(instr); break;
+		case tablegetelem_v: execute_tablegetelem(instr); break;
+		case tablesetelem_v: execute_tablesetelem(instr); break;
 		default: return;
 	}
 }

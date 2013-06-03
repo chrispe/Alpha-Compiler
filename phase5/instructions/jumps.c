@@ -21,7 +21,6 @@ cmp_func cmp_functions[] = {
  
 
 unsigned char is_greater(double a, double b){
-	printf("yes i did\n");
 	return a > b;
 }
 

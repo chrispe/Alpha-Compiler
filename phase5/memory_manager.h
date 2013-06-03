@@ -63,7 +63,7 @@ void avm_init_stack(void);
 
 /* All the functions that can be used on a table */
 avm_table * avm_newtable(void);
-avm_memcell * avm_tablegetitem(avm_memcell *);
+ 
 void avm_settableitem(avm_memcell *,avm_memcell *);
 void avm_destorytable(avm_table *);
 void avm_table_incr_refcounter(avm_table *);
@@ -91,5 +91,5 @@ extern char * undef_tostring (avm_memcell *);
 extern tostring_func_t to_str_funcs[];
 
 char * create_string(unsigned int len);
-
+avm_memcell * create_memcell();
 char * value_type_to_str(avm_memcell_t);

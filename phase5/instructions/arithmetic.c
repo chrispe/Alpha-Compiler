@@ -55,11 +55,13 @@ void execute_arithmetic(instr_s * instr){
 			lv->data.double_value = (*op)(rv1->data.double_value,rv2->data.double_value);
 	}
 	else{
+		//printf("Error int : %d\n",pc);
 		if(!rv1_valid)
 			avm_error(instr->arg1->name," has invalid type, cannot perform arithmetic operations on a",value_type_to_str(rv1->type),instr->line);
 		if(!rv2_valid)
 			avm_error(instr->arg2->name," has invalid type, cannot perform arithmetic operations on a",value_type_to_str(rv2->type),instr->line);
 	}
+
 }
 
  

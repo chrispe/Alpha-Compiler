@@ -1,0 +1,9 @@
+a = 0;
+function g(x){
+	a = a + x;
+	if(x<=0)return;
+	return g(x-1)+g(x-2);
+}
+
+g(20);
+print(a);
