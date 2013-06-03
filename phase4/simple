@@ -1,6 +1,15 @@
+function g(){
+ print("haha");
+}
+
 a = 10;
 b = 5;
 c = a + b;
+
+function sup(arg){
+print("Sup ",arg,"\n");
+}
+
 print("Result : ",c,"\n");
 print("Giving a plus now...\n");
 c++;
@@ -9,3 +18,5 @@ print("and now multiply\n");
 p = 0;
 c = c*p + c%3;
 print("Result : ",c,"\n");
+g();
+sup("dude");

@@ -36,6 +36,7 @@ void execute_instr(instr_s * instr){
 		case mul_v: execute_arithmetic(instr); break;
 		case div_v: execute_arithmetic(instr); break;
 		case mod_v: execute_arithmetic(instr); break;
+		case jump_v: execute_jump(instr); break;
 		default: return;
 	}
 }

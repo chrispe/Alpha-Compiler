@@ -1,10 +1,12 @@
-avm: file_handler.o mem_manager.o env_mem.o assign.o table.o call.o arithm.o dispatcher.o lib.o avm.c 
-	gcc -o avm file_handler.o mem_manager.o env_mem.o assign.o dispatcher.o call.o arithm.o lib.o avm.c
+avm: file_handler.o mem_manager.o env_mem.o assign.o table.o call.o arithm.o jumps.o dispatcher.o lib.o avm.c 
+	gcc -o avm file_handler.o mem_manager.o env_mem.o assign.o dispatcher.o call.o jumps.o arithm.o lib.o avm.c
 	rm *.o	
 lib.o: library_funcs.c library_funcs.h
 	gcc -o lib.o -c library_funcs.c
 dispatcher.o: dispatcher.c dispatcher.h	
 	gcc -o dispatcher.o -c dispatcher.c
+jumps.o: ./instructions/jumps.c ./instructions/jumps.h
+	gcc -o jumps.o -c ./instructions/jumps.c	
 arithm.o: ./instructions/arithmetic.c ./instructions/arithmetic.h
 	gcc -o arithm.o -c ./instructions/arithmetic.c	
 call.o: ./instructions/call.c ./instructions/call.h

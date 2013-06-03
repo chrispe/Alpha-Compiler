@@ -10,7 +10,8 @@ void execute_call(instr_s * instr){
 	avm_call_save_env();
 	switch(func->type){
 		case userfunc_m:{
-			pc = func->data.func_value;
+			//prosoxh
+			pc = user_funcs[func->data.func_value].address;
 			assert(pc<AVM_ENDING_PC);
 			assert(instructions[pc].opcode == funcenter_v);
 			break;
