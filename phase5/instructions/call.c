@@ -10,7 +10,6 @@ void execute_call(instr_s * instr){
 	avm_call_save_env();
 	switch(func->type){
 		case userfunc_m:{
-			//prosoxh
 			pc = user_funcs[func->data.func_value].address;
 			assert(pc<AVM_ENDING_PC);
 			assert(instructions[pc].opcode == funcenter_v);
@@ -24,7 +23,6 @@ void execute_call(instr_s * instr){
 			avm_error("Cannot bind ",s," to function",instr->line);
 		}
 	}
-
 }
 
 void avm_push_envvalue(unsigned int value){

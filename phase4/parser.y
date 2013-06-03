@@ -639,6 +639,7 @@ idlist:
  
  			// Adding the argument of a function to the symbol table.
 			// Every required checking is included in the following method.
+			reset_curr_scope_offset();
  			add_function_argument((symbol_table **)st,$1,yylineno,0);
  			increase_curr_scope_offset();
 		}
@@ -833,7 +834,7 @@ int main(int argc,char ** argv)
     fflush(stdout);
 	yyparse(&st);
 	write_quads();
-	//print_st(st);
+	print_st(st);
 	if(compile_errors==0)printf(" (DONE)\n");
 
 

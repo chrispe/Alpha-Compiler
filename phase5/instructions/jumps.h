@@ -21,4 +21,6 @@ unsigned char undef_tobool(avm_memcell *);
 
 unsigned char avm_tobool(avm_memcell *m);
 
+void execute_jeq (instr_s * instr);
 void execute_jump(instr_s *);
+char is_num_type(avm_memcell_t type);
