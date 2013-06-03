@@ -43,8 +43,10 @@ void execute_arithmetic(instr_s * instr){
 		arithmetic_func_t op = arithmetic_funcs[instr->opcode-add_v];
 		avm_clear_memcell(lv);
 		lv->type = double_m;
-		if(rv1->type == integer_m && rv2->type==integer_m)
-			lv->data.double_value = (*op)((double)rv1->data.int_value,(double)rv2->data.int_value);
+		if(rv1->type == integer_m && rv2->type==integer_m){
+			lv->type = integer_m;
+			lv->data.int_value = (int)(*op)((double)rv1->data.int_value,(double)rv2->data.int_value);
+		}
 		else if(rv1->type == integer_m)
 			lv->data.double_value = (*op)((double)rv1->data.int_value,rv2->data.double_value);
 		else if(rv2->type == integer_m)

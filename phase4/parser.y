@@ -226,8 +226,8 @@ term:
 					emit(table_set_elem,$<expression>1,$<expression>1->index,value,-1,yylineno);
 				}
 				else{
-					emit(assign,$<expression>1,NULL,$<expression>$,-1,yylineno);
-					emit(add,$<expression>1,new_expr_const_int(1),$<expression>1,-1,yylineno);
+					emit(add,$<expression>1,new_expr_const_int(1),$<expression>$,-1,yylineno);
+					emit(assign,$<expression>$,NULL,$<expression>1,-1,yylineno);
 				}
 				temp_expr = $<expression>$;
 			}
@@ -244,10 +244,11 @@ term:
 					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,-1,yylineno);
 				}
 				else{
-					emit(add,$<expression>2,new_expr_const_int(1),$<expression>2,-1,yylineno);
+ 
 					$<expression>$ = new_expr(arithm_expr_e);
 					$<expression>$->sym = new_temp_var(st,yylineno);
-					emit(assign,$<expression>2,NULL,$<expression>$,-1,yylineno);
+					emit(add,$<expression>2,new_expr_const_int(1),$<expression>$,-1,yylineno);
+					emit(assign,$<expression>$,NULL,$<expression>2,-1,yylineno);
 				}
 				temp_expr = $<expression>$;
 			}
@@ -267,8 +268,8 @@ term:
 					emit(table_set_elem,$<expression>1,$<expression>1->index,value,-1,yylineno);
 				}
 				else{
-					emit(assign,$<expression>1,NULL,$<expression>$,-1,yylineno);
-					emit(sub,$<expression>1,new_expr_const_int(1),$<expression>1,-1,yylineno);
+					emit(sub,$<expression>1,new_expr_const_int(1),$<expression>$,-1,yylineno);
+					emit(assign,$<expression>$,NULL,$<expression>1,-1,yylineno);
 				}
 			}
 			temp_expr = $<expression>$;
@@ -285,10 +286,10 @@ term:
 					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,-1,yylineno);
 				}
 				else{
-					emit(sub,$<expression>2,new_expr_const_int(1),$<expression>2,-1,yylineno);
 					$<expression>$ = new_expr(arithm_expr_e);
 					$<expression>$->sym = new_temp_var(st,yylineno);
-					emit(assign,$<expression>2,NULL,$<expression>$,-1,yylineno);
+					emit(sub,$<expression>2,new_expr_const_int(1),$<expression>$,-1,yylineno);
+					emit(assign,$<expression>$,NULL,$<expression>2,-1,yylineno);
 				}
 				temp_expr = $<expression>$;
 			}
@@ -768,7 +769,7 @@ forprefix:
 forstmt:
 		forprefix N elist PAREN_R N stmt N {
 			scope_loop--;
-			patch_label(for_enter,$<intval>5+1);
+			//patch_label(for_enter,$<intval>5+1);
 			patch_label($<intval>2,curr_quad);
 			patch_label($<intval>5,$<intval>1);
 			patch_label($<intval>7,$<intval>2+1);
@@ -834,7 +835,7 @@ int main(int argc,char ** argv)
     fflush(stdout);
 	yyparse(&st);
 	write_quads();
-	print_st(st);
+	//print_st(st);
 	if(compile_errors==0)printf(" (DONE)\n");
 
 

@@ -38,6 +38,11 @@ void execute_instr(instr_s * instr){
 		case mod_v: execute_arithmetic(instr); break;
 		case jump_v: execute_jump(instr); break;
 		case jeq_v: execute_jeq(instr); break;
+		case jne_v:execute_jeq(instr); break;
+		case jgt_v:execute_cmp(instr); break;
+		case jge_v:execute_cmp(instr); break;
+		case jlt_v:execute_cmp(instr); break;
+		case jle_v:execute_cmp(instr); break;
 		default: return;
 	}
 }

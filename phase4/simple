@@ -1,5 +1,9 @@
 function g(){
  print("haha");
+ function gaga(ca){
+	print(ca);
+}
+gaga("haha");
 }
 
 a = 10;
@@ -20,7 +24,10 @@ c = c*p + c%3;
 print("Result : ",c,"\n");
 g();
 sup("dude");
-while(c==2 or c==1){
+
+function lol(){return "lol";}
+
+if(lol()=="lold"){
 print("\nmphka!\n");
 //c = 10;
 //c = c*2;
@@ -31,11 +38,13 @@ c++;
 function go(ar1){
 print("The arg1 was : ",ar1,"\n");
 ar1 =  ar1*2;
+//return;
 print("and now is : ",ar1,"\n");
 return ar1;
 }
 //c = go(c);
 c = go(10);
+c = c*1;
 print("And now is : ",c,"\n");
 
 

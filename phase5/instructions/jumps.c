@@ -12,6 +12,60 @@ tobool_func_t to_bool_funcs[] = {
 	undef_tobool
 };
 
+cmp_func cmp_functions[] = {
+	is_less_eq,
+	is_greatereq,
+	is_less,
+	is_greater
+};
+ 
+
+unsigned char is_greater(double a, double b){
+	printf("yes i did\n");
+	return a > b;
+}
+
+unsigned char is_greatereq(double a, double b){
+	return a>=b;
+}
+
+unsigned char is_less(double a, double b){
+	return a<b;
+}
+
+unsigned char is_less_eq(double a, double b){
+	return a<=b;
+}
+ 
+
+void execute_cmp(instr_s * instr){
+	assert(instr->result->type == label_a);
+
+	avm_memcell * rv1 = avm_translate_operand(instr->arg1,&ax);
+	avm_memcell * rv2 = avm_translate_operand(instr->arg2,&bx);
+
+	if(!is_num_type(rv1->type))
+		avm_error("Cannot compare, variable (",instr->arg1->name,") has invalid type.",instr->line);
+	if(!is_num_type(rv2->type))
+		avm_error("Cannot compare, variable (",instr->arg2->name,") has invalid type.",instr->line);
+
+	unsigned char result = 0;
+	cmp_func func = cmp_functions[instr->opcode-jle_v];
+ 
+	if(rv1->type == integer_m && rv2->type==integer_m)
+		result = (*func)(rv1->data.int_value,rv2->data.int_value);
+	else if(rv1->type == integer_m)
+		result = (*func)((double)rv1->data.int_value,rv2->data.double_value);
+	else if(rv2->type == integer_m)
+		result = (*func)(rv1->data.double_value,(double)rv2->data.int_value);
+	else
+		result = (*func)(rv1->data.double_value,rv2->data.double_value);
+
+	if(result)
+		pc = instr->result->value;
+}
+
+
 unsigned char double_tobool(avm_memcell * m){
 	return m->data.double_value!=0;
 }
@@ -65,9 +119,9 @@ void execute_jeq (instr_s * instr){
 	unsigned char result = 0;
 
 	if(rv1->type == undefined_m)
-		avm_error("Cannot peform perform equality, variable (",instr->arg1->name,") is undefined",instr->line);
+		avm_error("Cannot perform equality, variable (",instr->arg1->name,") is undefined",instr->line);
 	if(rv2->type == undefined_m)
-		avm_error("Cannot peform perform equality, variable (",instr->arg2->name,") is undefined",instr->line);
+		avm_error("Cannot perform equality, variable (",instr->arg2->name,") is undefined",instr->line);
 
 	if(rv1->type == nil_m || rv2->type == nil_m)
 		result = rv1->type == nil_m && rv2->type == nil_m;
@@ -90,9 +144,14 @@ void execute_jeq (instr_s * instr){
 		}
 	}
 
-	if(result)
+	if(instr->opcode==jeq_v && result)
+		pc = instr->result->value;
+	else if(instr->opcode==jne_v && !result)
 		pc = instr->result->value;
 }
+
+ 
+
 
 char is_num_type(avm_memcell_t type){
 	return (type == integer_m || type == double_m);
