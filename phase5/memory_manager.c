@@ -149,3 +149,11 @@ void avm_table_bucket_destroy(avm_table_bucket ** bucket){
 		bucket[i] = NULL;
 	}
 }
+ 
+
+char * value_type_to_str(avm_memcell_t type){
+	char * value_types[] = {"double","integer","string","boolean",
+							"table","user function","library function",
+							"nil","undefined"};
+	return(value_types[type]);
+} 

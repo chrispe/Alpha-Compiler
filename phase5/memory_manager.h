@@ -91,3 +91,5 @@ extern char * undef_tostring (avm_memcell *);
 extern tostring_func_t to_str_funcs[];
 
 char * create_string(unsigned int len);
+
+char * value_type_to_str(avm_memcell_t);

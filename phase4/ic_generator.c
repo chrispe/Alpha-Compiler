@@ -319,23 +319,22 @@ expr * emit_arithm(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * 
 	unsigned int is_float = 0;
 	double a_result;
 
-	if(arithm_expr_valid(arg1) && arithm_expr_valid(arg2)){
-		if(is_num_expr(arg1) && is_num_expr(arg2)){
-			is_float = is_num_double(arg1) || is_num_double(arg2);
-			double a_result = apply_arithm_op(op,get_expr_num_value(arg1),get_expr_num_value(arg2),line);
-			if(is_float)
-				result = new_expr_const_num(a_result);
-			else
-				result = new_expr_const_int((int)a_result);
-		}
-		else {
-				result = new_expr(arithm_expr_e);
-				result->sym = new_temp_var(st,line);
-				emit(op,arg1,arg2,result,label,line);
-		}
-	}
-	else 
+	if(!arithm_expr_valid(arg1) || !arithm_expr_valid(arg2))
 		printf("\nWarning at line %d : Invalid expression type for arithmetic operation.\n",line);
+
+	if(is_num_expr(arg1) && is_num_expr(arg2)){
+		is_float = is_num_double(arg1) || is_num_double(arg2);
+		double a_result = apply_arithm_op(op,get_expr_num_value(arg1),get_expr_num_value(arg2),line);
+		if(is_float)
+			result = new_expr_const_num(a_result);
+		else
+			result = new_expr_const_int((int)a_result);
+	}
+	else {
+			result = new_expr(arithm_expr_e);
+			result->sym = new_temp_var(st,line);
+			emit(op,arg1,arg2,result,label,line);
+	}
 	return result;
 }
 

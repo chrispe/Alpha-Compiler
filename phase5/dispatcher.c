@@ -31,6 +31,11 @@ void execute_instr(instr_s * instr){
 		case funcenter_v: execute_funcenter(instr); break;
 		case funcexit_v: execute_funcexit(instr); break;
 		case pusharg_v: execute_pusharg(instr); break;
+		case add_v: execute_arithmetic(instr); break;
+		case sub_v: execute_arithmetic(instr); break;
+		case mul_v: execute_arithmetic(instr); break;
+		case div_v: execute_arithmetic(instr); break;
+		case mod_v: execute_arithmetic(instr); break;
 		default: return;
 	}
 }
