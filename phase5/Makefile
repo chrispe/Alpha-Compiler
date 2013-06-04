@@ -1,5 +1,5 @@
 avm: file_handler.o mem_manager.o env_mem.o assign.o call.o arithm.o jumps.o dispatcher.o  table.o  lib.o avm.c 
-	gcc -o avm file_handler.o mem_manager.o env_mem.o assign.o dispatcher.o call.o jumps.o arithm.o table.o lib.o avm.c
+	gcc -o avm file_handler.o mem_manager.o env_mem.o assign.o dispatcher.o call.o jumps.o arithm.o table.o lib.o avm.c -lm
 	rm *.o	
 lib.o: library_funcs.c library_funcs.h
 	gcc -o lib.o -c library_funcs.c

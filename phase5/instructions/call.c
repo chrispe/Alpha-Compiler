@@ -1,7 +1,5 @@
 #include "call.h"
 
-unsigned int total_actuals = 0;
-
 void execute_call(instr_s * instr){
  
 	avm_memcell * func = avm_translate_operand(instr->result,&ax);
@@ -85,13 +83,30 @@ void avm_call_libfunc(char * id){
 	topsp = top;
 	total_actuals = 0;
 	
-	// Add the cases for the libs here...
-	if(strcmp(id,"print")==0){
+	if(strcmp(id,"print")==0)
 		libfunc_print();
-	}
-	else if(strcmp(id,"totalarguments")==0){
+	else if(strcmp(id,"totalarguments")==0)
 		libfunc_totalarguments();
-	}
+	else if(strcmp(id,"argument")==0)
+		libfunc_argument();
+	else if(strcmp(id,"typeof")==0)
+		libfunc_typeof();
+	else if(strcmp(id,"input")==0)
+		libfunc_input();
+	else if(strcmp(id,"sin")==0)
+		libfunc_sin();
+	else if(strcmp(id,"cos")==0)
+		libfunc_cos();
+	else if(strcmp(id,"sqrt")==0)
+		libfunc_sqrt();
+	else if(strcmp(id,"strtonum")==0)
+		libfunc_strtonum();
+	else if(strcmp(id,"objecttotalmembers")==0)
+		libfunc_objecttotalmembers();
+	else if(strcmp(id,"objectmemberkeys")==0)
+		libfunc_objectmemberkeys();
+	else if(strcmp(id,"objectcopy")==0)
+		libfunc_objectcopy();
 
 	if(!execution_finished)
 		execute_funcexit((instr_s *)NULL);

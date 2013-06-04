@@ -1,12 +1,18 @@
-function g(a,b,c,d)
+function g(a,b)
 {
-	print("hello\n");
-	print("sup\n");
-	print("lol\n");
-	n = totalarguments();
-	print("I saved n\n");
-	print("total arguments:",n,"\n");
+//	print("hello\n");
+//	print("sup\n");
+//	print("lol\n");
+//	dn = 666;
+//	print("I saved n\n");
+//	print("total arguments:",dn,"\n");
+	print(typeof(a));
+	print(typeof(b));
 }
 
 //totalarguments();
-g(1,2,3,4);
+//g(nil,p,"lol");
+//typeof(a);
+
+ga = "hello";
+print(typeof(ga));

@@ -14,6 +14,8 @@ extern avm_memcell retval;
 /* The stack pointers */
 extern unsigned int top, topsp;
 
+extern unsigned int total_actuals;
+
 /* The functions that retrieve values
    from the constants arrays */
 double consts_getdouble(unsigned int);

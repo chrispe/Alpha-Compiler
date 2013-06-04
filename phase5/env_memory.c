@@ -6,7 +6,8 @@ avm_memcell retval;
 
 /* The stack pointers */
 // Be careful here
-unsigned int top= AVM_STACKSIZE-1;
+unsigned int total_actuals = 0;
+unsigned int top = AVM_STACKSIZE-1;
 unsigned int topsp;
 
 double consts_getdouble(unsigned int index){

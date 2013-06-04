@@ -11,8 +11,6 @@
 #define AVM_SAVEDTOP_OFFSET 2
 #define AVM_SAVEDTOPSP_OFFSET 1
 
-extern unsigned int total_actuals;
-
 void execute_call(instr_s * instr);
 
 void avm_push_envvalue(unsigned int);

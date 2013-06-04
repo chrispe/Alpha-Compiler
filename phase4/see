@@ -1,0 +1,4 @@
+function s(a,b,c){
+	print("This ",a,b,c);
+}
+s(1,2,3);

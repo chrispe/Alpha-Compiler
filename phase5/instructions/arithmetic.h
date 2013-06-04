@@ -15,5 +15,4 @@ double sub_impl (double, double);
 double mul_impl (double,double);
 double div_impl (double,double);
 double mod_impl(double,double);
-
 void execute_arithmetic(instr_s *);

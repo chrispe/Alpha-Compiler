@@ -14,11 +14,13 @@ int main(int argc, char * argv[]){
     avm_init_stack();
     fprintf(stdout, "The stack has been initialized.\n");
 
-    fprintf(stdout,"Press [ENTER] to begin the execution.\n");
-    getchar();
+    //fprintf(stdout,"Press [ENTER] to begin the execution.\n");
+    //getchar();
 
+
+    topsp = top;
     while(!execution_finished){
-       // printstack();
+        //printstack();
     	execute_cycle();
     }
     

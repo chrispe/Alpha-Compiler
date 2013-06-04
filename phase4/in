@@ -1,0 +1,28 @@
+a = [];
+a.a = "a";
+a.b = "b";
+a.c = "d";
+a.number = 10;
+a[2] = 4;
+
+//v = objectmemberkeys(a);
+
+//n = objecttotalmembers(v);
+//for(i=0;i<n;i++){
+//print(v[i],"\n");
+//}
+
+g = objectcopy(a);
+a.a = 666;
+print(g.a);
+print(a.a);
+
+//a[2] = "b";
+//print(g.a);
+
+
+//print(objecttotalmembers(a));
+//print(a.a);
+//rint(a.b);
+//print(a.c);
+//print(a[2]);

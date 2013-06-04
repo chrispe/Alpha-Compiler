@@ -29,7 +29,6 @@ void execute_tablegetelem(instr_s * instr){
 	}
 }
 
-
 void execute_tablesetelem(instr_s * instr){
  
 	avm_memcell * t = avm_translate_operand(instr->arg1,(avm_memcell *)NULL);
@@ -54,13 +53,17 @@ void avm_tablesetelem(avm_table ** table,avm_memcell * index,avm_memcell * data)
 			temp->next = (*table)->str_indexed[key];
 			temp->key = malloc(sizeof(avm_memcell));
 			temp->value = malloc(sizeof(avm_memcell));
+			memcpy(temp->key,index,sizeof(avm_memcell));
 		}
 		else{
-			avm_clear_memcell(temp->key);
 			avm_clear_memcell(temp->value);
 		}
-		memcpy(temp->key,index,sizeof(avm_memcell));
 		memcpy(temp->value,data,sizeof(avm_memcell));
+		if(data->type == string_m){
+			temp->value->data.str_value = malloc(strlen(data->data.str_value)+1);
+			strcpy(temp->value->data.str_value,data->data.str_value);
+		}
+		 
 		(*table)->str_indexed[key] = temp;
 	}
 	else{
@@ -74,13 +77,16 @@ void avm_tablesetelem(avm_table ** table,avm_memcell * index,avm_memcell * data)
 			temp->next = (*table)->num_indexed[key];
 			temp->key = malloc(sizeof(avm_memcell));
 			temp->value = malloc(sizeof(avm_memcell));
+			memcpy(temp->key,index,sizeof(avm_memcell));
 		}
 		else{
-			avm_clear_memcell(temp->key);
 			avm_clear_memcell(temp->value);
 		}
-		memcpy(temp->key,index,sizeof(avm_memcell));
 		memcpy(temp->value,data,sizeof(avm_memcell));
+		if(data->type == string_m){
+			temp->value->data.str_value = malloc(strlen(data->data.str_value));
+			strcpy(temp->value->data.str_value,data->data.str_value);
+		}
 		(*table)->num_indexed[key] = temp;
 	}
 }
@@ -138,7 +144,7 @@ avm_table_bucket * avm_lookuptable_bystring(avm_table * table,const char * index
 			return temp;
 		temp = temp->next;
 	}
-	return temp;
+	return NULL;
 }
 
 unsigned int generate_key(const char * name){
