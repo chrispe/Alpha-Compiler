@@ -1,0 +1,6 @@
+function g(){
+	local x = "sdasd";
+	print(x);
+}
+
+g();

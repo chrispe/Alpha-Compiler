@@ -1,11 +1,20 @@
-a = [];
+a = 3;
+if(a==1)
+print("Cor1");
+else if(a==3)
+print("Cor2");
+else print("Cor3");
+
+
+
+//a = [];
 //for(i=0;i<10;i++){
 //  a[i] = i*10;
 //}
 
-a.xax = "ahahahah";
-b = a.xax;
-print(b);
+//a.xax = "ahahahah";
+//b = a.xax;
+//print(b);
 
 
 //for(i=0;i<100;i++){

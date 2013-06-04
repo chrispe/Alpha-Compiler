@@ -11,6 +11,8 @@ void execute_call(instr_s * instr){
 	switch(func->type){
 		case userfunc_m:{
 			pc = user_funcs[func->data.func_value].address;
+			if(pc>=AVM_ENDING_PC)
+				pc = func->data.func_value;
 			assert(pc<AVM_ENDING_PC);
 			assert(instructions[pc].opcode == funcenter_v);
 			break;
@@ -87,6 +89,9 @@ void avm_call_libfunc(char * id){
 	if(strcmp(id,"print")==0){
 		libfunc_print();
 	}
+	else if(strcmp(id,"totalarguments")==0){
+		libfunc_totalarguments();
+	}
 
 	if(!execution_finished)
 		execute_funcexit((instr_s *)NULL);
@@ -112,6 +117,7 @@ unsigned char avm_library_func_exist(char * funcname){
 
 void execute_pusharg(instr_s * instr){
 	avm_memcell * arg = avm_translate_operand(instr->result,&ax);
+	//printf("I pushed %s (%s) at %d\n",avm_tostring(arg),value_type_to_str(arg->type),top);
 	if(arg->type==undefined_m)
 		avm_warning("Undefined variable (",instr->result->name,") has been used as a function argument",instr->line);
 	assert(arg);

@@ -17,8 +17,10 @@ int main(int argc, char * argv[]){
     fprintf(stdout,"Press [ENTER] to begin the execution.\n");
     getchar();
 
-    while(!execution_finished)
+    while(!execution_finished){
+       // printstack();
     	execute_cycle();
+    }
     
     fprintf(stdout,"\nThe program has exited with return code (1: OK).\n");
 	return 0;

@@ -1,0 +1,12 @@
+function g(a,b,c,d)
+{
+	print("hello\n");
+	print("sup\n");
+	print("lol\n");
+	n = totalarguments();
+	print("I saved n\n");
+	print("total arguments:",n,"\n");
+}
+
+//totalarguments();
+g(1,2,3,4);

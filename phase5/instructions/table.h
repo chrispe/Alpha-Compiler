@@ -1,6 +1,10 @@
 #ifndef ENV_MEM_LIB
 #include "../env_memory.h"
 #endif 
+
+#ifndef DISPATCHER
+#include "../dispatcher.h"
+#endif
  
 void execute_newtable(instr_s *);
 void execute_tablegetelem(instr_s * instr); 
