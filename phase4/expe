@@ -1,0 +1,6 @@
+function g(a){
+return a+1;
+}
+
+b = g(1)+g(2)+g(3);
+print("Should be 9: ",b);

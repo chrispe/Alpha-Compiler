@@ -3,10 +3,16 @@
 #include "instructions.h"
 #include "dispatcher.h"
 
-
 int main(int argc, char * argv[]){
     if (argc <= 1)
     	error_message("No filename was given as an argument.");
+
+    char debug_mode = 0;
+
+    if(argc>=3){
+        if(strcmp(argv[2],"-d")==0)
+            debug_mode = 1;
+    }
 
     read_binary_file(argv[1]);
     fprintf(stdout,"The executable binary file (%s) has been loaded.\n",argv[1]);
@@ -14,13 +20,13 @@ int main(int argc, char * argv[]){
     avm_init_stack();
     fprintf(stdout, "The stack has been initialized.\n");
 
-    //fprintf(stdout,"Press [ENTER] to begin the execution.\n");
-    //getchar();
-
+    fprintf(stdout,"Press [ENTER] to begin the execution.\n");
+    getchar();
 
     topsp = top;
     while(!execution_finished){
-        //printstack();
+        if(debug_mode)
+            printstack();
     	execute_cycle();
     }
     

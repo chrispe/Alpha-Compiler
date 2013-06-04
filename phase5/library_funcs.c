@@ -1,5 +1,4 @@
 #include "library_funcs.h"
-#include <math.h>
 
 void libfunc_print(){
 	unsigned int n = avm_total_actuals();

@@ -148,5 +148,5 @@ void printstack(){
 			printf("%d: %s\n",i,avm_tostring(&stack[i]));
 		}
 	}
-	printf("\n___\n");
+	printf("\n------------------\n");
 }

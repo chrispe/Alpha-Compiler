@@ -7,7 +7,6 @@
 #endif
 
 typedef double (*arithmetic_func_t)(double x,double y);
-
 extern arithmetic_func_t arithmetic_funcs[];
 
 double add_impl (double,double);
@@ -15,4 +14,6 @@ double sub_impl (double, double);
 double mul_impl (double,double);
 double div_impl (double,double);
 double mod_impl(double,double);
+
+/* Performs the arithmetic instructions */
 void execute_arithmetic(instr_s *);

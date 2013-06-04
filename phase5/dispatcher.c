@@ -24,8 +24,6 @@ void execute_cycle(void){
 	}
 }
 
- 
-
 void execute_instr(instr_s * instr){
 	switch(instr->opcode){
 		case assign_v: execute_assign(instr); break;

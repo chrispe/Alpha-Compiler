@@ -19,7 +19,6 @@ cmp_func cmp_functions[] = {
 	is_greater
 };
  
-
 unsigned char is_greater(double a, double b){
 	return a > b;
 }
@@ -36,7 +35,6 @@ unsigned char is_less_eq(double a, double b){
 	return a<=b;
 }
  
-
 void execute_cmp(instr_s * instr){
 	assert(instr->result->type == label_a);
 
@@ -63,7 +61,6 @@ void execute_cmp(instr_s * instr){
 	if(result)
 		pc = instr->result->value;
 }
-
 
 unsigned char double_tobool(avm_memcell * m){
 	return m->data.double_value!=0;
@@ -148,9 +145,6 @@ void execute_jeq (instr_s * instr){
 	else if(instr->opcode==jne_v && !result)
 		pc = instr->result->value;
 }
-
- 
-
 
 char is_num_type(avm_memcell_t type){
 	return (type == integer_m || type == double_m);

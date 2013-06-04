@@ -18,4 +18,5 @@ extern unsigned int curr_line;
 /* Executes a cycle of the AVM */
 void execute_cycle(void);
 
+/* Executes the instruction argument */
 void execute_instr(instr_s *);

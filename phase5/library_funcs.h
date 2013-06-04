@@ -2,7 +2,7 @@
 #include "instructions.h"
 #endif
  
- 
+#include <math.h>
 
 void libfunc_print(void);
 void libfunc_totalarguments(void);
