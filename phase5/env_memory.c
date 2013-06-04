@@ -89,11 +89,11 @@ avm_memcell * avm_translate_operand(vmarg_s * arg,avm_memcell * reg){
 }
 
 void avm_warning(char * msg1,char * msg2,char * msg3,unsigned int line){
-	fprintf(stdout,"\n\x1b[33mWarning : %s %s %s at line %d.\e[0m\n",msg1,msg2,msg3,line);
+	fprintf(stdout,"\n\x1b[33mWarning : %s %s %s at line (%d).\e[0m\n",msg1,msg2,msg3,line);
 }
 
 void avm_error(char * msg1,char * msg2,char * msg3, unsigned int line){
-	fprintf(stdout,"\n\x1b[31mRuntime error : %s %s %s at line %d. \e[0m \n",msg1,msg2,msg3,line);
+	fprintf(stdout,"\n\x1b[31mRuntime error : %s %s %s at line (%d). \e[0m \n",msg1,msg2,msg3,line);
 	fprintf(stdout,"\nThe program has exited with return code (0: BAD CODE).\n");
 	exit(0);
 }
@@ -251,5 +251,12 @@ char * value_type_to_str(avm_memcell_t type){
 	char * value_types[] = {"double","integer","string","boolean",
 							"table","user function","library function",
 							"nil","undefined"};
+	return(value_types[type]);
+} 
+
+char * arg_value_type_to_str(vmarg_t type){
+	char * value_types[] = {"label_a","global_a","formal_a","local_a",
+							"integer_a" ,"double_a" ,"string_a" ,"bool_a",
+							"nil_a" , "userfunc_a" ,"libfunc_a" ,"retval_a"};
 	return(value_types[type]);
 } 

@@ -707,7 +707,11 @@ void generate_FUNCSTART(quad * q){
 	
 	userfunc_s * func = malloc(sizeof(userfunc_s));
 	func->address = symbol->taddress;
-	func->local_size = count_func_args(symbol);
+	
+	// Careful with the size
+	func->local_size = count_func_locals(st, symbol->name);
+	//printf("The size of %s is %d\n",symbol->name,func->local_size);
+
  	func->name  = malloc(sizeof(strlen(symbol->name)+1));
  	strcpy(func->name,symbol->name);
 	add_const_to_array(func,user_func_c);

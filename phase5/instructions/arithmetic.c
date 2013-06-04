@@ -56,8 +56,8 @@ void execute_arithmetic(instr_s * instr){
 	}
 	else{
 		if(!rv1_valid)
-			avm_error(instr->arg1->name," has invalid type, cannot perform arithmetic operations on a",value_type_to_str(rv1->type),instr->line);
+			avm_error(instr->arg1->name," has invalid type, cannot perform arithmetic operations on a(n)",value_type_to_str(rv1->type),instr->line);
 		if(!rv2_valid)
-			avm_error(instr->arg2->name," has invalid type, cannot perform arithmetic operations on a",value_type_to_str(rv2->type),instr->line);
+			avm_error(instr->arg2->name," has invalid type, cannot perform arithmetic operations on a(n)",value_type_to_str(rv2->type),instr->line);
 	}
 }

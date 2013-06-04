@@ -1,5 +1,7 @@
 #include "symbol_table.h"
 
+symbol_table * st = NULL;
+
 int st_insert(symbol_table ** st, st_entry ** symbol) {
 	unsigned int key = generate_key((*symbol)->name);
 	scope_entry * temp = (*st)->scope_list;
@@ -92,7 +94,7 @@ void print_st(symbol_table * st){
 				else if(entry->type==LCAL)printf("type=(local variable at : %s) ",entry->value_type.varVal->used_in_func);
 				else if(entry->type==LIBFUNC)printf("type=(library function) ");
 				else if(entry->type==FORMAL)printf("type=(formal at : %s)",entry->value_type.varVal->used_in_func);
-				else if(entry->type==TEMP_VAR)printf("type=(temp variable) ");
+				else if(entry->type==TEMP_VAR)printf("type=(temp variable at %s) ",entry->value_type.varVal->used_in_func);
 				else{
 					printf("user_function(");
 					arg = entry->value_type.funVal->arguments;
@@ -282,4 +284,22 @@ unsigned int count_func_args(st_entry * s){
 		arg = arg->next;
 	}
 	return(total_arguments);
+}
+
+unsigned int count_func_locals(symbol_table * st,char * funcname){
+	unsigned int locals = 0;
+	scope_entry * sc_e = st->scope_list;
+	st_entry * st_e; 
+ 	while(sc_e){
+ 		st_e = sc_e->symbols;
+ 		while(st_e){
+ 			if(st_e->value_type.varVal->used_in_func){
+ 				if(st_e->type!=FORMAL && strcmp(st_e->value_type.varVal->used_in_func,funcname)==0)
+ 					locals++;
+ 			}
+ 			st_e = st_e->next;
+ 		}
+ 		sc_e = sc_e->next;
+ 	}
+ 	return locals;
 }

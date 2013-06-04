@@ -108,6 +108,7 @@ avm_memcell * create_memcell();
 /* Returns the type of data that the
    memcell represents to a string */
 char * value_type_to_str(avm_memcell_t);
+char * arg_value_type_to_str(vmarg_t type);
 
 /* The functions that retrieve values
    from the constants arrays */
@@ -129,3 +130,5 @@ void avm_error(char *, char *, char *,unsigned int);
 
 /* Displays an error message (without line) and exits the AVM */
 void avm_anonymous_error(char *);
+
+extern unsigned int current_func_size;

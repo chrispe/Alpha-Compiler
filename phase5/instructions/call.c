@@ -1,5 +1,7 @@
 #include "call.h"
 
+unsigned int current_func_size = 0;
+
 void execute_call(instr_s * instr){
  
 	avm_memcell * func = avm_translate_operand(instr->result,&ax);
@@ -49,11 +51,11 @@ void execute_funcenter(instr_s * instr){
 	avm_memcell * func = avm_translate_operand(instr->result,&ax);
 	assert(func);
 	assert(pc == func->data.func_value);
-
 	total_actuals = 0;
 	userfunc_s * func_info = avm_get_func_info(pc);
 	topsp = top;
-	top = top - func_info->local_size;
+	top = top - func_info->local_size - avm_total_actuals();
+	current_func_size = func_info->local_size;
 }
 
 userfunc_s * avm_get_func_info(unsigned int index){
@@ -132,13 +134,13 @@ unsigned char avm_library_func_exist(char * funcname){
 
 void execute_pusharg(instr_s * instr){
 	avm_memcell * arg = avm_translate_operand(instr->result,&ax);
-	//printf("I pushed %s (%s) at %d\n",avm_tostring(arg),value_type_to_str(arg->type),top);
 	if(arg->type==undefined_m)
 		avm_warning("Undefined variable (",instr->result->name,") has been used as a function argument",instr->line);
 	assert(arg);
 	avm_assign(&stack[top],arg);
 	total_actuals++;
 	avm_dec_top();
+ 
 }
 
 void printstack(){

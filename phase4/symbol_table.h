@@ -77,6 +77,9 @@ typedef struct Symbol_Table{
 */
 symbol_table * create_symbol_table(void);
 
+extern symbol_table * st;
+
+
 /*	
 	A general fuction for inserting a new symbol to the symbol table.
 	Returns 1 if insertion was a succecss else returns 0. 
@@ -115,3 +118,5 @@ st_entry * create_symbol(const char *, unsigned int, unsigned int,unsigned int,s
 
 // Counts the arguments of a function symbol.
 unsigned int count_func_args(st_entry *);
+
+unsigned int count_func_locals(symbol_table * st,char * funcname);

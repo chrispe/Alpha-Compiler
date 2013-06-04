@@ -357,8 +357,9 @@ st_entry * new_temp_var(symbol_table ** st, unsigned int line){
 	st_entry * symbol = st_lookup_scope(*st,var_name,get_current_scope());
 	var_signed++;
 	if(symbol==NULL){
-		 
 		symbol = create_symbol(var_name,1,scope_main,line,TEMP_VAR,get_current_scope_offset(),get_current_scope_space());
+		if(top(func_names)!=NULL)
+			symbol = set_var_func(symbol,top(func_names));
 		st_insert(st,&symbol);
 	    increase_curr_scope_offset();
 	}

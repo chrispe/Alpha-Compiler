@@ -22,7 +22,7 @@ int main(int argc, char * argv[]){
 
     fprintf(stdout,"Press [ENTER] to begin the execution.\n");
     getchar();
-
+    
     topsp = top;
     while(!execution_finished){
         if(debug_mode)

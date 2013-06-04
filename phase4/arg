@@ -1,18 +1,8 @@
 function g(a,b)
 {
-//	print("hello\n");
-//	print("sup\n");
-//	print("lol\n");
-//	dn = 666;
-//	print("I saved n\n");
-//	print("total arguments:",dn,"\n");
-	print(typeof(a));
-	print(typeof(b));
+	x = 666;
+	print(x," this"," is"," fucking"," awesome","lol ","agapw","olon");
+	print("agapw",x);
 }
 
-//totalarguments();
-//g(nil,p,"lol");
-//typeof(a);
-
-ga = "hello";
-print(typeof(ga));
+g(123,2);

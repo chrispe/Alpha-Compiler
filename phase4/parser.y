@@ -43,6 +43,8 @@
  	// The stack for patching the jumps before the function declaration
  	st_entry * func_sym_temp = NULL;
  	str_stack_node * func_jump_decl_stack = NULL;
+
+
 %}
 %error-verbose
 %start program
@@ -813,7 +815,7 @@ int yyerror (const char * yaccProvideMessage){
 int main(int argc,char ** argv)
 {
 	m_param.elist = NULL;
- 	symbol_table * st = NULL;
+ 	 
  	st = create_symbol_table();
  
     if (argc > 1) {
