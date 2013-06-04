@@ -2,7 +2,7 @@ a = "lol";
 print(a);
 //a = 4*(3+4) + b;
 print(a);
-if(a==5){print();input();}
+if(a=="ds"){print();input();}
 else{}
 print(a);
 while(i<4){

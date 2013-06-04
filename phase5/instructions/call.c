@@ -3,9 +3,7 @@
 unsigned int current_func_size = 0;
 
 void execute_call(instr_s * instr){
- 
 	avm_memcell * func = avm_translate_operand(instr->result,&ax);
- 
 	assert(func);
 	avm_call_save_env();
 	switch(func->type){
@@ -13,6 +11,10 @@ void execute_call(instr_s * instr){
 			pc = user_funcs[func->data.func_value].address;
 			if(pc>=AVM_ENDING_PC)
 				pc = func->data.func_value;
+
+			if(pc==0 && instructions[pc].opcode != funcenter_v)
+				pc = func->data.func_value;
+
 			assert(pc<AVM_ENDING_PC);
 			assert(instructions[pc].opcode == funcenter_v);
 			break;
@@ -140,7 +142,6 @@ void execute_pusharg(instr_s * instr){
 	avm_assign(&stack[top],arg);
 	total_actuals++;
 	avm_dec_top();
- 
 }
 
 void printstack(){

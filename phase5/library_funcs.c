@@ -234,7 +234,7 @@ void libfunc_objectmemberkeys(){
 		temp = arg->data.table_value->num_indexed[i];
 		while(temp){
 			index.data.int_value = total_objects;
-			avm_tablesetelem(&retval.data.table_value,&index,temp->value); 
+			avm_tablesetelem(&retval.data.table_value,&index,temp->key); 
 			total_objects++;
 			temp = temp->next;
 		}
@@ -244,7 +244,7 @@ void libfunc_objectmemberkeys(){
 		temp = arg->data.table_value->str_indexed[i];
 		while(temp){
 			index.data.int_value = total_objects;
-			avm_tablesetelem(&retval.data.table_value,&index,temp->value); 
+			avm_tablesetelem(&retval.data.table_value,&index,temp->key); 
 			total_objects++;
 			temp = temp->next;
 		}

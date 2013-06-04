@@ -10,7 +10,7 @@ void execute_newtable(instr_s * instr){
 }
 
 void execute_tablegetelem(instr_s * instr){
- 
+	
 	avm_memcell * lv = avm_translate_operand(instr->result,(avm_memcell *)NULL);
 	avm_memcell * t = avm_translate_operand(instr->arg1,(avm_memcell *)NULL);
 	avm_memcell * i = avm_translate_operand(instr->arg2,&ax);
