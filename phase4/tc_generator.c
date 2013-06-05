@@ -273,7 +273,7 @@ vmarg_s * make_operand(expr * e, vmarg_s * arg){
 		}
 		case program_func_e:{
 			arg->type = userfunc_a;
-			arg->value = e->sym->taddress;
+			arg->value = add_const_to_array(e->sym->name,user_func_c);
 			break;
 		}
 		case library_func_e:{

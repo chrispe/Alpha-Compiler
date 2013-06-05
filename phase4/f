@@ -1,0 +1,7 @@
+b = 3;
+
+b = (function k(){});
+a = (function g(){print("hello");});
+print(a);
+
+a();
