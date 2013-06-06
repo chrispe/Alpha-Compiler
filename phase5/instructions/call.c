@@ -86,7 +86,7 @@ void avm_call_libfunc(char * id){
 		avm_anonymous_error("Unsupported lib func called");
 	topsp = top;
 	total_actuals = 0;
-	
+ 
 	if(strcmp(id,"print")==0)
 		libfunc_print();
 	else if(strcmp(id,"totalarguments")==0)

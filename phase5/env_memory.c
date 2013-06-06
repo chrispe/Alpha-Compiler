@@ -125,8 +125,39 @@ char * int_tostring(avm_memcell * m){
 }
 
 char * table_tostring(avm_memcell * m){
-	char * output = create_string(100);
-	sprintf(output,"%s",m->data.str_value);
+	char * output = create_string(1);
+	avm_table_bucket * temp;
+	unsigned int i;
+
+	printf("[");
+	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
+		temp = m->data.table_value->str_indexed[i];
+		while(temp!=NULL){
+			if(temp->value->type!=table_m)
+				printf("{'%s':%s},",temp->key->data.str_value,avm_tostring(temp->value));
+			else{
+				printf("{'%s':",temp->key->data.str_value);
+				avm_tostring(temp->value);
+			}
+			temp = temp->next;
+		}
+	}
+
+	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
+		temp = m->data.table_value->num_indexed[i];
+		while(temp!=NULL){
+			if(temp->value->type!=table_m)
+				printf("{%d:%s},",temp->key->data.int_value,avm_tostring(temp->value));
+			else{
+				printf("{%d:",temp->key->data.int_value);
+				avm_tostring(temp->value);
+			}
+			temp = temp->next;
+		}
+	}
+
+	printf("]");
+
 	return output;	
 }
 

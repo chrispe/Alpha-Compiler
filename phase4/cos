@@ -1,0 +1,2 @@
+print(cos(0));
+print("\n",sin(0));

@@ -1,0 +1,6 @@
+
+function g(){}
+
+//a = input();
+//print(typeof(a));
+x =argument(0);

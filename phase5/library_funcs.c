@@ -12,7 +12,7 @@ void libfunc_print(){
 void libfunc_totalarguments(){
 	unsigned p_topsp = avm_get_env_value(topsp+AVM_SAVEDTOPSP_OFFSET);
 	avm_clear_memcell(&retval);
-
+	printf("%d\n",p_topsp);
 	if(!p_topsp)
 		avm_error("Library function 'totalarguments' was called outside of a function","","",instructions[pc].line);
 	retval.type = integer_m;
@@ -62,7 +62,18 @@ void libfunc_input(){
 			recognized_char = 1;
 	}
 
-	if(recognized_char || dots>1){
+	if(strcmp(input_str,"true")==0){
+		retval.type = bool_m;
+		retval.data.bool_value = 1;
+	}
+	else if(strcmp(input_str,"false")==0){
+		retval.type = bool_m;
+		retval.data.bool_value = 0;
+	}
+	else if(strcmp(input_str,"nil")==0){
+		retval.type = nil_m;
+	}
+	else if(recognized_char || dots>1){
 		retval.type = string_m;
 		retval.data.str_value = malloc(len+1);
 		strcpy(retval.data.str_value,input_str);
@@ -95,7 +106,8 @@ void libfunc_sin(){
 		arg_value = arg->data.double_value;
 
 	retval.type = double_m;
-	retval.data.double_value = sin(arg_value);	 	
+	double radians = arg_value * M_PI/180.0f;
+	retval.data.double_value = sin(radians);	 	
 }
 
 void libfunc_cos(){
@@ -116,7 +128,8 @@ void libfunc_cos(){
 		arg_value = arg->data.double_value;
 
 	retval.type = double_m;
-	retval.data.double_value = cos(arg_value);	 	
+	double radians = arg_value * M_PI/180.0f;
+	retval.data.double_value = cos(radians);	 	
 }
 
 void libfunc_sqrt(){
@@ -135,6 +148,11 @@ void libfunc_sqrt(){
 		arg_value = (double)arg->data.int_value;
 	else
 		arg_value = arg->data.double_value;
+
+	if(arg_value<0){
+		retval.type = nil_m;
+		return;
+	}
 
 	retval.type = double_m;
 	retval.data.double_value = sqrt(arg_value);	 
@@ -163,9 +181,8 @@ void libfunc_strtonum(){
 	}
 
 	if(recognized_char || dots>1){
-		avm_warning("The string",arg->data.str_value,"does not represent a number, so the strtonum(s) will return zero as a default value.",instructions[pc].line);
-		retval.type = integer_m;
-		retval.data.int_value = 0;
+		avm_warning("The string",arg->data.str_value,"does not represent a number, so the strtonum(s) will return nil.",instructions[pc].line);
+		retval.type = nil_m;
 	}
 	else if(dots==0){
 		retval.type = integer_m;

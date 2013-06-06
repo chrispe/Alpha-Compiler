@@ -1,0 +1,27 @@
+function Book(title) {
+    return [
+		{ "title" : title },
+		{ "sections" : [] },
+
+		{ "AppendSection" :
+			(function(book, section) {
+				
+				book.sections[objecttotalmembers(book.sections)] = section;
+
+			})
+		},
+
+        { "Accept" :
+        	(function(book, visitor) {
+        		visitor.VisitBook(book);
+
+        		for (i=0; i < objecttotalmembers(book.sections); ++i)
+        			book.sections[i].Accept(book.sections[i], visitor);
+        	})
+        }
+    ];
+}
+
+a = Book("Hello World");
+a..AppendSection("Section 1");
+a..AppendSection("Section 2");
