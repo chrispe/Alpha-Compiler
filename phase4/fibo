@@ -5,4 +5,4 @@ function fibo(x){
 	else return (fibo(x-1)+fibo(x-2));
 }
 
-print("fibonaci :",fibo(12),"\n");
+print("fibonaci :",fibo(15),"\n");

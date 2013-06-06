@@ -240,7 +240,9 @@ void avm_table_bucket_destroy(avm_table_bucket ** bucket){
 			del_b = bucket[i];
 			bucket[i] = bucket[i]->next;
 			avm_clear_memcell(del_b->value);
-			avm_clear_memcell(del_b->key);
+			free(del_b->value);
+			//avm_clear_memcell(del_b->key);
+			free(del_b->key);
 			free(del_b);
 		}
 		bucket[i] = NULL;

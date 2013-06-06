@@ -4,4 +4,6 @@ b = (function k(){});
 a = (function g(){print("hello");});
 print(a);
 
-a();
+t.t = 5;
+
+print(people);

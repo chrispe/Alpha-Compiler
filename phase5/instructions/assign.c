@@ -18,7 +18,7 @@ void avm_assign(avm_memcell * lv, avm_memcell * rv,unsigned int line){
 		avm_warning("Assigning from undefined variable (",instructions[pc].result->name,")",instructions[pc].line);
 
 	avm_clear_memcell(lv);
-
+	
 	assert(rv->type>=double_m && rv->type<=undefined_m);
 	
 	memcpy(lv,rv,sizeof(avm_memcell));
@@ -27,4 +27,5 @@ void avm_assign(avm_memcell * lv, avm_memcell * rv,unsigned int line){
 		lv->data.str_value = strdup(rv->data.str_value);
 	else if(lv->type==table_m)
 		avm_table_incr_refcounter(lv->data.table_value);
+
 }

@@ -9,11 +9,11 @@ void execute_call(instr_s * instr){
 	switch(func->type){
 		case userfunc_m:{
 			pc = user_funcs[func->data.func_value].address;
-			if(pc>=AVM_ENDING_PC)
-				pc = func->data.func_value;
+			//if(pc>=AVM_ENDING_PC)
+			//	pc = func->data.func_value;
 
-			if(pc==0 && instructions[pc].opcode != funcenter_v)
-				pc = func->data.func_value;
+			//if(pc==0 && instructions[pc].opcode != funcenter_v)
+			//	pc = func->data.func_value;
 
 			assert(pc<AVM_ENDING_PC);
 			assert(instructions[pc].opcode == funcenter_v);

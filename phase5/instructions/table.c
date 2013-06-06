@@ -1,8 +1,8 @@
 #include "table.h"
+#include <math.h>
 
 void execute_newtable(instr_s * instr){
 	avm_memcell * lv = avm_translate_operand(instr->result,(avm_memcell *)NULL);
-
 	avm_clear_memcell(lv);
 	lv->type = table_m;
 	lv->data.table_value = avm_newtable();
@@ -15,7 +15,7 @@ void execute_tablegetelem(instr_s * instr){
 	avm_memcell * t = avm_translate_operand(instr->arg1,(avm_memcell *)NULL);
 	avm_memcell * i = avm_translate_operand(instr->arg2,&ax);
  
-	avm_clear_memcell(lv);
+	//avm_clear_memcell(lv);
 	lv->type = nil_m;
 
 	if(t->type != table_m)
@@ -24,8 +24,10 @@ void execute_tablegetelem(instr_s * instr){
 		avm_memcell * content = avm_tablegetitem(t->data.table_value,i);
 		if(content)
 			avm_assign(lv,content);
-		else
-			avm_warning("Element with key '",avm_tostring(i),"' could not be on the table",instr->line);
+		else{
+			avm_warning("Element with key '",avm_tostring(i),"' could not be found on the table",instr->line);
+			avm_clear_memcell(lv);
+		}
 	}
 }
 
@@ -68,9 +70,10 @@ void avm_tablesetelem(avm_table ** table,avm_memcell * index,avm_memcell * data)
 	}
 	else{
 		if(index->type==integer_m)
-			key = index->data.int_value % AVM_TABLE_HASHSIZE;
+			key = (int)abs(index->data.int_value) % AVM_TABLE_HASHSIZE;
 		else
-			key = (int)index->data.double_value % AVM_TABLE_HASHSIZE;
+			key = (int)abs(index->data.double_value) % AVM_TABLE_HASHSIZE;
+ 
 		temp = avm_lookuptable_bynumber(*table,index);
 		if(temp==NULL){
 			temp = malloc(sizeof(avm_table_bucket));
@@ -106,9 +109,9 @@ avm_table_bucket * avm_lookuptable_bynumber(avm_table * table,avm_memcell * inde
 	unsigned int key;
 
 	if(index->type==integer_m)
-		key = index->data.int_value % AVM_TABLE_HASHSIZE;
+		key = (int) abs(index->data.int_value) % AVM_TABLE_HASHSIZE;
 	else
-		key = (int)index->data.double_value % AVM_TABLE_HASHSIZE;
+		key = (int) abs(index->data.double_value) % AVM_TABLE_HASHSIZE;
 
 	avm_table_bucket * temp = table->num_indexed[key];
 
