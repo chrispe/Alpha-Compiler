@@ -1,4 +1,5 @@
 function Book(title) {
+	print("");
     return [
 		{ "title" : title },
 		{ "sections" : [] },
@@ -6,10 +7,10 @@ function Book(title) {
 		{ "AppendSection" :
 			(function(book, section) {
 				a = objecttotalmembers(book.sections);
-//                print(a,"\n");
-                print(book,"\n");
-//                print(book.sections,"\n");
+				book.sections[a] = section;
+				//print(book);
 			})
+		
 		}
  
     ];
@@ -19,6 +20,6 @@ function Book(title) {
 
 a = Book("Hello World");
 //a.sections = [];
-a..AppendSection("Section 1");
+//a..AppendSection("Section 1");
 //a..AppendSection("Section 2");
- 
+print(a); 

@@ -29,7 +29,7 @@ int main(int argc, char * argv[]){
             printstack();
     	execute_cycle();
     }
-     
+      
     fprintf(stdout,"\nThe program has exited with return code (1: OK).\n");
 	return 0;
 }

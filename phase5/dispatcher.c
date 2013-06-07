@@ -17,6 +17,7 @@ void execute_cycle(void){
 			instr_s * instr = instructions + pc;
 			curr_line = instr->line;
 			unsigned int old_pc = pc;
+			//printf("%d\n",pc);
 			execute_instr(instr);
 			if(pc==old_pc)
 				pc++;

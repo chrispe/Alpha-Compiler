@@ -45,6 +45,7 @@ userfunc_s * userfuncs_getfunc(unsigned int index){
 }
  
 avm_memcell * avm_translate_operand(vmarg_s * arg,avm_memcell * reg){
+
 	switch(arg->type){
 		case global_a: return &stack[arg->value];
 		case local_a:  return &stack[topsp-arg->value];
@@ -152,6 +153,7 @@ char * table_tostring(avm_memcell * m){
 			else{
 				printf("{%d:",temp->key->data.int_value);
 				avm_tostring(temp->value);
+				printf("},");
 			}
 			temp = temp->next;
 		}
@@ -230,7 +232,7 @@ avm_table * avm_newtable(void){
 	memerror(table,"new table");
 	AVM_WIPEOUT(*table);
 
-	table->ref_counter = 1;
+	table->ref_counter = 0;
 	table->total = 0;
 	avm_table_bucket_init(table->num_indexed);
 	avm_table_bucket_init(table->str_indexed);
@@ -248,7 +250,6 @@ void avm_table_incr_refcounter(avm_table * table){
 }
 
 void avm_table_decr_refcounter(avm_table * table){
-	printf("DESTROY\n");
 	assert(table->ref_counter>0);
 	table->ref_counter--;
 	if(table->ref_counter==0)
@@ -292,5 +293,12 @@ char * arg_value_type_to_str(vmarg_t type){
 	char * value_types[] = {"label_a","global_a","formal_a","local_a",
 							"integer_a" ,"double_a" ,"string_a" ,"bool_a",
 							"nil_a" , "userfunc_a" ,"libfunc_a" ,"retval_a"};
+	return(value_types[type]);
+} 
+
+char * real_value_type_to_str(avm_memcell_t type){
+	char * value_types[] = {"number","number","string","boolean",
+							"table","user function","library function",
+							"nil","undefined"};
 	return(value_types[type]);
 } 

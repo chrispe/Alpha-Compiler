@@ -1,0 +1,8 @@
+function get(b)
+{
+	return [{"la":(function (){print(3);})}];	
+}
+
+a = get("sup");
+a.la();
+print(a);

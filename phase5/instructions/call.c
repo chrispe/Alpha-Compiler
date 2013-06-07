@@ -139,6 +139,7 @@ void execute_pusharg(instr_s * instr){
 
 void printstack(){
 	unsigned int i;
+	printf("PC:%d\n",pc);
 	for(i=0;i<AVM_STACKSIZE;i++){
 		if(stack[i].type!=undefined_m){
 			printf("%d: %s\n",i,avm_tostring(&stack[i]));

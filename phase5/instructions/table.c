@@ -6,7 +6,7 @@ void execute_newtable(instr_s * instr){
 	avm_clear_memcell(lv);
 	lv->type = table_m;
 	lv->data.table_value = avm_newtable();
-	 
+	avm_table_incr_refcounter(lv->data.table_value);
 }
 
 void execute_tablegetelem(instr_s * instr){

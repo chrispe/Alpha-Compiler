@@ -1,0 +1,9 @@
+function g(){
+	return [{"books":[{1:"lol"}]}];
+}
+
+a = g();
+print(a);
+print(a);
+print(a.books);
+print(a.books[1]);

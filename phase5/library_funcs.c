@@ -5,6 +5,10 @@ void libfunc_print(){
 	unsigned int i;
 	for(i=0;i<n;i++){
 		char * s = avm_tostring(avm_get_actual(i));
+		if(avm_get_actual(i)->type==userfunc_m)
+			printf("User function : ");
+		else if(avm_get_actual(i)->type==libfunc_m)
+			printf("Library function : ");
 		printf("%s",s);
 	}
 }
@@ -52,7 +56,7 @@ void libfunc_typeof(){
 
 	avm_memcell * arg = avm_get_actual(0);
 	retval.type = string_m;
-	retval.data.str_value = value_type_to_str(arg->type);
+	retval.data.str_value = real_value_type_to_str(arg->type);
 }
 
 void libfunc_input(){

@@ -109,6 +109,7 @@ avm_memcell * create_memcell();
    memcell represents to a string */
 char * value_type_to_str(avm_memcell_t);
 char * arg_value_type_to_str(vmarg_t type);
+char * real_value_type_to_str(avm_memcell_t type);
 
 /* The functions that retrieve values
    from the constants arrays */

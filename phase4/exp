@@ -2,9 +2,9 @@ print("a");
 function g(){
 	//d = [];
 	//d.books = [];
-	d = [{"books":[{"a":2}]}];
-//	print(d);
-	return d;
+	d = [{"books":[]}];
+	print(d);
+//	return d;
 }
 
 //function d(){

@@ -675,8 +675,8 @@ void generate_CALL(quad * q){
 			instr->result->value = q->result->sym->offset;
 			switch(q->result->sym->space){
 				case PROGRAM_VAR: instr->result->type = global_a; break;
-				case FUNC_LOCAL:  instr->result->type = formal_a; break;
-				case FORMAL_ARG:  instr->result->type = local_a; break;
+				case FUNC_LOCAL:  instr->result->type = local_a; break;
+				case FORMAL_ARG:  instr->result->type = formal_a; break;
 			}
 		}
 		else{
