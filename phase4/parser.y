@@ -45,6 +45,7 @@
  	str_stack_node * func_jump_decl_stack = NULL;
 
  	str_stack_node * temp_var_stack = NULL;
+ 	char inside_index = 0;
 %}
 %error-verbose
 %start program
@@ -94,7 +95,7 @@ program:
 		;
 
 stmt:
-		expr SEMICOLON { fun_rec=0;   }
+		expr SEMICOLON { fun_rec=0; reset_tmp_var_counter();   }
 		| BREAK SEMICOLON {
 			if(scope_loop<=0){
 				yyerror("Cannot use break; outside of a loop.");
@@ -465,10 +466,10 @@ objectdef:
 			}
 			$<expression>$ = table;
 		}
-		| BRACKET_L indexed BRACKET_R {
+		| BRACKET_L{inside_index=1;} indexed BRACKET_R {
 	 
 			expr * table = new_expr(new_table_e);
-			expr * temp = $<expression>2;
+			expr * temp = $<expression>3;
 
 			table->sym = new_temp_var(st,yylineno);
 			emit(table_create,NULL,NULL,table,-1,yylineno);
@@ -480,6 +481,7 @@ objectdef:
 			}
 			$<expression>$ = table;
 			index_expr = NULL;
+			inside_index = 0;
 		}
 		;
 
@@ -656,8 +658,12 @@ idlist:
 
 block:
 		BRACE_L {
-			push_value(&temp_var_stack,var_signed);
-			reset_tmp_var_counter();
+
+			// Careful over here
+			if(func_started){
+				push_value(&temp_var_stack,var_signed);
+				reset_tmp_var_counter();
+			}
 
 			if(!func_started)
 				scope_main++;
@@ -666,9 +672,10 @@ block:
 
 		} block_in BRACE_R {
 
+			// Careful over here 
 			var_signed = top_value(temp_var_stack);
 			pop(&temp_var_stack);
-
+		 
 			// We disable the local variables of the current scope
 			scope_set_active((symbol_table **)st,scope_main,0);
 			scope_main--;
@@ -840,7 +847,7 @@ int main(int argc,char ** argv)
     fflush(stdout);
 	yyparse(&st);
 	write_quads();
-	print_st(st);
+	//print_st(st);
 	if(compile_errors==0)printf(" (DONE)\n");
 
 

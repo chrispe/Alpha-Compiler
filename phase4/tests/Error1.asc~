@@ -1,9 +1,0 @@
-//mail from: golemis@csd.uoc.gr, katsikas@csd.uoc.gr
-
-function f(){
-       local f=10;
-       function g(){
-               return f;            //Error : Cannot access 'f' inside function 'g'
-               return f();     //Error : Cannot access 'f' inside function 'g'
-       }
-}
