@@ -1,6 +1,0 @@
-function g(a,b,c){
- print(totalarguments());
-}
-
-g(10,20,30);
-

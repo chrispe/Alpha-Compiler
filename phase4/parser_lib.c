@@ -56,6 +56,8 @@ unsigned int scope_space_counter = 1;
 // A stack which keeps the scope offset for each function.
 str_stack_node * scope_offset_stack = NULL;
 
+ 
+
 void push(str_stack_node ** top,const char * newString){
 	str_stack_node * newNode = malloc(sizeof(str_stack_node));
 	newNode->str = malloc(strlen(newString)+1);

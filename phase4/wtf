@@ -1,2 +1,0 @@
-a = totalarguments();
-print(typeof(a));

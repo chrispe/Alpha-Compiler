@@ -1,8 +1,0 @@
-function g(a,b)
-{
-	x = 666;
-	print(x," this"," is"," fucking"," awesome","lol ","agapw","olon");
-	print("agapw",x);
-}
-
-g(123,2);

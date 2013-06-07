@@ -1,7 +1,0 @@
-function g(x){
-	print(x,"\n");
-	if(x==0)return;
-	g(x-2);
-//	g(x-1);
-}
-g(10);

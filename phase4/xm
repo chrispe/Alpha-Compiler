@@ -1,9 +1,0 @@
-book = [];
-
-book.sections = [];
-book.sections[0] = "hello";
-book.sections[1] = "lol";
-
-n = objecttotalmembers(book);
-
-print(book.sections[0]);

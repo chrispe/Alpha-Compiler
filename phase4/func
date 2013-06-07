@@ -1,6 +1,0 @@
-function g(){
-	return (function s(){print("Hello");});
-}
-
-a = g();
-a();

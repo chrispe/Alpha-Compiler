@@ -1,9 +1,0 @@
-function d(){}
-function g(){print("LOL");return 2;}
-
-function a(x){
-	return x();
-}
-
-c = a(g);
-print(c);

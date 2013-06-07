@@ -44,7 +44,7 @@
  	st_entry * func_sym_temp = NULL;
  	str_stack_node * func_jump_decl_stack = NULL;
 
-
+ 	str_stack_node * temp_var_stack = NULL;
 %}
 %error-verbose
 %start program
@@ -94,7 +94,7 @@ program:
 		;
 
 stmt:
-		expr SEMICOLON { fun_rec=0; reset_tmp_var_counter(); }
+		expr SEMICOLON { fun_rec=0;   }
 		| BREAK SEMICOLON {
 			if(scope_loop<=0){
 				yyerror("Cannot use break; outside of a loop.");
@@ -469,10 +469,12 @@ objectdef:
 	 
 			expr * table = new_expr(new_table_e);
 			expr * temp = $<expression>2;
+
 			table->sym = new_temp_var(st,yylineno);
 			emit(table_create,NULL,NULL,table,-1,yylineno);
 
 			while(temp){
+				 
 				emit(table_set_elem,table,temp,temp->index,-1,yylineno);
 				temp = temp->next;
 			}
@@ -654,6 +656,8 @@ idlist:
 
 block:
 		BRACE_L {
+			push_value(&temp_var_stack,var_signed);
+			reset_tmp_var_counter();
 
 			if(!func_started)
 				scope_main++;
@@ -661,6 +665,9 @@ block:
 				func_started = 0;
 
 		} block_in BRACE_R {
+
+			var_signed = top_value(temp_var_stack);
+			pop(&temp_var_stack);
 
 			// We disable the local variables of the current scope
 			scope_set_active((symbol_table **)st,scope_main,0);
