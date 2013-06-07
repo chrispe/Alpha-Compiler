@@ -66,6 +66,7 @@ typedef struct instruction {
 typedef struct userfunc {
 	unsigned int address;
 	unsigned int local_size;
+	unsigned int scope;
 	char * name;
 }userfunc_s;
 
@@ -135,6 +136,10 @@ extern unsigned int total_instructions;
 /* The stack used to save functions
    during the target code generation. */
 extern func_stack  * funcs;
+
+/* Counts the function scope for
+   shadowing functions */
+extern unsigned int current_func_scope;
 
 /* Adds an incomplete jump to the i_jump list */
 void add_incomplete_jump(unsigned int, unsigned int);

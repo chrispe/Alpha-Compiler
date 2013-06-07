@@ -5,23 +5,20 @@ function Book(title) {
 
 		{ "AppendSection" :
 			(function(book, section) {
-				
-				book.sections[objecttotalmembers(book.sections)] = section;
-
+				a = objecttotalmembers(book.sections);
+//                print(a,"\n");
+                print(book,"\n");
+//                print(book.sections,"\n");
 			})
-		},
-
-        { "Accept" :
-        	(function(book, visitor) {
-        		visitor.VisitBook(book);
-
-        		for (i=0; i < objecttotalmembers(book.sections); ++i)
-        			book.sections[i].Accept(book.sections[i], visitor);
-        	})
-        }
+		}
+ 
     ];
 }
 
+ 
+
 a = Book("Hello World");
+//a.sections = [];
 a..AppendSection("Section 1");
-a..AppendSection("Section 2");
+//a..AppendSection("Section 2");
+ 

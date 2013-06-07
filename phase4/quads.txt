@@ -1,12 +1,33 @@
-0:	JUMP 10
-1:	FUNCSTART g
-2:	JUMP 7
-3:	FUNCSTART g
-4:	CALL g
-5:	GETRETVAL $t_0 
-6:	FUNCEND g
-7:	CALL g
-8:	GETRETVAL $t_0 
-9:	FUNCEND g
-10:	CALL g
-11:	GETRETVAL $t_0 
+0:	JUMP 22
+1:	FUNCSTART Book
+2:	TABLECREATE $t_0
+3:	JUMP 16
+4:	FUNCSTART $f_0
+5:	TABLEGETELEM book 'sections' $t_1
+6:	PARAM $t_1 
+7:	CALL objecttotalmembers
+8:	GETRETVAL $t_2 
+9:	ASSIGN $t_2 a
+10:	ASSIGN a $t_3
+11:	PARAM "
+" 
+12:	PARAM book 
+13:	CALL print
+14:	GETRETVAL $t_0 
+15:	FUNCEND $f_0
+16:	TABLECREATE $t_0
+17:	TABLESETELEM $t_0 '"title"' title
+18:	TABLESETELEM $t_0 '"sections"' $t_0
+19:	TABLESETELEM $t_0 '"AppendSection"' $f_0
+20:	RETURN $t_0
+21:	FUNCEND Book
+22:	PARAM "Hello World" 
+23:	CALL Book
+24:	GETRETVAL $t_1 
+25:	ASSIGN $t_1 a
+26:	ASSIGN a $t_2
+27:	TABLEGETELEM a 'AppendSection' $t_0
+28:	PARAM "Section 1" 
+29:	PARAM a 
+30:	CALL $t_0
+31:	GETRETVAL $t_1 

@@ -1,25 +1,57 @@
 <user functions>: 
-0 : g
-1 : g
+0 : Book
+1 : $f_0
 <end of funcs>
 <lib functions>: 
+0 : objecttotalmembers
+1 : print
 <end of lib funcs>
 <strings> : 
+0 : sections
+1 : "
+"
+2 : "title"
+3 : "sections"
+4 : "AppendSection"
+5 : "Hello World"
+6 : AppendSection
+7 : "Section 1"
 <end of strings>
 <integers> : 
 <end of integers>
 <doubles> : 
 <end of doubles>
-number of strings 0
-0:	JUMP 10 (label_a)
+number of strings 8
+0:	JUMP 23 (label_a)
 1:	ENTERFUNC 0 (userfunc_a)
-2:	JUMP 7 (label_a)
-3:	ENTERFUNC 0 (userfunc_a)
-4:	CALLFUNC 0 (userfunc_a)
-5:	ASSIGN 0 (retval_a) 0 (local_a:$t_0)
-6:	EXITFUNC 0 (userfunc_a)
-7:	CALLFUNC 0 (userfunc_a)
-8:	ASSIGN 0 (retval_a) 0 (local_a:$t_0)
-9:	EXITFUNC 0 (userfunc_a)
-10:	CALLFUNC 0 (userfunc_a)
-11:	ASSIGN 0 (retval_a) 0 (global_a:$t_0)
+2:	NEWTABLE 0 (local_a:$t_0)
+3:	JUMP 16 (label_a)
+4:	ENTERFUNC 1 (userfunc_a)
+5:	TABLEGETELEM 0 (formal_a:book) 0 (string_a) 1 (local_a:$t_1)
+6:	PUSHARG 1 (local_a:$t_1)
+7:	CALLFUNC 0 (libfunc_a)
+8:	ASSIGN 0 (retval_a) 2 (local_a:$t_2)
+9:	ASSIGN 2 (local_a:$t_2) 0 (local_a:a)
+10:	ASSIGN 0 (local_a:a) 3 (local_a:$t_3)
+11:	PUSHARG 1 (string_a)
+12:	PUSHARG 0 (formal_a:book)
+13:	CALLFUNC 1 (libfunc_a)
+14:	ASSIGN 0 (retval_a) 4 (local_a:$t_0)
+15:	EXITFUNC 1 (userfunc_a)
+16:	NEWTABLE 0 (local_a:$t_0)
+17:	TABLESETITEM 0 (local_a:$t_0) 2 (string_a) 0 (formal_a:title)
+18:	TABLESETITEM 0 (local_a:$t_0) 3 (string_a) 0 (local_a:$t_0)
+19:	TABLESETITEM 0 (local_a:$t_0) 4 (string_a) 1 (userfunc_a)
+20:	ASSIGN 0 (local_a:$t_0) 0 (retval_a)
+21:	JUMP 22 (label_a)
+22:	EXITFUNC 0 (userfunc_a)
+23:	PUSHARG 5 (string_a)
+24:	CALLFUNC 0 (userfunc_a)
+25:	ASSIGN 0 (retval_a) 1 (global_a:$t_1)
+26:	ASSIGN 1 (global_a:$t_1) 0 (global_a:a)
+27:	ASSIGN 0 (global_a:a) 2 (global_a:$t_2)
+28:	TABLEGETELEM 0 (global_a:a) 6 (string_a) 3 (global_a:$t_0)
+29:	PUSHARG 7 (string_a)
+30:	PUSHARG 0 (global_a:a)
+31:	CALLFUNC 3 (global_a:$t_0)
+32:	ASSIGN 0 (retval_a) 1 (global_a:$t_1)

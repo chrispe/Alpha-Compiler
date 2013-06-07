@@ -45,6 +45,10 @@ func_stack * funcs = NULL;
    for the target code generation  */
 unsigned int current_quad;
 
+/* Counts the function scope for
+   shadowing functions */
+unsigned int current_func_scope = 0;
+
 generator_func_t generators[] = {
 	generate_ASSIGN,
 	generate_ADD,
@@ -111,6 +115,7 @@ unsigned int add_const_to_array(void * constant,const_t type){
 			current_user_func->address = ((userfunc_s *)constant)->address;
 			current_user_func->local_size = ((userfunc_s *)constant)->local_size;
 			current_user_func->name = malloc(strlen(((userfunc_s *)constant)->name)+1);
+			current_user_func->scope = current_func_scope;
 			strcpy(current_user_func->name,((userfunc_s *)constant)->name);
 			return(current_user_func_index-1);
 		}
@@ -148,8 +153,9 @@ unsigned int value_exists_in_arr(void * value, const_t type){
 			break;
 		}
 		case user_func_c:{
-			for(i=0;i<current_user_func_index;i++){
-				if(strcmp((user_funcs[i]).name,(char *)value)==0)return i;
+			for(i=current_user_func_index-1;i>=0;i--){
+				if(strcmp((user_funcs[i]).name,(char *)value)==0 && user_funcs[i].scope<=current_func_scope)
+					return i;
 			}
 			break;
 		}
@@ -701,6 +707,7 @@ void generate_GETRETVAL(quad * q){
 }
 
 void generate_FUNCSTART(quad * q){
+	 
 	st_entry * symbol = q->result->sym;
 	symbol->taddress = next_instr_label();
 	q->taddress = next_instr_label();
@@ -710,6 +717,7 @@ void generate_FUNCSTART(quad * q){
 	
 	// Careful with the size
 	func->local_size = count_func_locals(st, symbol->name);
+	func->scope = current_func_scope;
 	//printf("The size of %s is %d\n",symbol->name,func->local_size);
 
  	func->name  = malloc(sizeof(strlen(symbol->name)+1));
@@ -723,6 +731,7 @@ void generate_FUNCSTART(quad * q){
 	instr->opcode = funcenter_v;
 	make_operand(q->result,instr->result);
 	emit_instruction(instr);
+	current_func_scope++;
 }
  
 void generate_RETURN(quad * q){
@@ -750,6 +759,7 @@ void generate_RETURN(quad * q){
 }
 
 void generate_FUNCEND(quad * q){
+	current_func_scope--;
 	list_node * return_list = (top_func(funcs))->ret_list;
 	while(return_list){
 		instructions[return_list->value].result = create_vmarg();

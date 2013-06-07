@@ -138,6 +138,7 @@ char * table_tostring(avm_memcell * m){
 			else{
 				printf("{'%s':",temp->key->data.str_value);
 				avm_tostring(temp->value);
+				printf("},");
 			}
 			temp = temp->next;
 		}
@@ -229,7 +230,7 @@ avm_table * avm_newtable(void){
 	memerror(table,"new table");
 	AVM_WIPEOUT(*table);
 
-	table->ref_counter = 0;
+	table->ref_counter = 1;
 	table->total = 0;
 	avm_table_bucket_init(table->num_indexed);
 	avm_table_bucket_init(table->str_indexed);
@@ -247,6 +248,7 @@ void avm_table_incr_refcounter(avm_table * table){
 }
 
 void avm_table_decr_refcounter(avm_table * table){
+	printf("DESTROY\n");
 	assert(table->ref_counter>0);
 	table->ref_counter--;
 	if(table->ref_counter==0)
@@ -272,7 +274,6 @@ void avm_table_bucket_destroy(avm_table_bucket ** bucket){
 			bucket[i] = bucket[i]->next;
 			avm_clear_memcell(del_b->value);
 			free(del_b->value);
-			//avm_clear_memcell(del_b->key);
 			free(del_b->key);
 			free(del_b);
 		}

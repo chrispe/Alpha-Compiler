@@ -13,15 +13,15 @@ print(v[i],"\n");
 }
 
 g = objectcopy(a);
-a.a = 666;
+a.a = 555;
 print(g.a);
 print(a.a);
 
 a[3] = "b";
-//print(g.a);
+print(g.a,"\n");
 
 
-print(objecttotalmembers(a));
+print(objectmemberkeys(a));
 //print(a.a);
 //rint(a.b);
 //print(a.c);

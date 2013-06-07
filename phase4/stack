@@ -1,0 +1,6 @@
+function g(a,b){
+	return [];
+}
+
+a = g(555,666);
+print(a);

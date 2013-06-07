@@ -1,0 +1,31 @@
+print("a");
+function g(){
+	//d = [];
+	//d.books = [];
+	d = [{"books":[{"a":2}]}];
+//	print(d);
+	return d;
+}
+
+//function d(){
+//	e = [{"books":[]}];
+//	return e;
+//}
+
+a = g();
+print(a);
+//a = g();
+//print(a);
+//a = g();
+//print(a);
+
+//a = g();
+//print(a);
+//a = g();
+//print(a);
+//a = g();
+//print(a);
+//h = [{"books":[]}];
+//print(h);
+//a =  [{"books":[{1:"ds"}]}];
+//print(a);
