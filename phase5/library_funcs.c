@@ -12,9 +12,13 @@ void libfunc_print(){
 void libfunc_totalarguments(){
 	unsigned p_topsp = avm_get_env_value(topsp+AVM_SAVEDTOPSP_OFFSET);
 	avm_clear_memcell(&retval);
-	printf("%d\n",p_topsp);
-	if(!p_topsp)
-		avm_error("Library function 'totalarguments' was called outside of a function","","",instructions[pc].line);
+
+	if(!p_topsp){
+		avm_warning("Library function 'totalarguments' was called outside of a function, will return nil.","","",instructions[pc].line);
+		retval.type = nil_m;
+		return;
+	}
+
 	retval.type = integer_m;
 	retval.data.int_value = avm_get_env_value(p_topsp+AVM_NUMACTUALS_OFFSET);
 }
@@ -23,8 +27,12 @@ void libfunc_argument(){
 	unsigned int n = avm_total_actuals();
 	unsigned int p_topsp = avm_get_env_value(topsp+AVM_SAVEDTOPSP_OFFSET);
 
-	if(!p_topsp)
-		avm_error("Library function 'argument(i)' was called outside of a function","","",instructions[pc].line);
+	if(!p_topsp){
+		avm_warning("Library function 'argument(i)' was called outside of a function, will return nil","","",instructions[pc].line);
+		retval.type = nil_m;
+		return;
+	}
+
 	if(n==0)
 		avm_error("Library function 'argument(i)' was called without an argument","","",instructions[pc].line);
 
@@ -37,8 +45,10 @@ void libfunc_argument(){
 
 void libfunc_typeof(){
 	unsigned int n = avm_total_actuals();
-	if(n==0)
-		avm_error("Library function 'typeof(var)' was called without an argument","","",instructions[pc].line);
+	if(n==0){
+		avm_warning("Library function 'typeof(var)' was called without an argument, will return nil","","",instructions[pc].line);
+		retval.type = nil_m;
+	}
 
 	avm_memcell * arg = avm_get_actual(0);
 	retval.type = string_m;

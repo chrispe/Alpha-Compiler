@@ -1,0 +1,25 @@
+<user functions>: 
+0 : g
+1 : g
+<end of funcs>
+<lib functions>: 
+<end of lib funcs>
+<strings> : 
+<end of strings>
+<integers> : 
+<end of integers>
+<doubles> : 
+<end of doubles>
+number of strings 0
+0:	JUMP 10 (label_a)
+1:	ENTERFUNC 0 (userfunc_a)
+2:	JUMP 7 (label_a)
+3:	ENTERFUNC 0 (userfunc_a)
+4:	CALLFUNC 0 (userfunc_a)
+5:	ASSIGN 0 (retval_a) 0 (local_a:$t_0)
+6:	EXITFUNC 0 (userfunc_a)
+7:	CALLFUNC 0 (userfunc_a)
+8:	ASSIGN 0 (retval_a) 0 (local_a:$t_0)
+9:	EXITFUNC 0 (userfunc_a)
+10:	CALLFUNC 0 (userfunc_a)
+11:	ASSIGN 0 (retval_a) 0 (global_a:$t_0)
