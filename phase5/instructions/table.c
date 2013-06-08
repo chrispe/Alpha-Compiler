@@ -87,7 +87,7 @@ void avm_tablesetelem(avm_table ** table,avm_memcell * index,avm_memcell * data)
 		}
 		memcpy(temp->value,data,sizeof(avm_memcell));
 		if(data->type == string_m){
-			temp->value->data.str_value = malloc(strlen(data->data.str_value));
+			temp->value->data.str_value = malloc(strlen(data->data.str_value)+1);
 			strcpy(temp->value->data.str_value,data->data.str_value);
 		}
 		(*table)->num_indexed[key] = temp;

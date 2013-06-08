@@ -720,7 +720,7 @@ void generate_FUNCSTART(quad * q){
 	func->scope = current_func_scope;
 	//printf("The size of %s is %d\n",symbol->name,func->local_size);
 
- 	func->name  = malloc(sizeof(strlen(symbol->name)+1));
+ 	func->name  = malloc(strlen(symbol->name)+1);
  	strcpy(func->name,symbol->name);
 	add_const_to_array(func,user_func_c);
 

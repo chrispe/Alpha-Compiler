@@ -258,14 +258,15 @@ void libfunc_objectmemberkeys(){
 	unsigned int total_objects = 0;
 	avm_table_bucket * temp;  
 
-	avm_memcell index;
-	index.type = integer_m;
+	// Changed it to dynamical allocation
+	avm_memcell * index = malloc(sizeof(avm_memcell));
+	index->type = integer_m;
 
 	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
 		temp = arg->data.table_value->num_indexed[i];
 		while(temp){
-			index.data.int_value = total_objects;
-			avm_tablesetelem(&retval.data.table_value,&index,temp->key); 
+			index->data.int_value = total_objects;
+			avm_tablesetelem(&retval.data.table_value,index,temp->key); 
 			total_objects++;
 			temp = temp->next;
 		}
@@ -274,8 +275,8 @@ void libfunc_objectmemberkeys(){
 	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
 		temp = arg->data.table_value->str_indexed[i];
 		while(temp){
-			index.data.int_value = total_objects;
-			avm_tablesetelem(&retval.data.table_value,&index,temp->key); 
+			index->data.int_value = total_objects;
+			avm_tablesetelem(&retval.data.table_value,index,temp->key); 
 			total_objects++;
 			temp = temp->next;
 		}

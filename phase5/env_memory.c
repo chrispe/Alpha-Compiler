@@ -260,7 +260,7 @@ void avm_clear_memcell(avm_memcell * cell){
 	if(cell->type!=undefined_m){
 		if(cell->type==string_m && cell->data.str_value!=NULL)
 			free(cell->data.str_value);
-		else if(cell->type==table_m)
+		else if(cell->type==table_m && cell->data.table_value!=NULL)
 			avm_table_decr_refcounter(cell->data.table_value);
 		cell->type = undefined_m;
 	}
