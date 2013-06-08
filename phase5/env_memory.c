@@ -232,7 +232,7 @@ avm_table * avm_newtable(void){
 	memerror(table,"new table");
 	AVM_WIPEOUT(*table);
 
-	table->ref_counter = 0;
+	table->ref_counter = 1;
 	table->total = 0;
 	avm_table_bucket_init(table->num_indexed);
 	avm_table_bucket_init(table->str_indexed);
@@ -240,9 +240,9 @@ avm_table * avm_newtable(void){
 }
 
 void avm_destorytable(avm_table * table){
-	//avm_table_bucket_destroy(table->str_indexed);
-	//avm_table_bucket_destroy(table->num_indexed);
-	//free(table);
+	avm_table_bucket_destroy(table->str_indexed);
+	avm_table_bucket_destroy(table->num_indexed);
+	free(table);
 }
 
 void avm_table_incr_refcounter(avm_table * table){

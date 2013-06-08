@@ -69,9 +69,9 @@
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
 %token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
 
-%type <strval> stmt  assignexpr const primary member call callsuffix normcall methodcall term   if_prefix else_prefix forprefix M N
+%type <strval> stmt  assignexpr const primary member   callsuffix normcall methodcall term   if_prefix else_prefix forprefix M N
 %type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp whilesecond whilestart temp_indexed
-%type <expression> expr lvalue con_elist
+%type <expression> expr lvalue con_elist call
  
  
 %left EQUAL
@@ -400,9 +400,18 @@ member:
 			$<expression>$ = new_expr(table_item_e);
 			($<expression>$)->sym = ($1)->sym;
 			($<expression>$)->index = $3;
+
 		}
-		| call DOT IDENTIFIER {}
-		| call BRACKET_L expr BRACKET_R {}
+		| call DOT IDENTIFIER {
+			$<expression>$ = new_member_item_expr($<expression>1,$3,st,yylineno);
+			 
+		}
+		| call BRACKET_L expr BRACKET_R {
+			$1 = emit_iftableitem($1,st,yylineno);
+			$<expression>$ = new_expr(table_item_e);
+			($<expression>$)->sym = new_temp_var(st,yylineno);
+			($<expression>$)->index = $3;
+		}
 		;
 
 call:
@@ -411,11 +420,21 @@ call:
 			m_param.elist = NULL;
 		}
 		| lvalue callsuffix {
+
 			if(m_param.method){
 				expr * self = $1;
-				$1 = emit_iftableitem(new_member_item_expr(self,m_param.name,st,yylineno),st,yylineno);
-				self->next = m_param.elist;
-				m_param.elist = self;
+				expr * pa = new_member_item_expr(self,m_param.name,st,yylineno);
+				$1 = emit_iftableitem(pa,st,yylineno);
+
+				if(pa && pa->sym && pa->sym->name[0]=='$'){
+					self = pa;
+					self->next = m_param.elist;
+					m_param.elist = self;
+				}
+				else{
+					self->next = m_param.elist;
+					m_param.elist = self;
+				}
 			}
 			$<expression>$ = make_call($1,m_param.elist,(symbol_table **)st,yylineno);
 			m_param.elist = NULL;
@@ -608,6 +627,10 @@ funcdef:
 			// Starting function
 			func_var=1;
 
+	 		// We push the old tempvar counter
+			push_value(&temp_var_stack,var_signed);
+			reset_tmp_var_counter();
+			 
 			// We push the loop scope and the offset to a stack
 			push_value(&loop_stack,scope_loop);
 			push_value(&scope_offset_stack,get_current_scope_offset());
@@ -634,6 +657,13 @@ funcdef:
 
 			// We set the symbol of this expression (poitning to the function symbol)
 			$<symbol>$ = func_sym_temp;
+			
+			// We pop out the old temp counter value 
+			if(temp_var_stack){
+				var_signed = top_value(temp_var_stack);
+				pop(&temp_var_stack);
+			}
+			else var_signed = 0;
 		}
 		;
 
@@ -658,28 +688,15 @@ idlist:
 
 block:
 		BRACE_L {
-
-			// Careful over here
-			if(func_started){
-				push_value(&temp_var_stack,var_signed);
-				reset_tmp_var_counter();
-			}
-
 			if(!func_started)
 				scope_main++;
 			else
 				func_started = 0;
 
 		} block_in BRACE_R {
-
-			// Careful over here 
-			var_signed = top_value(temp_var_stack);
-			pop(&temp_var_stack);
-		 
 			// We disable the local variables of the current scope
 			scope_set_active((symbol_table **)st,scope_main,0);
 			scope_main--;
-
 		}
 		;
  

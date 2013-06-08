@@ -15,7 +15,7 @@ void libfunc_print(){
 
 void libfunc_totalarguments(){
 	unsigned p_topsp = avm_get_env_value(topsp+AVM_SAVEDTOPSP_OFFSET);
-	avm_clear_memcell(&retval);
+	//avm_clear_memcell(&retval);
 
 	if(!p_topsp){
 		avm_warning("Library function 'totalarguments' was called outside of a function, will return nil.","","",instructions[pc].line);
