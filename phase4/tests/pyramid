@@ -1,0 +1,48 @@
+function print_char_times(c,k){
+	for(i=0;i<k;i++){
+		print(c);
+	}
+}
+
+/*
+limit = input();
+x = 0;
+while(1){
+	k = cos(x);
+	times = k*limit;
+	print_char_times("*",times);
+	print("\n");
+	print_char_times("*",times);
+	print("\n");
+	print_char_times("*",times);
+	print("\n");
+	x = x + 0.1;
+}
+*/
+
+
+n = input();
+limit = n;
+x = 1;
+rising = false;
+
+while(1){
+	print_char_times(" ",n);
+	print_char_times("*",x);
+	print_char_times(" ",n);
+	print("\n");
+	
+	if(n==0){rising = true;}
+	if(n==limit){rising = false;}
+
+	if(rising==false){
+		n--;
+		x = x + 2;
+	}
+	else{
+		n++;
+		x = x - 2;
+	}
+//	input();
+}
+
