@@ -1,5 +1,5 @@
 parser: lex.yy.c parser.c lex_lib.o st.o par_lib.o ic_gen.o tc_gen.o
-	gcc -o parser lex.yy.c lex_lib.o st.o parser.c par_lib.o ic_gen.o tc_gen.o -lfl
+	gcc -o parser lex.yy.c lex_lib.o st.o parser.c par_lib.o ic_gen.o tc_gen.o 
 	rm *.o
 	rm -f lex.yy.c
 	rm -f parser.c
