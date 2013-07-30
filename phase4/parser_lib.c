@@ -200,7 +200,7 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 	}
 }	
 
-void check_global_variable(symbol_table ** st, char * variable,unsigned int yylineno){
+char check_global_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 	st_entry * se = NULL;
 
 	// We perform a lookup in the global scope
@@ -209,9 +209,10 @@ void check_global_variable(symbol_table ** st, char * variable,unsigned int yyli
 	if(se==NULL){
 		printf("\nError at line %d: Global variable '%s' could not be detected.\n",yylineno,variable);
 		compile_errors++;
+		return 0;
 	}
-	else
-		(*st)->last_symbol = se;
+	(*st)->last_symbol = se;
+	return 1;
 }
 
 void add_function(symbol_table ** st, char * function,unsigned int yylineno,const char has_name){

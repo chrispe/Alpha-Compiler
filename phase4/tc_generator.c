@@ -174,7 +174,7 @@ void expand_const_array(const_t array_type){
 	switch(array_type){
 		case double_c:{
 			double * new_double_arr = (double *)malloc(DOUBLE_ARR_NEW_SIZE);
-			if(memerror(new_double_arr,"new double array"))exit(0);
+			memcheck(new_double_arr,"new_double_array");
 			memcpy(new_double_arr,double_consts,DOUBLE_ARR_SIZE);
 			double_consts = new_double_arr;
 			total_double_consts += EXPAND_SIZE;
@@ -182,7 +182,7 @@ void expand_const_array(const_t array_type){
 		}
 		case int_c:{
 			int * new_int_arr = (int *)malloc(INTGER_ARR_NEW_SIZE);
-			if(memerror(new_int_arr,"new integer array"))exit(0);
+			memcheck(new_int_arr,"new integer array");
 			memcpy(new_int_arr,integer_consts,INTEGER_ARR_SIZE);
 			integer_consts = new_int_arr;
 			total_integer_consts += EXPAND_SIZE;
@@ -190,7 +190,7 @@ void expand_const_array(const_t array_type){
 		}
 		case str_c:{
 			char ** new_str_arr = (char **)malloc(STRING_ARR_NEW_SIZE);
-			if(memerror(new_str_arr,"new string array"))exit(0);
+			memcheck(new_str_arr,"new string array");
 			memcpy(new_str_arr,str_consts,STRING_ARR_SIZE);
 			str_consts = new_str_arr;
 			total_str_consts += EXPAND_SIZE;
@@ -198,7 +198,7 @@ void expand_const_array(const_t array_type){
 		}
 		case user_func_c:{
 			userfunc_s * new_user_func_arr = (userfunc_s *)malloc(USER_FUNC_ARR_NEW_SIZE);
-			if(memerror(new_user_func_arr,"new user func array"))exit(0);
+			memcheck(new_user_func_arr,"new user func array");
 			memcpy(new_user_func_arr,user_funcs,USER_FUNC_ARR_SIZE);
 			user_funcs = new_user_func_arr;
 			total_user_funcs += EXPAND_SIZE;
@@ -206,7 +206,7 @@ void expand_const_array(const_t array_type){
 		}
 		case lib_func_c:{
 			char ** new_lib_func_arr = (char **)malloc(LIB_FUNC_ARR_NEW_SIZE);
-			if(memerror(new_lib_func_arr,"new lib func array"))exit(0);
+			memcheck(new_lib_func_arr,"new lib func array");
 			memcpy(new_lib_func_arr,named_lib_funcs,LIB_FUNC_ARR_SIZE);
 			named_lib_funcs = new_lib_func_arr;
 			total_named_lib_funcs += EXPAND_SIZE;
@@ -218,14 +218,14 @@ void expand_const_array(const_t array_type){
 
 vmarg_s * create_vmarg(void){
 	vmarg_s * new_vmarg = malloc(sizeof(vmarg_s));
+	memcheck(new_vmarg,"new vmarg");
 	new_vmarg->name = NULL;
-	if(memerror(new_vmarg,"new vmarg"))exit(0);
 	return(new_vmarg);
 }
  
 instr_s * create_instr(void){
 	instr_s * new_instr = malloc(sizeof(instr_s));
-	if(memerror(new_instr,"new instr"))exit(0);
+	memcheck(new_instr,"new instr");
 	new_instr->arg1 = NULL;
 	new_instr->arg2 = NULL;
 	new_instr->result = NULL;
@@ -233,7 +233,6 @@ instr_s * create_instr(void){
 }
 
 vmarg_s * make_operand(expr * e, vmarg_s * arg){
-	 
 	switch(e->type){
 		case var_e:
 		case assign_expr_e:
@@ -244,6 +243,7 @@ vmarg_s * make_operand(expr * e, vmarg_s * arg){
 			assert(e->sym);
 			arg->value = e->sym->offset;
 			arg->name = malloc(strlen(e->sym->name)+1);
+			memcheck(arg->name,"make_operand arg name");
 			strcpy(arg->name,e->sym->name);
 			switch(e->sym->space){
 				case PROGRAM_VAR: arg->type = global_a;	break;
@@ -314,22 +314,22 @@ void make_retval_operand(vmarg_s * arg){
 
 void add_incomplete_jump(unsigned int instr_id, unsigned int iaddress){
 	incomplete_jump * new_jump = malloc(sizeof(incomplete_jump));
-	if(memerror(new_jump,"new incomplete jump"))exit(0);
+	memcheck(new_jump,"new incomplete jump");
 	new_jump->instr_id = instr_id;
 	new_jump->iaddress = iaddress;
 	new_jump->next = i_jumps;
 	i_jumps = new_jump;
 }
 
-void expand_instr_array(void){
+void expand_instr_array(){
 	instr_s * new_instr_arr = (instr_s *)malloc(INSTR_ARR_NEW_SIZE);
-	if(memerror(new_instr_arr,"new instruction array"))exit(0);
+	memcheck(new_instr_arr,"new instruction array");
 	memcpy(new_instr_arr,instructions,INSTR_ARR_SIZE);
 	instructions = new_instr_arr;
 	total_instructions += EXPAND_SIZE;
 }
 
-void patch_incomplete_jumps(void){
+void patch_incomplete_jumps(){
 	incomplete_jump * temp = i_jumps;
 	while(temp){
 		if(temp->iaddress == curr_quad)
@@ -340,7 +340,7 @@ void patch_incomplete_jumps(void){
 	}
 }
 
-unsigned int next_instr_label(void){
+unsigned int next_instr_label(){
 	return(current_instr_index);
 }
 

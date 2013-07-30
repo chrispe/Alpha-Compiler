@@ -10,7 +10,7 @@
 // The type of the variable/function.
 typedef enum{
 	GLOBAL_VAR, VAR, LCAL, FORMAL,
-	USERFUNC, LIBFUNC, TEMP_VAR
+	USERFUNC, LIBFUNC, TEMP_VAR, UNKNOWN
 }st_entry_type;
 
 typedef enum{
@@ -109,6 +109,9 @@ void print_st(symbol_table * st);
 
 // Prints an error in case the memory allocation failed.
 int memerror(void * ptr, const char * name);
+
+// Calls memerror, in case an error is returned the program returns.
+void memcheck(void * p, const char * name);
 
 // Sets the function in which the symbol (var) was declared.
 st_entry * set_var_func(st_entry * symbol,const char * func_name);

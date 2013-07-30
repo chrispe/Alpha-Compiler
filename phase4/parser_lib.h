@@ -94,7 +94,7 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno);
 void add_local_variable(symbol_table ** st, char * variable,unsigned int yylineno);
 
 // It just checks if the global reference is valid.
-void check_global_variable(symbol_table ** st, char * variable,unsigned int yylineno);
+char check_global_variable(symbol_table ** st, char * variable,unsigned int yylineno);
 
 
 /* ======================================================================

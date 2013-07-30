@@ -2,8 +2,8 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
- 
  	#include "tc_generator.h"
+
 	#define YYPARSE_PARAM st
 	
 	int yyerror (const char * yaccProvideMessage);
@@ -14,26 +14,15 @@
 	extern char * yytext;
 	extern FILE * yyin;
 
-	// A temporary symbol pointing to the last function
-	st_entry * func_entry = NULL;
-
 	// Some parameters for the elist
 	method_call_param m_param;
- 
- 	// A temporary expression used to make some things easier.
- 	expr * temp_expr = NULL;
-
- 	// A stack for pushing a useful variable when entering a function
- 	expr * expr_stack = NULL;
-
- 	// Some variables used for the (for) statement
- 	unsigned int for_test = 0;
- 	unsigned int for_enter = 0;
 
  	// The lists in which we save the labels for patching.
  	list_node * break_list = NULL;
  	list_node * con_list = NULL;
 
+ 	// A stack containing the lists of break;
+ 	// and continue; labels for each nested loop.
  	stack_node * break_stack = NULL;
  	stack_node * con_stack = NULL;
 
@@ -43,9 +32,7 @@
  	// The stack for patching the jumps before the function declaration
  	st_entry * func_sym_temp = NULL;
  	str_stack_node * func_jump_decl_stack = NULL;
-
  	str_stack_node * temp_var_stack = NULL;
- 	char inside_index = 0;
 %}
 %error-verbose
 %start program
@@ -95,7 +82,7 @@ program:
 		;
 
 stmt:
-		expr SEMICOLON { fun_rec=0; reset_tmp_var_counter();   }
+		expr SEMICOLON { fun_rec=0; reset_tmp_var_counter(); }
 		| BREAK SEMICOLON {
 			if(scope_loop<=0){
 				yyerror("Cannot use break; outside of a loop.");
@@ -114,7 +101,6 @@ stmt:
 				compile_errors++;
 			}
 			else{
-							
 				con_list = stack_top(con_stack);
 				con_list = list_insert(con_list,curr_quad);
 				con_stack->head = con_list;
@@ -134,81 +120,65 @@ expr:
 		assignexpr {$<expression>$ = $<expression>1;}
 		|	expr PLUS expr 	{
 				$<expression>$ = emit_arithm((symbol_table **)st,add,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr MINUS expr	{
 				$<expression>$ = emit_arithm((symbol_table **)st,sub,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr MULTI expr {
 				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr SLASH expr {
 				$<expression>$ = emit_arithm((symbol_table **)st,op_div,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 			}
 		|	expr PERCENT expr {
 				$<expression>$ = emit_arithm((symbol_table **)st,mod,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 			}
 		|	expr GREATER expr {
 				$<expression>$ = emit_relop((symbol_table **)st,if_greater,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr EQ_GREATER expr {
 				$<expression>$ = emit_relop((symbol_table **)st,if_greq,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr LESS expr {
 				$<expression>$ = emit_relop((symbol_table **)st,if_less,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|   expr EQ_LESS expr {
 				$<expression>$ = emit_relop((symbol_table **)st,if_leq,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr DEQUAL expr {
 				$<expression>$ = emit_relop((symbol_table **)st,if_eq,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr NEQUAL expr {
 				$<expression>$ = emit_relop((symbol_table **)st,if_neq,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr AND expr {
 				$<expression>$ = new_expr(bool_expr_e);
 				$<expression>$->sym = new_temp_var(st,yylineno);
 				emit(and,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
 		|	expr OR expr {
 				$<expression>$ = new_expr(bool_expr_e);
 				$<expression>$->sym = new_temp_var(st,yylineno);
 				emit(or,$<expression>1,$<expression>3,$<expression>$,0,yylineno);
-				temp_expr = $<expression>$;
 		}
-		| 	term {$<expression>$ = $<expression>1;}
+		| 	term { $<expression>$ = $<expression>1; }
 		;
 
 term:
-		PAREN_L expr PAREN_R	{$<expression>$ = $<expression>2; temp_expr=$<expression>$;}
+		PAREN_L expr PAREN_R	{$<expression>$ = $<expression>2;}
 		| MINUS expr %prec UMINUS {
 			check_uminus($<expression>2,yylineno);
-			if(is_num_expr($<expression>2)){
+			if(is_num_expr($<expression>2))
 				$<expression>$ = emit_arithm((symbol_table **)st,mul,$<expression>2,new_expr_const_int(-1),$<expression>$,-1,yylineno);
-			}
 			else{
 				$<expression>$ = new_expr(arithm_expr_e);
 				$<expression>$->sym =  new_temp_var(st,yylineno);
 				emit(uminus,$<expression>2,NULL,$<expression>$,-1,yylineno);
 			}
-			temp_expr = $<expression>$;
 		}
 		| NOT expr {
 			$<expression>$ = new_expr(bool_expr_e);
 			$<expression>$->sym = new_temp_var(st,yylineno);
-			temp_expr = $<expression>$;
 			emit(not,$<expression>2,NULL,$<expression>$,-1,yylineno);
 		}
 		| lvalue DPLUS {
@@ -229,7 +199,6 @@ term:
 					emit(add,$<expression>1,new_expr_const_int(1),$<expression>$,-1,yylineno);
 					emit(assign,$<expression>$,NULL,$<expression>1,-1,yylineno);
 				}
-				temp_expr = $<expression>$;
 			}
 		}
 		| DPLUS lvalue {
@@ -244,13 +213,11 @@ term:
 					emit(table_set_elem,$<expression>2,$<expression>2->index,$<expression>$,-1,yylineno);
 				}
 				else{
- 
 					$<expression>$ = new_expr(arithm_expr_e);
 					$<expression>$->sym = new_temp_var(st,yylineno);
 					emit(add,$<expression>2,new_expr_const_int(1),$<expression>$,-1,yylineno);
 					emit(assign,$<expression>$,NULL,$<expression>2,-1,yylineno);
 				}
-				temp_expr = $<expression>$;
 			}
 		}
 		| lvalue DMINUS {
@@ -272,7 +239,6 @@ term:
 					emit(assign,$<expression>$,NULL,$<expression>1,-1,yylineno);
 				}
 			}
-			temp_expr = $<expression>$;
 		}
 		| DMINUS lvalue {
 			if($<expression>2->sym->type==USERFUNC || $<expression>2->sym->type==LIBFUNC){
@@ -291,61 +257,51 @@ term:
 					emit(sub,$<expression>2,new_expr_const_int(1),$<expression>$,-1,yylineno);
 					emit(assign,$<expression>$,NULL,$<expression>2,-1,yylineno);
 				}
-				temp_expr = $<expression>$;
 			}
 		}
-		| primary {$<expression>$ = $<expression>1; }
+		| primary { $<expression>$ = $<expression>1; }
 		;
 
 primary:
 		lvalue	{
 			$<expression>$ = emit_iftableitem($1,st,yylineno);
-			temp_expr = $<expression>$;
-
 		}
 		| const { 
 			$<expression>$ = $<expression>1;
-			temp_expr = $<expression>$;
 		}
 		| call  { 
 			$<expression>$ = $<expression>1; 
-			temp_expr = $<expression>$;}
+		}
 		| objectdef {
-
 			$<expression>$ = new_expr(new_table_e);
 			$<expression>$ = $<expression>1;
-			temp_expr = $<expression>$;
 		}
 		| PAREN_L funcdef PAREN_R {
-	 		
 			$<expression>$ = new_expr(program_func_e);
-			($<expression>$)->sym = $<symbol>2;
-			temp_expr = $<expression>$;
-
+			$<expression>$->sym = $<symbol>2;
 		}
 		;
 
 const:
-		REAL {$<expression>$=new_expr_const_num(yylval.fltval);temp_expr = $<expression>$;}
-		| INTEGER {$<expression>$=new_expr_const_int(yylval.intval);temp_expr = $<expression>$;}
-		| STRING {$<expression>$ = new_expr_const_str(yylval.strval);temp_expr = $<expression>$;}
-		| NIL {$<expression>$ = new_expr(nil_e);temp_expr = $<expression>$;}
-		| TRUE {$<expression>$ = new_expr_const_bool(1);temp_expr = $<expression>$;}
-		| FALSE {$<expression>$ = new_expr_const_bool(0);temp_expr = $<expression>$;}
+		REAL { $<expression>$ = new_expr_const_num(yylval.fltval);}
+		| INTEGER { $<expression>$ = new_expr_const_int(yylval.intval);}
+		| STRING { $<expression>$ = new_expr_const_str(yylval.strval);}
+		| NIL { $<expression>$ = new_expr(nil_e);}
+		| TRUE { $<expression>$ = new_expr_const_bool(1);}
+		| FALSE { $<expression>$ = new_expr_const_bool(0);}
 		;
 
 assignexpr:
 		lvalue EQUAL{expr_started=1;} 
 		expr { 
 			expr_started=0; 
+			fun_rec=0;
+
 			if($<expression>1->sym->type==USERFUNC || $<expression>1->sym->type==LIBFUNC){
 				printf("\nError at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$2);
 				compile_errors++;
 			}
-			fun_rec=0;
 
-			// Careful with the labels
-			// (had tempexpr on exp4)
 			if(($1)->type==table_item_e){
 				emit(table_set_elem,$<expression>1,$<expression>1->index,$<expression>4,-1,yylineno);
 				$<expression>$ = emit_iftableitem($<expression>1,st,yylineno);
@@ -359,8 +315,8 @@ assignexpr:
 					($<expression>$)->sym = new_temp_var(st,yylineno);
 					emit(assign,$<expression>1,NULL,$<expression>$,-1,yylineno);
 				}
-				else $<expression>$->sym = $<expression>1->sym;
-				
+				else 
+					$<expression>$->sym = $<expression>1->sym;
 			}
 		}
 		;
@@ -380,15 +336,21 @@ lvalue:
 			// Every required checking is included in the following function.
 			add_local_variable((symbol_table **)st, $2,yylineno);
 			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
+		
 		}
 		| DCOLON IDENTIFIER {
 
 			// We check that the global variable exists
-			// The whole proccess is handled by the following funciton.
-			check_global_variable((symbol_table **)st, $2,yylineno);
+			// The whole proccess is handled by the following function.
 			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
+
+			// In case the global variable could not be found we assign
+			// the type of the variable to uknown so the right errors occure.
+			if(check_global_variable((symbol_table **)st, $2,yylineno)==0)
+				$<expression>$->sym->type = UNKNOWN;
+		
 		}
-		| member {$<expression>$ = $<expression>1;}
+		| member { $<expression>$ = $<expression>1; }
 		;
 
 member:
@@ -398,19 +360,17 @@ member:
 		| lvalue BRACKET_L expr BRACKET_R {
 			$1 = emit_iftableitem($1,st,yylineno);
 			$<expression>$ = new_expr(table_item_e);
-			($<expression>$)->sym = ($1)->sym;
-			($<expression>$)->index = $3;
-
+			$<expression>$->sym = ($1)->sym;
+			$<expression>$->index = $3;
 		}
 		| call DOT IDENTIFIER {
 			$<expression>$ = new_member_item_expr($<expression>1,$3,st,yylineno);
-			 
 		}
 		| call BRACKET_L expr BRACKET_R {
 			$1 = emit_iftableitem($1,st,yylineno);
 			$<expression>$ = new_expr(table_item_e);
-			($<expression>$)->sym = new_temp_var(st,yylineno);
-			($<expression>$)->index = $3;
+			$<expression>$->sym = new_temp_var(st,yylineno);
+			$<expression>$->index = $3;
 		}
 		;
 
@@ -472,35 +432,36 @@ methodcall:
 
 objectdef:
 		BRACKET_L elist BRACKET_R {
-			int i=0;
+			unsigned int i = 0;
 			expr * table = new_expr(new_table_e);
+			expr * temp = m_param.elist;
+
 			table->sym = new_temp_var(st,yylineno);
 			emit(table_create,NULL,NULL,table,curr_quad,yylineno);
-
-			expr * temp = m_param.elist;
+			
 			while(temp){
 				emit(table_set_elem,table,new_expr_const_int(i),temp,-1,yylineno);
 				temp = temp->next;
 				i++;
 			}
+			
 			$<expression>$ = table;
 		}
-		| BRACKET_L{inside_index=1;} indexed BRACKET_R {
+		| BRACKET_L indexed BRACKET_R {
 	 
 			expr * table = new_expr(new_table_e);
-			expr * temp = $<expression>3;
-
+			expr * temp = $<expression>2;
+			
+			index_expr = NULL;
 			table->sym = new_temp_var(st,yylineno);
 			emit(table_create,NULL,NULL,table,-1,yylineno);
 
 			while(temp){
-				 
 				emit(table_set_elem,table,temp,temp->index,-1,yylineno);
 				temp = temp->next;
 			}
+			
 			$<expression>$ = table;
-			index_expr = NULL;
-			inside_index = 0;
 		}
 		;
 
@@ -515,13 +476,11 @@ temp_indexed:
 			COMMA indexedelem temp_indexed {			
 				$<expression>$ = $<expression>2;
 				$<expression>$->next = $<expression>3; }
-			|	{$<expression>$ = NULL;}
+			|	{ $<expression>$ = NULL; }
 			;
-
 
 indexedelem:
 			BRACE_L expr COLON expr BRACE_R	{
-		 
 				$<expression>$ = $<expression>2;
 				$<expression>$->index = $<expression>4;
 			}
@@ -545,23 +504,16 @@ con_elist: COMMA expr con_elist	{
  
 func_temp:
 		IDENTIFIER{
-			// Adding the function(with name) to the symbol table.
+			// Adding the function (with name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,$1,yylineno,1);
-			func_entry = (*((symbol_table **)st))->last_symbol;
 
 			// We add funcstart quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),$1,scope_main);
-			
-			temp_expr = lvalue_expr(se);
-			temp_expr->next = expr_stack;
-			expr_stack = temp_expr;
-			temp_expr = NULL;
 			funcstart_jump = curr_quad;
 			push_value(&func_jump_decl_stack,funcstart_jump);
 			emit(jump,NULL,NULL,NULL,-1,yylineno);
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
-			 
 		} 
 		PAREN_L {
 			scope_main++;
@@ -580,30 +532,20 @@ func_temp:
 			patch_label(top_value(func_jump_decl_stack),curr_quad);
 			pop(&func_jump_decl_stack);
 			pop(&func_names);
-			temp_expr = expr_stack;
-			expr_stack = expr_stack->next;
 			func_sym_temp = se;
-
 		}
 		| PAREN_L{
  			// Adding the function(without name) to the symbol table.
 			// Every required checking is included in the following method.
 			add_function((symbol_table **)st,NULL,yylineno,0);
-			temp_expr = NULL;
-			
+
 			// We add funcstart quad
 			st_entry * se = (*(symbol_table **)(st))->last_symbol;
-			 
-			temp_expr = lvalue_expr(se);
-			temp_expr->next = expr_stack;
-			expr_stack = temp_expr;
-			temp_expr = NULL;
 			funcstart_jump = curr_quad;
 			push_value(&func_jump_decl_stack,funcstart_jump);
 			emit(jump,NULL,NULL,NULL,-1,yylineno);
 			emit(func_start,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
  		 	enter_scope_space();
- 		  
 
 		} idlist PAREN_R{enter_scope_space();} block {   
 			func_var=0;
@@ -615,8 +557,6 @@ func_temp:
 			patch_label(top_value(func_jump_decl_stack),curr_quad);
 			pop(&func_jump_decl_stack);
 			pop(&func_names);
-			temp_expr = expr_stack;
-			expr_stack = expr_stack->next;
 			func_sym_temp = se;
  
 		}
@@ -708,8 +648,6 @@ block_in:
 ifstmt:
 		if_prefix stmt %prec IF_TERM { 
 			patch_label($<intval>1,curr_quad);
-
-
 		}
 		| if_prefix stmt else_prefix stmt { 
 			patch_label($<intval>1,$<intval>3+1);
@@ -763,7 +701,6 @@ whilestart:
 			$<intval>$ = curr_quad;
  			break_stack = push_node(break_stack,NULL);
 			con_stack = push_node(con_stack,NULL);
- 
 		}
 
 whilesecond:
@@ -773,7 +710,6 @@ whilesecond:
 			emit(jump,NULL,NULL,NULL,curr_quad,yylineno);
 		}
 		;
-
 
 N: {
 	$<intval>$ = curr_quad;
@@ -788,7 +724,6 @@ forprefix:
 		FOR PAREN_L elist SEMICOLON M expr SEMICOLON{
 			scope_loop++;
 			$<intval>$ = $<intval>5;
-			for_enter = curr_quad;
 			emit(if_eq,$<expression>6,new_expr_const_bool(1),NULL,curr_quad,yylineno);
 			break_stack = push_node(break_stack,NULL);
 			con_stack = push_node(con_stack,NULL);
@@ -798,7 +733,6 @@ forprefix:
 forstmt:
 		forprefix N elist PAREN_R N stmt N {
 			scope_loop--;
-			//patch_label(for_enter,$<intval>5+1);
 			patch_label($<intval>2,curr_quad);
 			patch_label($<intval>5,$<intval>1);
 			patch_label($<intval>7,$<intval>2+1);
@@ -824,15 +758,16 @@ forstmt:
 
 returnstmt:
 		RETURN SEMICOLON {
-			if(func_scope==0)yyerror("Cannot use return; when not in a function.");
-			else emit(ret,NULL,NULL,NULL,curr_quad,yylineno);
-			
-		
+			if(func_scope==0)
+				yyerror("Cannot use return; when not in a function.");
+			else 
+				emit(ret,NULL,NULL,NULL,curr_quad,yylineno);		
 		}
 		| RETURN expr SEMICOLON {
-			if(func_scope==0)yyerror("Cannot use return; when not in a function.");
-			else emit(ret,NULL,NULL,$<expression>2,curr_quad,yylineno);
-			
+			if(func_scope==0)
+				yyerror("Cannot use return; when not in a function.");
+			else 
+				emit(ret,NULL,NULL,$<expression>2,curr_quad,yylineno);
 		}
 		;
 
@@ -841,6 +776,39 @@ returnstmt:
 int yyerror (const char * yaccProvideMessage){
 	fprintf(stderr,"\nSyntax error at line %d: %s\n",yylineno,yaccProvideMessage);
 	compile_errors++;
+}
+
+void generate_icode(const char * param){
+    printf("Generating intermediate code...");
+	yyparse(&st);
+	if(param && strcmp(param,"-q")==0)
+		write_quads();
+	if(param && strcmp(param,"-st")==0)	
+		print_st(st);
+	if(compile_errors==0)
+		printf(" (DONE)\n");
+}
+
+void generate_tcode(const char * param){
+	printf("Generating target code...");
+	generate_instructions();
+	if(param && strcmp(param,"-i")==0)
+		print_instructions();
+
+	if(compile_errors>0)
+		printf(" (FAILED)\n");
+	else 
+		printf(" (DONE)\n");
+}
+
+void write_bf(const char * param){
+	printf("Writing executable binary file...");
+	write_binary_file();
+	
+	if(compile_errors>0)
+		printf(" (FAILED)\n");
+	else 
+		printf(" (DONE)\n");
 }
 
 int main(int argc,char ** argv)
@@ -860,38 +828,15 @@ int main(int argc,char ** argv)
         yyin = stdin;
 
     printf("Compilation started...\n");
-    printf("Generating intermediate code...");
-    fflush(stdout);
-	yyparse(&st);
+    
+    // Generate the intermidiate code
+    generate_icode(param);
 
-	if(param && strcmp(param,"-q")==0)
-		write_quads();
+    // Generate the target code
+    generate_tcode(param);
 
-	if(param && strcmp(param,"-st")==0)	
-		print_st(st);
-	
-	if(compile_errors==0)
-		printf(" (DONE)\n");
-
-	printf("Generating target code...");
-
-	generate_instructions();
-	if(param && strcmp(param,"-i")==0)
-		print_instructions();
-
-	if(compile_errors>0)
-		printf(" (FAILED)\n");
-	else 
-		printf(" (DONE)\n");
-
-	printf("Writing executable binary file...");
-	write_binary_file();
-	fflush(stdout);
-
-	if(compile_errors>0)
-		printf(" (FAILED)\n");
-	else 
-		printf(" (DONE)\n");
+    // Write the executable binary file
+    write_bf(param);
 
 	if(compile_errors>0)
 		printf("Compilation failed. (%d errors)\n",compile_errors);

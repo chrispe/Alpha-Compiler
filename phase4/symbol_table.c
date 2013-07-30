@@ -13,13 +13,10 @@ int st_insert(symbol_table ** st, st_entry ** symbol) {
 		symbol_cpy =  set_var_func(symbol_cpy,(*symbol)->value_type.varVal->used_in_func);
 
 	// Insertion in the hash table.
-	if ((*st)->hash_table[key] == NULL)
-		(*st)->hash_table[key] = *symbol;
-	else{
+	if ((*st)->hash_table[key])
 		(*symbol)->next = (*st)->hash_table[key];
-		(*st)->hash_table[key] = *symbol;
-	} 
-	
+	(*st)->hash_table[key] = *symbol;
+
 	// Insertion in the scope list.
 	while (temp && temp->scope<(*symbol)->scope){
 		previous = temp;
@@ -127,7 +124,6 @@ st_entry * st_lookup_table(symbol_table * st,const char * symbol_name){
 			return temp;
 		temp = temp->next;
 	}
-
 	return temp;
 }
 
@@ -140,6 +136,7 @@ st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned i
 
 	if(sc_temp==NULL)
 		return NULL;
+	
 	st_temp = sc_temp->symbols;
 	 
 	while(st_temp!=NULL){
@@ -215,6 +212,11 @@ int memerror(void * ptr, const char * name){
 		return 1;
 	}
 	return 0;
+}
+
+void memcheck(void * p, const char * name){
+	if(memerror(p,name))
+		exit(0);
 }
 
 int generate_key(const char * name){
@@ -315,7 +317,7 @@ unsigned int count_func_locals(symbol_table * st,char * funcname){
  		st_e = sc_e->symbols;
  		while(st_e){
  			if(st_e->value_type.varVal->used_in_func){
- 				if(st_e->type!=FORMAL && strcmp(st_e->value_type.varVal->used_in_func,funcname)==0)
+ 				if(st_e->type!=LCAL && strcmp(st_e->value_type.varVal->used_in_func,funcname)==0)
  					locals++;
  			}
  			st_e = st_e->next;

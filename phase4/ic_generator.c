@@ -212,9 +212,7 @@ char * expr_to_str(expr * e){
 	switch(e->type){
 		case const_int_e: sprintf(temp, "%d", e->int_value); break;
 		case const_num_e: sprintf(temp, "%lf", e->num_value);break;
-		case const_str_e:{
-			return e->str_value;
-		}
+		case const_str_e: return e->str_value;
 		case nil_e: return "NIL";
 		case const_bool_e:{
 			if(e->bool_value==1)
@@ -235,15 +233,17 @@ expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line
 
 	// We use params as a stack for the elist
 	params = elist;
-	if(elist!=NULL)elist = elist->next;
-	if(params!=NULL)params->next = NULL;
+	if(elist!=NULL)
+		elist = elist->next;
+	if(params!=NULL)
+		params->next = NULL;
 	 
 	// We create the stack 
 	while(elist){
 		temp = elist->next;
 		elist->next = params;
 		params = elist;
-		elist =temp;
+		elist = temp;
 	}
  	
  	// We emit each expression of the stack
@@ -297,8 +297,9 @@ unsigned int is_num_expr(expr * e){
 }
 
 unsigned int is_num_double(expr * e){
-	if(e->type==const_num_e)return 1;
-	else return 0;
+	if(e->type==const_num_e)
+		return 1; 
+	return 0;
 }
 
 double get_expr_num_value(expr * e){
@@ -339,7 +340,8 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 		case add: result = arg1 + arg2; break;
 		case sub: result = arg1 - arg2;	break;
 		case mod: {
-			if(arg2!=0)result = modulo(arg1,arg2);
+			if(arg2!=0)
+				result = modulo(arg1,arg2);
 			else{
 				result = arg1;
 				printf("\nWarning at line %d : Division by zero.\n",line);
@@ -347,7 +349,8 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 			break;
 		}
 		case op_div: {
-			if(arg2!=0)result = arg1/arg2; 
+			if(arg2!=0)
+				result = arg1/arg2; 
 			else{
 				result = arg1;
 				printf("\nWarning at line %d : Division by zero.\n",line);

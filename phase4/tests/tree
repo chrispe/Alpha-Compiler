@@ -49,15 +49,12 @@ function count(tree){
 }
 
 a = nil;
- 
+i = 0;
+limit = input();
 while(true){
-	user_input = input();
-	if(typeof(user_input)=="integer"){
-		a = tree_insert(a,user_input);
-	}
-	else{
-		break;
-	}
+	a = tree_insert(a,i);
+	i++;
+	if(i==limit)break;
 }
 
 print_tree(a);
