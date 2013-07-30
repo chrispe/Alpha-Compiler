@@ -5,9 +5,9 @@
  	#include "tc_generator.h"
 
 	#define YYPARSE_PARAM st
-	
+
 	int yyerror (const char * yaccProvideMessage);
-	
+
 	// Importing variables from yylex.
 	extern int yylex(void);
 	extern int yylineno;
@@ -310,7 +310,7 @@ assignexpr:
 			else{
 				emit(assign,$<expression>4,NULL,$<expression>1,-1,yylineno);
 				$<expression>$ = new_expr(assign_expr_e);
-				 
+
 				if($<expression>1->sym->type!=TEMP_VAR){
 					($<expression>$)->sym = new_temp_var(st,yylineno);
 					emit(assign,$<expression>1,NULL,$<expression>$,-1,yylineno);
@@ -336,19 +336,21 @@ lvalue:
 			// Every required checking is included in the following function.
 			add_local_variable((symbol_table **)st, $2,yylineno);
 			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
-		
+
 		}
 		| DCOLON IDENTIFIER {
-
+			
 			// We check that the global variable exists
 			// The whole proccess is handled by the following function.
+			char is_global = check_global_variable((symbol_table **)st, $2,yylineno);
+
 			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
 
 			// In case the global variable could not be found we assign
 			// the type of the variable to uknown so the right errors occure.
-			if(check_global_variable((symbol_table **)st, $2,yylineno)==0)
+			if(!is_global)
 				$<expression>$->sym->type = UNKNOWN;
-		
+
 		}
 		| member { $<expression>$ = $<expression>1; }
 		;
@@ -438,20 +440,20 @@ objectdef:
 
 			table->sym = new_temp_var(st,yylineno);
 			emit(table_create,NULL,NULL,table,curr_quad,yylineno);
-			
+
 			while(temp){
 				emit(table_set_elem,table,new_expr_const_int(i),temp,-1,yylineno);
 				temp = temp->next;
 				i++;
 			}
-			
+
 			$<expression>$ = table;
 		}
 		| BRACKET_L indexed BRACKET_R {
-	 
+
 			expr * table = new_expr(new_table_e);
 			expr * temp = $<expression>2;
-			
+
 			index_expr = NULL;
 			table->sym = new_temp_var(st,yylineno);
 			emit(table_create,NULL,NULL,table,-1,yylineno);
@@ -460,7 +462,7 @@ objectdef:
 				emit(table_set_elem,table,temp,temp->index,-1,yylineno);
 				temp = temp->next;
 			}
-			
+
 			$<expression>$ = table;
 		}
 		;
@@ -525,7 +527,7 @@ func_temp:
 		idlist PAREN_R{enter_scope_space();}  block { 
 			func_scope--;
 			in_func=0;
-			
+
 			// We add funcend quad
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
@@ -552,7 +554,7 @@ func_temp:
 			func_scope--;
 			in_func=0;
 			st_entry * se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main);
-			 
+
 			emit(func_end,NULL,NULL, lvalue_expr(se), curr_quad,yylineno);
 			patch_label(top_value(func_jump_decl_stack),curr_quad);
 			pop(&func_jump_decl_stack);
@@ -570,7 +572,7 @@ funcdef:
 	 		// We push the old tempvar counter
 			push_value(&temp_var_stack,var_signed);
 			reset_tmp_var_counter();
-			 
+
 			// We push the loop scope and the offset to a stack
 			push_value(&loop_stack,scope_loop);
 			push_value(&scope_offset_stack,get_current_scope_offset());
@@ -584,9 +586,9 @@ funcdef:
 
 			// We set the scope loop to the previous value
 			scope_loop = top_value(loop_stack);
-			 
+
 			pop(&loop_stack);
-			 
+
 			// We decrease the scope space by two. 
 			exit_scope_space();
 			exit_scope_space();
@@ -597,7 +599,7 @@ funcdef:
 
 			// We set the symbol of this expression (poitning to the function symbol)
 			$<symbol>$ = func_sym_temp;
-			
+
 			// We pop out the old temp counter value 
 			if(temp_var_stack){
 				var_signed = top_value(temp_var_stack);
@@ -689,7 +691,7 @@ whilestmt:
 				patch_label(con_list->value,$<intval>1);
 				con_list = con_list->next;
 			}
-			
+
 			break_stack = pop_node(break_stack);
 			con_stack = pop_node(con_stack);
 		} 
@@ -804,7 +806,7 @@ void generate_tcode(const char * param){
 void write_bf(const char * param){
 	printf("Writing executable binary file...");
 	write_binary_file();
-	
+
 	if(compile_errors>0)
 		printf(" (FAILED)\n");
 	else 

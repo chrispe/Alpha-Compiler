@@ -199,7 +199,6 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 		}
 	}
 }	
-
 char check_global_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 	st_entry * se = NULL;
 
@@ -211,7 +210,8 @@ char check_global_variable(symbol_table ** st, char * variable,unsigned int yyli
 		compile_errors++;
 		return 0;
 	}
-	(*st)->last_symbol = se;
+	else
+		(*st)->last_symbol = se;
 	return 1;
 }
 

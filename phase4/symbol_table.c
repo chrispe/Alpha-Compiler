@@ -317,7 +317,7 @@ unsigned int count_func_locals(symbol_table * st,char * funcname){
  		st_e = sc_e->symbols;
  		while(st_e){
  			if(st_e->value_type.varVal->used_in_func){
- 				if(st_e->type!=LCAL && strcmp(st_e->value_type.varVal->used_in_func,funcname)==0)
+ 				if(  strcmp(st_e->value_type.varVal->used_in_func,funcname)==0)
  					locals++;
  			}
  			st_e = st_e->next;
