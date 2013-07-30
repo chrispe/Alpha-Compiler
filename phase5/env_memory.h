@@ -7,7 +7,7 @@
   
 #define ENV_MEM_LIB
 #define AVM_STACK_ENV_SIZE 4
-#define AVM_STACKSIZE 4096
+#define AVM_STACKSIZE 120000
 #define AVM_WIPEOUT(m) memset(&(m),0,sizeof(avm_memcell))
 #define AVM_TABLE_HASHSIZE 211
 

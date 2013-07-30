@@ -845,52 +845,58 @@ int yyerror (const char * yaccProvideMessage){
 
 int main(int argc,char ** argv)
 {
-	m_param.elist = NULL;
- 	 
  	st = create_symbol_table();
- 
+ 	char * param = NULL;
+
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
             	fprintf(stderr, "Cannot read file %s\n", argv[1]);
             	return 1;
         }
+        if(argc>=3)
+        	param = argv[2];
     }
     else
         yyin = stdin;
 
     printf("Compilation started...\n");
-
     printf("Generating intermediate code...");
     fflush(stdout);
 	yyparse(&st);
-	write_quads();
-	//print_st(st);
-	if(compile_errors==0)printf(" (DONE)\n");
 
+	if(param && strcmp(param,"-q")==0)
+		write_quads();
 
-	fflush(stdout);
+	if(param && strcmp(param,"-st")==0)	
+		print_st(st);
+	
+	if(compile_errors==0)
+		printf(" (DONE)\n");
+
 	printf("Generating target code...");
-	fflush(stdout);
+
 	generate_instructions();
-	print_instructions();
+	if(param && strcmp(param,"-i")==0)
+		print_instructions();
 
-	if(compile_errors>0)printf(" (FAILED)\n");
-	else printf(" (DONE)\n");
+	if(compile_errors>0)
+		printf(" (FAILED)\n");
+	else 
+		printf(" (DONE)\n");
 
-	fflush(stdout);
 	printf("Writing executable binary file...");
 	write_binary_file();
 	fflush(stdout);
 
-	if(compile_errors>0)printf(" (FAILED)\n");
-	else printf(" (DONE)\n");
+	if(compile_errors>0)
+		printf(" (FAILED)\n");
+	else 
+		printf(" (DONE)\n");
 
-	fflush(stdout);
 	if(compile_errors>0)
 		printf("Compilation failed. (%d errors)\n",compile_errors);
-	else{
+	else
 		printf("Compilation has been completed.\n");
 
-	}
 	return 0;	
 }

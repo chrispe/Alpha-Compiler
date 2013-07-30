@@ -11,7 +11,6 @@ extern char *key_str[];
 extern char *op_str[];
 extern char *pun_str[];
  
-        
 // Extends the string by a given char
 char * extendString(char *,char);
 
@@ -19,4 +18,4 @@ char * extendString(char *,char);
 void replace(char *, char *, char);
 
 // Returns the hex value of a string representing a hex value
-int htoi(char *);
+int htoi(const char *);

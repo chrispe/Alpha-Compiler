@@ -15,7 +15,6 @@ void libfunc_print(){
 
 void libfunc_totalarguments(){
 	unsigned p_topsp = avm_get_env_value(topsp+AVM_SAVEDTOPSP_OFFSET);
-	//avm_clear_memcell(&retval);
 
 	if(!p_topsp){
 		avm_warning("Library function 'totalarguments' was called outside of a function, will return nil.","","",instructions[pc].line);
@@ -72,8 +71,10 @@ void libfunc_input(){
 	for(i=0;i<len;i++){
 		if(input_str[i]=='.')
 			dots++;
-		else if((int)input_str[i]>(int)('9') || (int)input_str[i]<(int)('0'))
-			recognized_char = 1;
+		else if((int)input_str[i]>(int)('9') || (int)input_str[i]<(int)('0')){
+			if(!(input_str[i]=='-' && i==0))
+				recognized_char = 1;
+		}
 	}
 
 	if(strcmp(input_str,"true")==0){
@@ -258,15 +259,14 @@ void libfunc_objectmemberkeys(){
 	unsigned int total_objects = 0;
 	avm_table_bucket * temp;  
 
-	// Changed it to dynamical allocation
-	avm_memcell * index = malloc(sizeof(avm_memcell));
-	index->type = integer_m;
+	avm_memcell index;
+	index.type = integer_m;
 
 	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
 		temp = arg->data.table_value->num_indexed[i];
 		while(temp){
-			index->data.int_value = total_objects;
-			avm_tablesetelem(&retval.data.table_value,index,temp->key); 
+			index.data.int_value = total_objects;
+			avm_tablesetelem(&retval.data.table_value,&index,temp->key); 
 			total_objects++;
 			temp = temp->next;
 		}
@@ -275,8 +275,8 @@ void libfunc_objectmemberkeys(){
 	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
 		temp = arg->data.table_value->str_indexed[i];
 		while(temp){
-			index->data.int_value = total_objects;
-			avm_tablesetelem(&retval.data.table_value,index,temp->key); 
+			index.data.int_value = total_objects;
+			avm_tablesetelem(&retval.data.table_value,&index,temp->key); 
 			total_objects++;
 			temp = temp->next;
 		}

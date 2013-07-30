@@ -15,10 +15,7 @@ unsigned int func_signed = 0;
 
 // A boolean which indicates if a function name has been called.
 char func_started = 0;
-
-// A temporary string for a lot of uses.
-char * temp_str;
-
+ 
 // A variable which indicates if we recognized a function symbol.
 char fun_rec = 0;
 
@@ -56,8 +53,6 @@ unsigned int scope_space_counter = 1;
 // A stack which keeps the scope offset for each function.
 str_stack_node * scope_offset_stack = NULL;
 
- 
-
 void push(str_stack_node ** top,const char * newString){
 	str_stack_node * newNode = malloc(sizeof(str_stack_node));
 	newNode->str = malloc(strlen(newString)+1);
@@ -81,12 +76,14 @@ void push_symbol(str_stack_node ** top, st_entry * s){
 }
 
 st_entry * top_symbol(str_stack_node * top){
-	if(top!=NULL)return top->symbol;
+	if(top!=NULL)
+		return top->symbol;
 	return NULL;
 }
 
 unsigned int  top_value(str_stack_node * top){
-	if(top!=NULL)return top->value;
+	if(top!=NULL)
+		return top->value;
 	return -1;
 }
 
@@ -123,7 +120,8 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 
 			for(i=scope_main;i>=0;i--){
 				se = st_lookup_scope(*((symbol_table **)st),variable,i);
-				if(se!=NULL)break;
+				if(se!=NULL)
+					break;
 			}
 
 			// If the symbol was found then we need to detect if we have access to it.
@@ -137,7 +135,8 @@ void add_variable(symbol_table ** st, char * variable,unsigned int yylineno){
 							compile_errors++;
 					}
 				}
-				else if(expr_started==0){fun_rec = 1;}
+				else if(expr_started==0)
+					fun_rec = 1;
 				(*st)->last_symbol = se;
 			}
 			else {
@@ -192,9 +191,8 @@ void add_local_variable(symbol_table ** st, char * variable,unsigned int yylinen
 					se = create_symbol(variable,1,scope_main,yylineno,LCAL,get_current_scope_offset(),get_current_scope_space());
 					se = set_var_func(se,top(func_names));
 				}
-				else{
+				else
 					se = create_symbol(variable,1,scope_main,yylineno,VAR,get_current_scope_offset(),get_current_scope_space());
-				}
 			}
 			increase_curr_scope_offset();
 			st_insert((symbol_table **)st,&se);
@@ -212,11 +210,14 @@ void check_global_variable(symbol_table ** st, char * variable,unsigned int yyli
 		printf("\nError at line %d: Global variable '%s' could not be detected.\n",yylineno,variable);
 		compile_errors++;
 	}
-	else (*st)->last_symbol = se;
+	else
+		(*st)->last_symbol = se;
 }
 
 void add_function(symbol_table ** st, char * function,unsigned int yylineno,const char has_name){
 	st_entry * se = NULL;
+	char * temp_str = NULL;
+	
 	if(has_name){
 		push(&func_names,function);
 
@@ -293,7 +294,10 @@ void add_function_argument(symbol_table ** st, char * argument,unsigned int yyli
  			se = create_symbol(argument,1,scope_main,yylineno,FORMAL,get_current_scope_offset(),get_current_scope_space());
  			se = set_var_func(se,top(func_names));
  			st_insert((symbol_table **)st,&se);
- 			if(comma)args_insert(&arg_tmp,argument);
+
+ 			if(comma)
+ 				args_insert(&arg_tmp,argument);
+
  			se = st_lookup_scope(*((symbol_table **)st),top(func_names),scope_main-1);
  			args_insert(&(se->value_type.funVal->arguments),argument);
  		}
@@ -337,11 +341,11 @@ char * generate_temp_var_name(unsigned int id){
 	return var_name;
 }
 
-void reset_temp_vars(void){
+void reset_temp_vars(){
 	var_signed = 0;
 }
 
-unsigned int get_current_scope(void){
+unsigned int get_current_scope(){
 	return scope_main;
 }
 

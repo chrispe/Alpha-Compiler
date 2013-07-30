@@ -5,7 +5,6 @@ avm_memcell ax, bx, cx;
 avm_memcell retval;
 
 /* The stack pointers */
-// Be careful here
 unsigned int total_actuals = 0;
 unsigned int top = AVM_STACKSIZE-1;
 unsigned int topsp;
@@ -89,11 +88,11 @@ avm_memcell * avm_translate_operand(vmarg_s * arg,avm_memcell * reg){
 	}
 }
 
-void avm_warning(char * msg1,char * msg2,char * msg3,unsigned int line){
+void avm_warning(char * msg1, char * msg2, char * msg3, unsigned int line){
 	fprintf(stdout,"\n\x1b[33mWarning : %s %s %s at line (%d).\e[0m\n",msg1,msg2,msg3,line);
 }
 
-void avm_error(char * msg1,char * msg2,char * msg3, unsigned int line){
+void avm_error(char * msg1, char * msg2, char * msg3, unsigned int line){
 	fprintf(stdout,"\n\x1b[31mRuntime error : %s %s %s at line (%d). \e[0m \n",msg1,msg2,msg3,line);
 	fprintf(stdout,"\nThe program has exited with return code (0: BAD CODE).\n");
 	exit(0);
@@ -105,7 +104,7 @@ void avm_anonymous_error(char * msg){
 	exit(0);
 }
 
-char * string_tostring(avm_memcell *m){
+char * string_tostring(avm_memcell * m){
 	return(m->data.str_value);
 }
 
@@ -114,13 +113,13 @@ char * avm_tostring(avm_memcell * m){
 }
 
 char * double_tostring(avm_memcell * m){
-	char * output = create_string(100);
+	char * output = create_string(64);
 	sprintf(output,"%lf",m->data.double_value);
 	return output;
 }
 
 char * int_tostring(avm_memcell * m){
-	char * output = create_string(100);
+	char * output = create_string(64);
 	sprintf(output,"%d",m->data.int_value);
 	return output;	
 }
@@ -133,7 +132,7 @@ char * table_tostring(avm_memcell * m){
 	printf("[");
 	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
 		temp = m->data.table_value->str_indexed[i];
-		while(temp!=NULL){
+		while(temp){
 			if(temp->value->type!=table_m)
 				printf("{'%s':%s},",temp->key->data.str_value,avm_tostring(temp->value));
 			else{
@@ -147,7 +146,7 @@ char * table_tostring(avm_memcell * m){
 
 	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
 		temp = m->data.table_value->num_indexed[i];
-		while(temp!=NULL){
+		while(temp){
 			if(temp->value->type!=table_m)
 				printf("{%d:%s},",temp->key->data.int_value,avm_tostring(temp->value));
 			else{
@@ -207,11 +206,14 @@ char * create_string(unsigned int len){
 avm_memcell * create_memcell(){
 	avm_memcell * new_cell = malloc(sizeof(avm_memcell));
 	new_cell->type = undefined_m;
+	new_cell->data.str_value = NULL;
+	new_cell->data.lib_func_value = NULL;
+	new_cell->data.table_value = NULL;
 	memerror(new_cell,"new avmcell");
 	return new_cell;
 }
 
-void avm_init_stack(void){
+void avm_init_stack(){
 	unsigned int i;
 	for(i=0;i<AVM_STACKSIZE;i++){
 		AVM_WIPEOUT(stack[i]);
@@ -223,7 +225,7 @@ void avm_init_stack(void){
 void avm_table_bucket_init(avm_table_bucket ** bucket){
 	unsigned int i;
 	for(i=0;i<AVM_TABLE_HASHSIZE;i++){
-		bucket[i] = (avm_table_bucket *) NULL;
+		bucket[i] = (avm_table_bucket *)NULL;
 	}
 }
 
@@ -258,9 +260,9 @@ void avm_table_decr_refcounter(avm_table * table){
  
 void avm_clear_memcell(avm_memcell * cell){
 	if(cell->type!=undefined_m){
-		if(cell->type==string_m && cell->data.str_value!=NULL)
+		if(cell->type==string_m && cell->data.str_value)
 			free(cell->data.str_value);
-		else if(cell->type==table_m && cell->data.table_value!=NULL)
+		else if(cell->type==table_m && cell->data.table_value)
 			avm_table_decr_refcounter(cell->data.table_value);
 		cell->type = undefined_m;
 	}
@@ -297,7 +299,7 @@ char * arg_value_type_to_str(vmarg_t type){
 } 
 
 char * real_value_type_to_str(avm_memcell_t type){
-	char * value_types[] = {"number","number","string","boolean",
+	char * value_types[] = {"double","integer","string","boolean",
 							"table","user function","library function",
 							"nil","undefined"};
 	return(value_types[type]);

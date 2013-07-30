@@ -13,12 +13,13 @@ unsigned int curr_quad = 0;
 /* An expression list for the index items */
 expr * index_expr = NULL;
 
-void expand(void){
+void expand(){
 	assert(quads_total==curr_quad);
 	
 	// Allocating memory for new array
 	quad * new_quad_arr = (quad *)malloc(NEW_SIZE);
-	if(memerror(new_quad_arr,"new quad array"))exit(0);
+	if(memerror(new_quad_arr,"new quad array"))
+		exit(0);
 
 	// Copying quads to the new array
 	memcpy(new_quad_arr,quads,CURR_SIZE);
@@ -50,7 +51,6 @@ void patch_label(unsigned int quad_id, unsigned int label){
 	quads[quad_id].label = label;
 }
 
-// TO DO 
 void write_quads(void){
 	int i;
 	FILE * quads_output; 
@@ -118,11 +118,6 @@ void write_quads(void){
 		else if(quads[i].op>=if_eq && quads[i].op<=if_greater){
 			fprintf(quads_output,"%d:\t%s %s %s %s\n",i,opcode_to_str(quads[i].op),expr_to_str(quads[i].arg1), expr_to_str(quads[i].arg2), expr_to_str(quads[i].result));
 		}
- 		//if(quads[i].result!=NULL && quads[i].result->sym!=NULL)
- 
-     	//else if(quads[i].arg1!=NULL && quads[i].arg1->sym!=NULL)
-       	//	printf("Quad  (line %d)  (label:%d) (name:%s) (type:%s) \n",quads[i].line,quads[i].label,quads[i].arg1->sym->name,opcode_to_str(quads[i].op));
-      
 	}
  
 	fclose(quads_output);  
@@ -236,7 +231,7 @@ expr * make_call(expr * lvalue,expr * elist,symbol_table ** st,unsigned int line
 	// Some variables
 	expr * func = emit_iftableitem(lvalue,st,line);
 	expr * params = NULL;
-	expr * temp;
+	expr * temp = NULL;
 
 	// We use params as a stack for the elist
 	params = elist;
@@ -409,7 +404,6 @@ unsigned expr_to_boolean(expr * e){
 
 list_node * list_insert(list_node * head,unsigned int value){
 	list_node * temp = head;
-
 	list_node * new_node = malloc(sizeof(list_node));
 	new_node->value = value;
 	new_node->next = NULL;
@@ -427,7 +421,6 @@ list_node * list_insert(list_node * head,unsigned int value){
 
 list_node * list_insert_two(list_node * head,unsigned int v1,unsigned int v2){
 	list_node * temp = head;
-
 	list_node * new_node = malloc(sizeof(list_node));
 	new_node->value = v1;
 	new_node->next_value = v2;
@@ -447,8 +440,10 @@ list_node * list_insert_two(list_node * head,unsigned int v1,unsigned int v2){
 list_node * merge_lists(list_node * list1, list_node * list2){
 	list_node * temp = list1;
 
-	if(list1==NULL)return list2;
-	else if(list2==NULL)return list1;
+	if(list1==NULL)
+		return list2;
+	else if(list2==NULL)
+		return list1;
 
 	while(temp!=NULL && temp->next!=NULL)
 		temp = temp->next;

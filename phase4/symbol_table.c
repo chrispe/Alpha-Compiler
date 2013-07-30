@@ -55,14 +55,16 @@ int st_insert(symbol_table ** st, st_entry ** symbol) {
 }
 
 symbol_table * create_symbol_table(){
-	char * lib_functions[] = {"print","input","objectmemberkeys","objecttotalmembers",
-				  "objectcopy","totalarguments","argument","typeof","strtonum",
-				  "sqrt","cos","sin"};
+	char * lib_functions[] = {
+					"print","input","objectmemberkeys","objecttotalmembers",
+				  	"objectcopy","totalarguments","argument","typeof","strtonum",
+				  	"sqrt","cos","sin" };
 	
-	int i;
+	unsigned int i;
 	st_entry * symbol;
 	symbol_table * st = (symbol_table *)malloc(sizeof(symbol_table));
-	if(memerror(st,"symbol table"))return NULL;
+	if(memerror(st,"symbol table"))
+		return NULL;
 
 	for(i=0;i<BUCKET_SIZE;i++)
 		st->hash_table[i] = NULL;
@@ -71,7 +73,8 @@ symbol_table * create_symbol_table(){
 	// We add all the library functions from the beginning in the symbol table.
 	for(i=0;i<12;i++){
 		symbol = create_symbol(lib_functions[i],1,0,0,LIBFUNC,0,0);
-		if(memerror(symbol,"initalize lib func"))return NULL;
+		if(memerror(symbol,"initalize lib func"))
+			return NULL;
 		st_insert(&st,&symbol);
 	}
 
@@ -85,8 +88,8 @@ void print_st(symbol_table * st){
 	sc = st->scope_list;
 
 	while(sc!=NULL){
-		printf("Symbol Table scope:<%d>\n",sc->scope);
 		entry = sc->symbols;
+		printf("Symbol Table scope:<%d>\n",sc->scope);
 		while(entry!=NULL){
 				printf("\tkey='%s' ",entry->name);
 				if(entry->type==GLOBAL_VAR)printf("type=(global variable) ");
@@ -104,13 +107,11 @@ void print_st(symbol_table * st){
 					}
 					printf(") ");
 				}
-				
 				if(entry->space==PROGRAM_VAR)printf("space='program_var'");
 				else if(entry->space==FUNC_LOCAL)printf("space='func_local'");
 				else printf("space='func_arg'");
 				printf(" line=%d scope=%d active=%d offset=%d\n",entry->line,entry->scope,entry->active,entry->offset);
 				entry = entry->next;
-
 		}
 		printf("\n");
 		sc = sc->next;
@@ -122,7 +123,8 @@ st_entry * st_lookup_table(symbol_table * st,const char * symbol_name){
 	st_entry * temp = st->hash_table[key];
 
 	while(temp!=NULL){
-		if(strcmp(temp->name,symbol_name)==0 && temp->active==1)return temp;
+		if(strcmp(temp->name,symbol_name)==0 && temp->active==1)
+			return temp;
 		temp = temp->next;
 	}
 
@@ -136,11 +138,13 @@ st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned i
 	while(sc_temp!=NULL && sc_temp->scope!=scope)
 		sc_temp = sc_temp->next;
 
-	if(sc_temp==NULL)return NULL;
+	if(sc_temp==NULL)
+		return NULL;
 	st_temp = sc_temp->symbols;
 	 
 	while(st_temp!=NULL){
-		if(strcmp(st_temp->name,symbol_name)==0 && st_temp->active==1)return st_temp;
+		if(strcmp(st_temp->name,symbol_name)==0 && st_temp->active==1)
+			return st_temp;
 		st_temp = st_temp->next;
 	}
 
@@ -149,11 +153,14 @@ st_entry * st_lookup_scope(symbol_table * st,const char * symbol_name,unsigned i
 
 st_entry * create_symbol(const char * name, unsigned int active, unsigned int scope,unsigned int line,st_entry_type type, unsigned int offset, scopespace_t space){
 	st_entry * symbol = (st_entry *)malloc(sizeof(st_entry));
-	if(memerror(symbol,"symbol"))return NULL;
+	if(memerror(symbol,"symbol"))
+		return NULL;
 
 	symbol->name = malloc(strlen(name)+1);
-	if(memerror(symbol->name,"symbol:name"))
+	if(memerror(symbol->name,"symbol:name")){
+		free(symbol);
 		return NULL;
+	}
 
 	strcpy(symbol->name,name);
 	symbol->active = active;
@@ -166,12 +173,21 @@ st_entry * create_symbol(const char * name, unsigned int active, unsigned int sc
 	// Depending on the symbol type we set the correct variables.
 	if(type==USERFUNC || type==LIBFUNC){
 		symbol->value_type.funVal = (function *)malloc(sizeof(function));
-		if(memerror(symbol->value_type.funVal,"funval"))return NULL;
+		if(memerror(symbol->value_type.funVal,"funval"))
+		{
+			free(symbol->name);
+			free(symbol);
+			return NULL;
+		}
 		symbol->value_type.funVal->arguments = NULL;
 	}
 	else {
 		symbol->value_type.varVal = (variable *)malloc(sizeof(variable));
-		if(memerror(symbol->value_type.varVal,"varVal"))return NULL;
+		if(memerror(symbol->value_type.varVal,"varVal")){
+			free(symbol->name);
+			free(symbol);
+			return NULL;
+		}
 		symbol->value_type.varVal->used_in_func = NULL;
 	}
 
@@ -186,8 +202,9 @@ st_entry * set_var_func(st_entry * symbol,const char * func_name){
 	}
 
 	symbol->value_type.varVal->used_in_func = malloc(strlen(func_name)+1);
-	if(memerror(symbol->value_type.varVal->used_in_func,"user_in_funct"))return NULL;
-
+	if(memerror(symbol->value_type.varVal->used_in_func,"user_in_funct"))
+		return NULL;
+	
 	strcpy(symbol->value_type.varVal->used_in_func,func_name);
 	return symbol;
 }
@@ -201,9 +218,8 @@ int memerror(void * ptr, const char * name){
 }
 
 int generate_key(const char * name){
-	int sum = 0;
-	int len = strlen(name);
-	int i;
+	unsigned int sum, i;
+	unsigned int len = strlen(name);
 
 	for(i=0;i<len;i++)
 		sum += (int)name[i];
@@ -214,21 +230,27 @@ int generate_key(const char * name){
 int args_insert(arg_node ** args,const char * arg_name){
 	arg_node * temp = *args;
 
-	if(args_lookup(*args,arg_name)!=NULL)return 0;
+	if(args_lookup(*args,arg_name)!=NULL)
+		return 0;
 
 	arg_node * arg = (arg_node *)malloc(sizeof(arg_node));
-	if(memerror(arg,"func arg"))return 0;
+	if(memerror(arg,"func arg"))
+		return 0;
 
 	arg->name = malloc(strlen(arg_name)+1);
-	if(memerror(arg->name,"func arg:name"))return 0;
+	if(memerror(arg->name,"func arg:name")){
+		free(arg);
+		return 0;
+	}
 	strcpy(arg->name,arg_name);
 
 	arg->next = NULL;
 
 	if(*args==NULL)
 		*args = arg;
-	else{
-		while((*args)->next!=NULL)*args = (*args)->next;
+	else {
+		while((*args)->next!=NULL)
+			*args = (*args)->next;
 		(*args)->next = arg;
 		*args = temp;
 	}
@@ -240,7 +262,8 @@ arg_node * args_lookup(arg_node * args,const char * arg_name){
 	arg_node * tmp = args;
 
 	while(tmp!=NULL){
-		if(strcmp(tmp->name,arg_name)==0)return tmp;
+		if(strcmp(tmp->name,arg_name)==0)
+			return tmp;
 		tmp = tmp->next;
 	}
 
@@ -249,8 +272,7 @@ arg_node * args_lookup(arg_node * args,const char * arg_name){
 
 void scope_set_active(symbol_table ** st,unsigned int scope,char active){
 	scope_entry * sc_temp = (*st)->scope_list;
-	st_entry * st_temp;
-	st_entry * ht_temp;
+	st_entry * st_temp, * ht_temp;
 	unsigned int key;
 
 	while(sc_temp!=NULL && sc_temp->scope!=scope)
@@ -260,7 +282,6 @@ void scope_set_active(symbol_table ** st,unsigned int scope,char active){
 		st_temp = sc_temp->symbols;
 
 		while(st_temp!=NULL){
-
 			st_temp->active = active;
 
 			// For the hash table

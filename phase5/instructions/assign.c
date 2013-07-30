@@ -1,7 +1,6 @@
 #include "assign.h"
 
 void execute_assign(instr_s * instr){
-	//printf("The %s (%d) has type : %s\n",instr->result->name,instr->result->value,arg_value_type_to_str(instr->result->type));
 	avm_memcell * lv = avm_translate_operand(instr->result,(avm_memcell *)NULL);
 	avm_memcell * rv = avm_translate_operand(instr->arg1, &ax);
 	avm_assign(lv,rv,instr->line); 

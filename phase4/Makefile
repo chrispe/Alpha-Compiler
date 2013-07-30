@@ -20,6 +20,9 @@ st.o: symbol_table.c symbol_table.h
 	gcc -o st.o -c symbol_table.c
 clean:
 	rm -f *.o
+	rm -f out.amc
+	rm -f quads.txt
+	rm -f target_code.txt
 	rm -f lex.yy.c
 	rm -f parser.c
 	rm -f parser.h
