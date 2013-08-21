@@ -4,10 +4,11 @@
 #include "dispatcher.h"
 
 int main(int argc, char * argv[]){
-    if (argc <= 1)
-    	error_message("No filename was given as an argument.");
 
-    char debug_mode = 0;
+    unsigned char debug_mode = 0;
+
+    if (argc <= 1)
+    	error_message("Missing filename argument. \n\tAdd the path to the executable file as a parameter.");
 
     if(argc>=3){
         if(strcmp(argv[2],"-d")==0)

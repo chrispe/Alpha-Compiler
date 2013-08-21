@@ -666,7 +666,7 @@ void generate_CALL(quad * q){
 		instr->result->value = value_exists_in_arr(q->result->sym->name,lib_func_c);
 		instr->result->type = libfunc_a;
 		if(instr->result->value==-1){
-			printf("Compile error at line %d : Library function %s does not exist.\n",q->line,q->result->sym->name);
+			printf("\n\tError at line %d : Library function %s does not exist.\n",q->line,q->result->sym->name);
 			exit(0);
 		}
 	}
@@ -684,7 +684,7 @@ void generate_CALL(quad * q){
 			instr->result->type = userfunc_a;
 		}
 		if(instr->result->value==-1){
-			printf("Compile error at line %d : User function %s does not exist.\n",q->line,q->result->sym->name);
+			printf("\n\tError at line %d : User function %s does not exist.\n",q->line,q->result->sym->name);
 			exit(0);
 		}
 	}

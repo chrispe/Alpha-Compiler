@@ -3,8 +3,8 @@ function create_node(head,v){
 }
 
 list = nil;
-
-for(i=0;i<1000000;i++){
+limit = input();
+for(i=0;i<limit;i++){
 list = create_node(list,i);
 }
 

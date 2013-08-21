@@ -2,6 +2,7 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
+ 	#include <time.h>
  	#include "tc_generator.h"
 
 	#define YYPARSE_PARAM st
@@ -33,6 +34,7 @@
  	st_entry * func_sym_temp = NULL;
  	str_stack_node * func_jump_decl_stack = NULL;
  	str_stack_node * temp_var_stack = NULL;
+
 %}
 %error-verbose
 %start program
@@ -54,7 +56,7 @@
 
 %token <strval>	IF ELSE WHILE FOR FUNCTION RETURN BREAK CONTINUE AND NOT OR LOCAL TRUE FALSE NIL
 %token <strval> EQUAL PLUS MINUS MULTI SLASH PERCENT DEQUAL NEQUAL DPLUS DMINUS GREATER LESS EQ_GREATER EQ_LESS
-%token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT
+%token <strval> BRACE_L BRACE_R BRACKET_L BRACKET_R PAREN_L PAREN_R SEMICOLON COMMA COLON DCOLON DOT DDOT DEF
 
 %type <strval> stmt  assignexpr const primary member   callsuffix normcall methodcall term   if_prefix else_prefix forprefix M N
 %type <strval> elist objectdef funcdef indexedelem indexed idlist block ifstmt block_in whilestmt forstmt func_temp whilesecond whilestart temp_indexed
@@ -113,6 +115,7 @@ stmt:
 		| ifstmt {}
 		| funcdef {}
 		| returnstmt {}
+		| DEF IDENTIFIER IDENTIFIER  IDENTIFIER { printf("Does %s\n",yytext);}
 		| SEMICOLON {}
 		;
 
@@ -183,7 +186,7 @@ term:
 		}
 		| lvalue DPLUS {
 			if($<expression>1->sym->type==USERFUNC || $<expression>1->sym->type==LIBFUNC){
-				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>1->sym->name);
+				printf("\n\tError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>1->sym->name);
 				compile_errors++;
 			}
 			else{
@@ -203,7 +206,7 @@ term:
 		}
 		| DPLUS lvalue {
 			if($<expression>2->sym->type==USERFUNC || $<expression>2->sym->type==LIBFUNC){
-				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>2->sym->name);
+				printf("\n\tError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>2->sym->name);
 				compile_errors++;
 			}
 			else {
@@ -222,7 +225,7 @@ term:
 		}
 		| lvalue DMINUS {
 			if($<expression>1->sym->type==USERFUNC || $<expression>1->sym->type==LIBFUNC){
-				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>1->sym->name);
+				printf("\n\tError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>1->sym->name);
 				compile_errors++;
 			}
 			else{
@@ -242,7 +245,7 @@ term:
 		}
 		| DMINUS lvalue {
 			if($<expression>2->sym->type==USERFUNC || $<expression>2->sym->type==LIBFUNC){
-				printf("\nError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>2->sym->name);
+				printf("\n\tError at line %d : %s is a function, cannot assign to a function.\n",yylineno,$<expression>2->sym->name);
 				compile_errors++;
 			}
 			else {
@@ -298,7 +301,7 @@ assignexpr:
 			fun_rec=0;
 
 			if($<expression>1->sym->type==USERFUNC || $<expression>1->sym->type==LIBFUNC){
-				printf("\nError at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$2);
+				printf("\n\tError at line %d: '%s' is a declared function, cannot assign to a function.\n",yylineno,$2);
 				compile_errors++;
 			}
 
@@ -343,7 +346,6 @@ lvalue:
 			// We check that the global variable exists
 			// The whole proccess is handled by the following function.
 			char is_global = check_global_variable((symbol_table **)st, $2,yylineno);
-
 			$<expression>$ = lvalue_expr((*((symbol_table **)st))->last_symbol);
 
 			// In case the global variable could not be found we assign
@@ -560,7 +562,6 @@ func_temp:
 			pop(&func_jump_decl_stack);
 			pop(&func_names);
 			func_sym_temp = se;
- 
 		}
 		; 
 
@@ -776,12 +777,13 @@ returnstmt:
 %%
 
 int yyerror (const char * yaccProvideMessage){
-	fprintf(stderr,"\nSyntax error at line %d: %s\n",yylineno,yaccProvideMessage);
+	fprintf(stderr,"\n\tSyntax error at line %d: %s\n",yylineno,yaccProvideMessage);
 	compile_errors++;
 }
 
 void generate_icode(const char * param){
     printf("Generating intermediate code...");
+    fflush(stdout);
 	yyparse(&st);
 	if(param && strcmp(param,"-q")==0)
 		write_quads();
@@ -789,10 +791,14 @@ void generate_icode(const char * param){
 		print_st(st);
 	if(compile_errors==0)
 		printf(" (DONE)\n");
+	else
+		printf(" (FAILED)\n");
+	fflush(stdout);
 }
 
 void generate_tcode(const char * param){
 	printf("Generating target code...");
+  	fflush(stdout);
 	generate_instructions();
 	if(param && strcmp(param,"-i")==0)
 		print_instructions();
@@ -801,22 +807,28 @@ void generate_tcode(const char * param){
 		printf(" (FAILED)\n");
 	else 
 		printf(" (DONE)\n");
+	fflush(stdout);
 }
 
-void write_bf(const char * param){
+void write_bf(){
 	printf("Writing executable binary file...");
+  	fflush(stdout);	
 	write_binary_file();
 
 	if(compile_errors>0)
 		printf(" (FAILED)\n");
 	else 
 		printf(" (DONE)\n");
+	fflush(stdout);
 }
 
 int main(int argc,char ** argv)
 {
  	st = create_symbol_table();
  	char * param = NULL;
+
+ 	// The timers
+ 	double tstart, tstop, ttime;
 
     if (argc > 1) {
         if ((yyin = fopen(argv[1], "r")) == NULL) {
@@ -829,6 +841,9 @@ int main(int argc,char ** argv)
     else
         yyin = stdin;
 
+
+    tstart = (double)clock()/CLOCKS_PER_SEC;
+
     printf("Compilation started...\n");
     
     // Generate the intermidiate code
@@ -838,12 +853,14 @@ int main(int argc,char ** argv)
     generate_tcode(param);
 
     // Write the executable binary file
-    write_bf(param);
+    write_bf();
 
+	tstop = (double)clock()/CLOCKS_PER_SEC;
+	fflush(stdout);
 	if(compile_errors>0)
-		printf("Compilation failed. (%d errors)\n",compile_errors);
+		printf("Compilation failed (%d errors)\n",compile_errors);
 	else
-		printf("Compilation has been completed.\n");
+		printf("Compilation has been completed (%.2lf ms)\n",(tstop - tstart)*10000);
 
 	return 0;	
 }

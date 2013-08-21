@@ -316,7 +316,7 @@ expr * emit_arithm(symbol_table ** st,opcode op,expr * arg1,expr * arg2, expr * 
 	double a_result;
 
 	if(!arithm_expr_valid(arg1) || !arithm_expr_valid(arg2))
-		printf("\nWarning at line %d : Invalid expression type for arithmetic operation.\n",line);
+		printf("\n\tWarning at line %d : Invalid expression type for arithmetic operation.\n",line);
 
 	if(is_num_expr(arg1) && is_num_expr(arg2)){
 		is_float = is_num_double(arg1) || is_num_double(arg2);
@@ -344,7 +344,7 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 				result = modulo(arg1,arg2);
 			else{
 				result = arg1;
-				printf("\nWarning at line %d : Division by zero.\n",line);
+				printf("\n\tWarning at line %d : Division by zero.\n",line);
 			}
 			break;
 		}
@@ -353,7 +353,7 @@ double apply_arithm_op(opcode op,double arg1,double arg2,unsigned int line){
 				result = arg1/arg2; 
 			else{
 				result = arg1;
-				printf("\nWarning at line %d : Division by zero.\n",line);
+				printf("\n\tWarning at line %d : Division by zero.\n",line);
 			}
 			break;
 		}

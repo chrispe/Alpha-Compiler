@@ -25,9 +25,9 @@ int st_insert(symbol_table ** st, st_entry ** symbol) {
 
 	if (temp == NULL || temp->scope != (*symbol)->scope) {
 		temp = (scope_entry *)malloc(sizeof(scope_entry));
-		temp->scope = (*symbol)->scope;
 		if (memerror(temp,"scope entry"))
 			return 0;
+		temp->scope = (*symbol)->scope;
 
 		if(previous!=NULL){
 			temp->next = previous->next;
@@ -70,8 +70,10 @@ symbol_table * create_symbol_table(){
 	// We add all the library functions from the beginning in the symbol table.
 	for(i=0;i<12;i++){
 		symbol = create_symbol(lib_functions[i],1,0,0,LIBFUNC,0,0);
-		if(memerror(symbol,"initalize lib func"))
+		if(memerror(symbol,"initalize lib func")){
+			free(st);
 			return NULL;
+		}
 		st_insert(&st,&symbol);
 	}
 
@@ -317,7 +319,7 @@ unsigned int count_func_locals(symbol_table * st,char * funcname){
  		st_e = sc_e->symbols;
  		while(st_e){
  			if(st_e->value_type.varVal->used_in_func){
- 				if(  strcmp(st_e->value_type.varVal->used_in_func,funcname)==0)
+ 				if( st_e->space==FUNC_LOCAL && strcmp(st_e->value_type.varVal->used_in_func,funcname)==0)
  					locals++;
  			}
  			st_e = st_e->next;
