@@ -1,0 +1,71 @@
+function print_tree(tree){
+	if(tree.lc!=nil)print_tree(tree.lc);
+	print(tree.value,"\n");
+	if(tree.rc!=nil)print_tree(tree.rc);
+}
+
+function tree_apply_action(tree,action){
+	if(tree.lc!=nil)tree_apply_action(tree.lc);
+	action(tree);
+	if(tree.rc!=nil)tree_apply_action(tree.rc);
+}
+
+function create_node(val){
+	return [{"value":val},{"rc":nil},{"lc":nil}];
+}
+
+function tree_insert(tree,val){
+	previous = nil;
+	visitor = tree;
+	if(tree==nil){
+		tree = create_node(val);
+	}
+	else{
+		while(visitor!=nil){
+			previous = visitor;
+			if(visitor.value>val){
+				visitor = visitor.lc;
+			}
+			else{
+				visitor = visitor.rc;
+			}
+		}
+		visitor = create_node(val);
+		if(previous.value<val){
+			previous.rc = visitor;
+		}
+		else{
+			previous.lc = visitor;
+		}
+		 
+	}
+	return tree;
+}		
+g = 0;
+function count(tree){
+	if(tree!=nil and tree.lc!=nil)count(tree.lc);
+	::g++;
+	if(tree!=nil and tree.rc!=nil)count(tree.rc);
+}
+
+a = nil;
+ 
+while(true){
+	user_input = input();
+	if(typeof(user_input)=="integer"){
+		a = tree_insert(a,user_input);
+	}
+	else{
+		break;
+	}
+}
+
+print_tree(a);
+ 
+
+ 
+g = 0;
+count(a,g);
+print("I counted ",g," elements\n");
+
+ 

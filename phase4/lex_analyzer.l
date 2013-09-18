@@ -1,7 +1,7 @@
 %{
     #define KEYWORDS    15
     #define OPERATORS   14
-    #define PUNCTUATION 13
+    #define PUNCTUATION 12
     #define YACC_DEFINED_START 262
     #define TOTAL_TYPES (KEYWORDS + OPERATORS + PUNCTUATION)
     #include "lex_lib.h"
@@ -24,7 +24,7 @@ WRONG_STR      \"
 
 OPERATOR       "="|"+"|"-"|"*"|"/"|"%"|"=="|"!="|"++"|"--"|">"|"<"|">="|"<="
 
-PUNCT          "{"|"}"|"["|"]"|"("|")"|";"|","|":"|"::"|"."|".."|"#"
+PUNCT          "{"|"}"|"["|"]"|"("|")"|";"|","|":"|"::"|"."|".."
 
 SPACE          [\r\n \t\v]
 
